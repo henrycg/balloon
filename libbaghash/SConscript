@@ -3,6 +3,8 @@ import os
 Import('env')
 
 src = [
+    "baghash.c",
+    "hash_state.c",
     "util.c",
 ]
 

@@ -1,0 +1,10 @@
+import os
+
+Import('env')
+
+src = [
+    "util.c",
+]
+
+env.StaticLibrary("baghash", src)
+

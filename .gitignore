@@ -30,3 +30,15 @@
 
 # Debug files
 *.dSYM/
+
+# Build files
+build
+.sconf_temp
+.sconsign.dblite
+
+# Sconf log
+config.log
+
+# vi swap files
+.*.swp
+

@@ -136,4 +136,5 @@ SConscript('libbaghash/SConscript', variant_dir='build/libbaghash')
 # Utilities
 if env["BUILD_BINARIES"]:
     SConscript('baghash/SConscript', variant_dir='build/baghash')
+    SConscript('bagtest/SConscript', variant_dir='build/bagtest')
 

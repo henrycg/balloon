@@ -22,5 +22,10 @@
 #define MCOST_MAX (1ull << 48)
 #define BLOCK_SIZE (1ull <<10)
 
+// Degree of expander graph used in the construction.
+// TODO: Make sure that this number is big enough to 
+// get the expansion we need.
+#define N_NEIGHBORS 20
+
 #endif
 

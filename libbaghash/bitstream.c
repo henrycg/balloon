@@ -28,6 +28,20 @@ bitstream_init (struct bitstream *b)
 }
 
 int 
+bitstream_init_with_seed (struct bitstream *b, const void *seed, size_t seedlen)
+{
+  int error;
+  if ((error = bitstream_init (b)))
+    return error;
+  if ((error = bitstream_seed_add (b, seed, seedlen)))
+    return error;
+  if ((error = bitstream_seed_finalize (b)))
+    return error;
+
+  return ERROR_NONE;
+}
+
+int 
 bitstream_seed_add (struct bitstream *b, const void *seed, size_t seedlen)
 {
   if (b->initialized)

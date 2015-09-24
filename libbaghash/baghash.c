@@ -34,11 +34,11 @@ BagHash (void *out, size_t outlen,
     return ERROR_MCOST_TOO_BIG;
 
   struct hash_state state;
-  if ((error = hash_state_init (&state, m_cost, BLOCK_SIZE)))
+  if ((error = hash_state_init (&state, m_cost, BLOCK_SIZE, salt, saltlen)))
     return error;
 
   // Fill buffer of m_cost blocks with pseudo-random stuff derived
-  // from the password.
+  // from the password and salt.
   if ((error = hash_state_fill (&state, in, inlen, salt, saltlen)))
     return error;
 

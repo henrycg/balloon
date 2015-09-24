@@ -6,11 +6,13 @@ baghash_env = env.Clone()
 
 test_srcs = [
     "mutest.c",
+    "bitstream_test.c",
     "util_test.c"
 ]
 
 libs = [
   "baghash",
+  "crypto"
 ]
 
 # Run the mutest script to generate the test harness code

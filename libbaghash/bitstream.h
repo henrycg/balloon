@@ -19,6 +19,7 @@ struct bitstream {
 
   unsigned char *genp;
   unsigned char generated[BITSTREAM_BUF_SIZE];
+  unsigned int n_refreshes;
 };
 
 
@@ -28,7 +29,16 @@ int bitstream_seed_add (struct bitstream *b, const void *seed, size_t seedlen);
 
 int bitstream_seed_finalize (struct bitstream *b);
 
-// Buffer "out" MUST be zeroed before calling this method.
+/** 
+ * This function will zero out the "out" buffer before filling
+ * it with pseudo-random bytes.
+ */
 int bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen);
+
+/** 
+ * Return a random integer in the "out" parameter in the range
+ * [0, max) -- exclusive of max.
+ */
+int bitstream_rand_int (struct bitstream *b, size_t *out, size_t max);
 
 #endif

@@ -2,14 +2,10 @@
 #include <assert.h>
 #include <baghash.h>
 
+#include "constants.h"
 #include "errors.h"
 #include "hash_state.h"
 #include "util.h"
-
-#define TCOST_MIN 3
-#define MCOST_MIN 64
-#define BLOCK_SIZE 1024
-
 struct {
   size_t buflen;
   unsigned char *buffer;
@@ -34,6 +30,8 @@ BagHash (void *out, size_t outlen,
     t_cost = TCOST_MIN;
   if (m_cost < MCOST_MIN)
     m_cost = MCOST_MIN;
+  if (m_cost >= MCOST_MAX)
+    return ERROR_MCOST_TOO_BIG;
 
   struct hash_state state;
   if ((error = hash_state_init (&state, m_cost, BLOCK_SIZE)))

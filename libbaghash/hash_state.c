@@ -12,7 +12,9 @@ hash_state_init (struct hash_state *s, size_t n_blocks, size_t block_size)
 {
   s->n_blocks = n_blocks;
   s->block_size = block_size;
-  s->buffer = calloc (n_blocks, block_size);
+  // To avoid an integer overflow, we limit the block size 
+  // memory size
+  s->buffer = malloc (n_blocks * block_size);
 
   return (!s->buffer) ?  ERROR_NONE : ERROR_MALLOC;
 }

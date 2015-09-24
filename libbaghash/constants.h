@@ -10,5 +10,9 @@
 #define SALTLEN_MIN 4
 #define SALTLEN_MAX (1<<20)
 
+// Key length (in bits) for the AES-CTR cipher used
+// to fill up the buffers initially.
+#define AES_CTR_KEY_LEN 256
+
 #endif
 

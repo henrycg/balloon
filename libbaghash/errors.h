@@ -18,6 +18,8 @@ enum error_codes {
 
   ERROR_OPENSSL_HASH,
   ERROR_OPENSSL_AES,
+
+  ERROR_BITSTREAM_UNINITIALIZED
 };
 
 #endif

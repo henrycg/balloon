@@ -44,12 +44,13 @@ BagHash (void *out, size_t outlen,
   if ((error = hash_state_fill (&state, in, inlen, salt, saltlen)))
     return error;
 
-  
-  // Mix the buffers t_cost times
+  // Mix the buffer t_cost times
+  for (unsigned int i = 0; i < t_cost; i++) {
+    hash_state_mix (&state);
+  }
  
-  // Hash the resulting state of the buffer
-  // together and return it
-  //
+  // Extract the output from the hash state
+  hash_state_extract (&state, out, outlen);
  
   hash_state_free (&state);
 

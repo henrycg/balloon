@@ -1,9 +1,12 @@
 
 
+//#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "bitstream.h"
 #include "constants.h"
+#include "compress.h"
 #include "errors.h"
 #include "hash_state.h"
 
@@ -21,7 +24,7 @@ hash_state_init (struct hash_state *s, size_t n_blocks, size_t block_size,
   if ((error = bitstream_init_with_seed (&s->bstream, salt, saltlen)))
     return error;
 
-  return (!s->buffer) ?  ERROR_NONE : ERROR_MALLOC;
+  return (s->buffer) ?  ERROR_NONE : ERROR_MALLOC;
 }
 
 void 
@@ -53,40 +56,58 @@ hash_state_fill (struct hash_state *s,
   return ERROR_NONE;
 }
 
+static inline void *
+last_block (const struct hash_state *s)
+{
+  return s->buffer + (s->block_size * (s->n_blocks - 1));
+}
+
 int 
 hash_state_mix (struct hash_state *s)
 {
   int error;
   unsigned char tmp_block[s->block_size];
-  size_t neighb;
+  size_t neighbor;
   
   // Simplest design: hash in place with one buffer
   for (size_t i = 0; i < s->n_blocks; i++) {
-    memset (tmp_block, 0, s->block_size);
+    void *cur_block = s->buffer + (s->block_size * i);
+
+    // Hash in the previous block (or the last block if this is
+    // the first block of the buffer).
+    const void *prev_block = i ? cur_block - s->block_size : last_block (s);
+    memcpy (tmp_block, prev_block, s->block_size);
 
     // For each block, pick random neighbors
     for (size_t n = 0; n < N_NEIGHBORS; n++) { 
 
       // Get next neighbor
-      if ((error = bitstream_rand_int (&s->bstream, &neighb, s->n_blocks)))
+      if ((error = bitstream_rand_int (&s->bstream, &neighbor, s->n_blocks)))
         return error;
 
-      // Hash value of next neighbor into temp buffer.
+      //printf("Neighbor %llu\n", (long long unsigned int)neighbor);
 
+      // Hash value of next neighbor into temp buffer.
+      if ((error = compress (tmp_block, tmp_block, &s->buffer[neighbor], s->block_size)))
+        return error;
     }
 
     // Copy output of compression function back into the 
     // big memory buffer.
-    memcpy (s->buffer + (s->n_blocks * i), tmp_block, s->block_size);
+    memcpy (cur_block, tmp_block, s->block_size);
+    //printf("copy %p => %p\n", s->buffer + (s->block_size * i), tmp_block);
   }
 
   return ERROR_NONE;
 }
 
 int 
-hash_state_extract (struct hash_state *s, const void *out, size_t outlen)
+hash_state_extract (struct hash_state *s, void *out, size_t outlen)
 {
-  return 0;
+  // For one-buffer design, just return the last block of the buffer
+  memset (out, 0, outlen);
+  memcpy (out, last_block (s), s->block_size);
+  return ERROR_NONE;
 }
 
 

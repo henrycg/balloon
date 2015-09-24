@@ -5,6 +5,7 @@ Import('env')
 src = [
     "baghash.c",
     "bitstream.c",
+    "compress.c",
     "hash_state.c",
     "util.c",
 ]

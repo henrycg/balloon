@@ -22,6 +22,6 @@ int hash_state_fill (struct hash_state *s, const void *in, size_t inlen,
 
 int hash_state_mix (struct hash_state *s);
 
-int hash_state_extract (struct hash_state *s, const void *out, size_t outlen);
+int hash_state_extract (struct hash_state *s, void *out, size_t outlen);
 
 #endif

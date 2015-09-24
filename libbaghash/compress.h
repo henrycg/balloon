@@ -2,7 +2,7 @@
 #define __COMPRESS_H__
 
 
-int
-compress (unsigned char *out, unsigned const char *blockA, unsigned const char *blockB);
+int compress (unsigned char *out, unsigned const char *blockA, unsigned const char *blockB,
+    size_t block_size);
 
 #endif

@@ -1,16 +1,29 @@
 
+#include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
 
+#include "keccak/KeccakSponge.h"
 #include "compress.h"
 #include "errors.h"
 
-int compress (unsigned char *out, unsigned const char *blockA, unsigned const char *blockB,
-    size_t block_size)
+int compress (unsigned char *out, unsigned const char *blocks[],
+    unsigned int n_blocks, size_t block_size)
 {
-  // TODO: put in real compression function
-  for (size_t i = 0; i < block_size; i++) {
-    *(out + i) = blockA[i] ^ blockB[i];
+  //printf("block %llu\n", (long long unsigned int)8*block_size);
+  assert (8 * block_size == KECCAK_RATE);
+  spongeState state;
+
+  if (InitSponge (&state, KECCAK_RATE, KECCAK_CAPACITY))
+    return ERROR_KECCAK;
+
+  for (unsigned int i = 0; i < n_blocks; i++) {
+    if (Absorb (&state, blocks[i], 8 * block_size))
+      return ERROR_KECCAK;
   }
+  
+  if (Squeeze (&state, out, 8 * block_size))
+    return ERROR_KECCAK;
 
   return ERROR_NONE;
 }

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "mutest.h"
 
+#include "libbaghash/constants.h"
 #include "libbaghash/hash_state.h"
 
 void 
@@ -9,7 +10,7 @@ mu_test_hash_state_init_free (void)
 {
   struct hash_state s;
   const unsigned char salt[] = "abcdefghijkl";
-  mu_check ( !hash_state_init (&s, 1024, 128, salt, sizeof (salt)) );
+  mu_check ( !hash_state_init (&s, 1024, BLOCK_SIZE, salt, sizeof (salt)) );
   hash_state_free (&s);
 }
 
@@ -19,7 +20,7 @@ mu_test_hash_state_fill (void)
   struct hash_state s;
   const unsigned char salt[] = "abcdefghijkl";
   const unsigned char in[] = "ZZZZZZZZZZZZ";
-  mu_check ( !hash_state_init (&s, 1024, 128, salt, sizeof (salt)) );
+  mu_check ( !hash_state_init (&s, 1024, BLOCK_SIZE, salt, sizeof (salt)) );
 
   mu_check ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
 
@@ -41,16 +42,16 @@ mu_test_hash_state_fill2 (void)
   struct hash_state s3;
   unsigned char salt[] = "abcdefghijkl";
   unsigned char in[] = "ZZZZZZZZZZZZ";
-  mu_check ( !hash_state_init (&s1, 1024, 128, salt, sizeof (salt)) );
+  mu_check ( !hash_state_init (&s1, 1024, BLOCK_SIZE, salt, sizeof (salt)) );
   mu_check ( !hash_state_fill (&s1, in, sizeof (in), salt, sizeof (salt)) ); 
 
   salt[0] = '5';
-  mu_check ( !hash_state_init (&s2, 1024, 128, salt, sizeof (salt)) );
+  mu_check ( !hash_state_init (&s2, 1024, BLOCK_SIZE, salt, sizeof (salt)) );
   mu_check ( !hash_state_fill (&s2, in, sizeof (in), salt, sizeof (salt)) ); 
 
 
   in[3] = '7';
-  mu_check ( !hash_state_init (&s3, 1024, 128, salt, sizeof (salt)) );
+  mu_check ( !hash_state_init (&s3, 1024, BLOCK_SIZE, salt, sizeof (salt)) );
   mu_check ( !hash_state_fill (&s3, in, sizeof (in), salt, sizeof (salt)) ); 
 
   // These checks should all pass w.h.p.
@@ -74,7 +75,7 @@ mu_test_hash_state_mix (void)
   struct hash_state s;
   const unsigned char salt[] = "abcdefghijkl";
   const unsigned char in[] = "ZZZZZZZZZZZZ";
-  mu_check ( !hash_state_init (&s, 1024, 128, salt, sizeof (salt)) );
+  mu_check ( !hash_state_init (&s, 1024, BLOCK_SIZE, salt, sizeof (salt)) );
   mu_check ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
 
   for (int i = 0; i < 10; i++)

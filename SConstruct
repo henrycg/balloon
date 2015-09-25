@@ -121,7 +121,7 @@ conf.Finish()
 Export('env')
 
 # Set compile options for binaries
-env.Append(LIBS = ["baghash"], LIBPATH = ['#build/libbaghash'])
+env.Append(LIBS = ["baghash"], LIBPATH = ['#build/libbaghash', '#build/keccak'])
 
 # Add header files
 env.Append(CPPPATH = ["#include", "#."])
@@ -132,6 +132,7 @@ env.Append(LIBS = ["pthread"])
 
 # libbaghash
 SConscript('libbaghash/SConscript', variant_dir='build/libbaghash')
+SConscript('keccak/SConscript', variant_dir='build/keccak')
 
 # Utilities
 if env["BUILD_BINARIES"]:

@@ -20,7 +20,7 @@
 // The product of these two values must be less
 // than 2^64 to avoid integer overflow in size_t.
 #define MCOST_MAX (1ull << 48)
-#define BLOCK_SIZE (1ull <<10)
+#define BLOCK_SIZE (168)
 
 // Degree of expander graph used in the construction.
 // TODO: Make sure that this number is big enough to 

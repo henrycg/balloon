@@ -1,6 +1,5 @@
 
 
-//#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -73,24 +72,25 @@ hash_state_mix (struct hash_state *s)
   for (size_t i = 0; i < s->n_blocks; i++) {
     void *cur_block = s->buffer + (s->block_size * i);
 
+    const unsigned char *blocks[N_NEIGHBORS + 1];
+
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
-    const void *prev_block = i ? cur_block - s->block_size : last_block (s);
-    memcpy (tmp_block, prev_block, s->block_size);
+    const unsigned char *prev_block = i ? cur_block - s->block_size : last_block (s);
+    blocks[0] = prev_block;
 
     // For each block, pick random neighbors
-    for (size_t n = 0; n < N_NEIGHBORS; n++) { 
+    for (size_t n = 1; n < N_NEIGHBORS; n++) { 
 
       // Get next neighbor
       if ((error = bitstream_rand_int (&s->bstream, &neighbor, s->n_blocks)))
         return error;
-
-      //printf("Neighbor %llu\n", (long long unsigned int)neighbor);
-
-      // Hash value of next neighbor into temp buffer.
-      if ((error = compress (tmp_block, tmp_block, &s->buffer[neighbor], s->block_size)))
-        return error;
+      blocks[n] = &s->buffer[s->block_size * neighbor];
     }
+
+    // Hash value of neighbors into temp buffer.
+    if ((error = compress (tmp_block, blocks, N_NEIGHBORS, s->block_size)))
+      return error;
 
     // Copy output of compression function back into the 
     // big memory buffer.

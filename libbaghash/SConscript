@@ -10,5 +10,10 @@ src = [
     "util.c",
 ]
 
+libs = [
+  "libkeccak",
+]
+
+env.Append(LIBS = libs)
 env.StaticLibrary("baghash", src)
 

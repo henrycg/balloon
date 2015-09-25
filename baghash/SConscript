@@ -10,6 +10,7 @@ src = [
 
 libs = [
   "baghash",
+  "crypto", 
 ]
 
 baghash_env.Append(LIBS = libs)

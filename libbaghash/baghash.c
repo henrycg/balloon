@@ -38,6 +38,7 @@ BagHash (void *out, size_t outlen,
   if ((error = hash_state_fill (&state, in, inlen, salt, saltlen)))
     return error;
 
+
   // Mix the buffer t_cost times
   for (unsigned int i = 0; i < opts->t_cost; i++) {
     hash_state_mix (&state);

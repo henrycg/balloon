@@ -15,16 +15,16 @@
 #define AES_CTR_KEY_LEN 256
 
 // Time cost (in number of passes over memory)
-#define TCOST_MIN 3ull
+#define TCOST_MIN 1ull
 // Memory cost (roughly in number of bytes)
-#define MCOST_MIN (8*1024ull)
+#define MCOST_MIN (1024ull)
 // Minimum number of blocks to use
 #define BLOCKS_MIN (32ull)
 
 // The product of these two values must be less
 // than 2^64 to avoid integer overflow in size_t.
 #define MCOST_MAX (1ull << 48)
-#define BLOCK_SIZE (168)
+#define KECCAK_1600_BLOCK_SIZE (168)
 
 #endif
 

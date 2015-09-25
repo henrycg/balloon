@@ -3,29 +3,72 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "blake2b/argon2-core.h"
 #include "keccak/KeccakSponge.h"
+
 #include "compress.h"
 #include "errors.h"
 
-int compress (unsigned char *out, unsigned const char *blocks[],
-    unsigned int n_blocks, size_t block_size)
-{
-  // TODO: Maybe use Keccak permutation directly?
-  
-  assert (8 * block_size == KECCAK_RATE);
-  spongeState state;
 
-  if (InitSponge (&state, KECCAK_RATE, KECCAK_CAPACITY))
+static int 
+compress_keccak (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp)
+{
+  spongeState sponge;
+
+  if (InitSponge (&sponge, KECCAK_RATE, KECCAK_CAPACITY))
     return ERROR_KECCAK;
 
-  for (unsigned int i = 0; i < n_blocks; i++) {
-    if (Absorb (&state, blocks[i], 8 * block_size))
+  for (unsigned int i = 0; i < blocks_to_comp; i++) {
+    if (Absorb (&sponge, blocks[i], 8 * KECCAK_1600_BLOCK_SIZE))
       return ERROR_KECCAK;
   }
   
-  if (Squeeze (&state, out, 8 * block_size))
+  if (Squeeze (&sponge, out, 8 * KECCAK_1600_BLOCK_SIZE))
     return ERROR_KECCAK;
 
   return ERROR_NONE;
+}
+
+static int 
+compress_blake2b (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp)
+{
+  Argon2FillBlock (out, blocks[0], (blocks_to_comp > 1 ? blocks[1] : out));
+  for (unsigned int i = 2; i < blocks_to_comp; i++) {
+    Argon2FillBlock (out, out, blocks[i]);
+  }
+
+  return ERROR_NONE;
+}
+
+int 
+compress(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+    enum comp_method comp)
+{
+  switch (comp) {
+    case COMP__KECCAK_1600:
+      return compress_keccak (out, blocks, blocks_to_comp);
+    case COMP__ARGON_BLAKE2B:
+      return compress_blake2b (out, blocks, blocks_to_comp);
+    case COMP__END:
+      break;
+  }
+
+  return ERROR_INVALID_COMPRESSION_METHOD;
+}
+
+size_t 
+compress_block_size (enum comp_method comp)
+{
+  switch (comp)
+  {
+    case COMP__KECCAK_1600:
+      return KECCAK_1600_BLOCK_SIZE;
+    case COMP__ARGON_BLAKE2B:
+      return ARGON2_BLOCK_SIZE;
+    case COMP__END:
+      break;
+  }
+
+  return 0;
 }
 

@@ -1,11 +1,11 @@
 
 #include <baghash.h>
 
+#include "blake2b/argon2-core.h"
+#include "compress.h"
 #include "constants.h"
 #include "errors.h"
 #include "options.h"
-
-
 
 int 
 options_validate (struct baghash_options *opts)
@@ -20,22 +20,18 @@ options_validate (struct baghash_options *opts)
   if (!opts->n_neighbors)
     return ERROR_NO_NEIGHBORS;
 
+  if (options_n_blocks (opts) > (1ull << 31) ||
+      compress_block_size (opts->comp) > (1ull << 31) )
+    return ERROR_MCOST_TOO_BIG;
+
   return ERROR_NONE;
 }
 
-size_t
-options_block_size (struct baghash_options *opts)
-{
-  if (opts->comp == COMP__KECCAK_1600)
-    return 100;
-
-  return 0;
-}
 
 size_t
 options_n_blocks (struct baghash_options *opts)
 {
-  const size_t bsize = options_block_size (opts);
+  const size_t bsize = compress_block_size (opts->comp);
   size_t ret = opts->m_cost / bsize;
   return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
 }

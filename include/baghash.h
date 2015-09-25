@@ -4,7 +4,10 @@
 #include <stddef.h>
 
 enum comp_method {
-  COMP__KECCAK_1600 
+  COMP__KECCAK_1600,
+  COMP__ARGON_BLAKE2B,
+
+  COMP__END
 };
 
 enum mix_method {
@@ -28,3 +31,4 @@ int BagHash (void *out, size_t outlen, const void *in, size_t inlen,
     struct baghash_options *opts);
 
 #endif /* __BAGHASH_H__ */
+

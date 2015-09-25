@@ -7,6 +7,7 @@ baghash_env = env.Clone()
 test_srcs = [
     "mutest.c",
     "bitstream_test.c",
+    "compress_test.c",
     "hash_state_test.c",
     "options_test.c"
 ]

@@ -1,5 +1,5 @@
 
-
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -9,12 +9,14 @@
 #include "errors.h"
 #include "hash_state.h"
 
+#define MIN(a, b) ((a < b) ? (a) : (b))
+
 int 
 hash_state_init (struct hash_state *s, struct baghash_options *opts,
     const void *salt, size_t saltlen)
 {
   s->n_blocks = options_n_blocks (opts);
-  s->block_size = options_block_size (opts);
+  s->block_size = compress_block_size (opts->comp);
   s->opts = opts;
 
   // TODO: Make sure this multiplication doesn't overflow (or use 
@@ -88,16 +90,17 @@ hash_state_mix (struct hash_state *s)
     blocks[0] = prev_block;
 
     // For each block, pick random neighbors
-    for (size_t n = 1; n < s->opts->n_neighbors; n++) { 
-
+    for (size_t n = 0; n < s->opts->n_neighbors; n++) { 
       // Get next neighbor
       if ((error = bitstream_rand_int (&s->bstream, &neighbor, s->n_blocks)))
         return error;
       blocks[n] = block_index (s, neighbor);
     }
 
+    assert (s->block_size == compress_block_size (s->opts->comp));
+
     // Hash value of neighbors into temp buffer.
-    if ((error = compress (tmp_block, blocks, s->opts->n_neighbors, s->block_size)))
+    if ((error = compress (tmp_block, blocks, s->opts->n_neighbors, s->opts->comp)))
       return error;
 
     // Copy output of compression function back into the 
@@ -114,8 +117,7 @@ hash_state_extract (struct hash_state *s, void *out, size_t outlen)
 {
   // For one-buffer design, just return the last block of the buffer
   memset (out, 0, outlen);
-  memcpy (out, block_last (s), s->block_size);
+  memcpy (out, block_last (s), MIN(outlen, s->block_size));
   return ERROR_NONE;
 }
-
 

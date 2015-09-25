@@ -10,7 +10,8 @@
 int compress (unsigned char *out, unsigned const char *blocks[],
     unsigned int n_blocks, size_t block_size)
 {
-  //printf("block %llu\n", (long long unsigned int)8*block_size);
+  // TODO: Maybe use Keccak permutation directly?
+  
   assert (8 * block_size == KECCAK_RATE);
   spongeState state;
 

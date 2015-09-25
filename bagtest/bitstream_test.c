@@ -3,7 +3,6 @@
 
 #include "libbaghash/constants.h"
 #include "libbaghash/errors.h"
-#include "libbaghash/util.h"
 
 // For testing static methods
 #include "libbaghash/bitstream.c"

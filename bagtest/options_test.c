@@ -3,7 +3,9 @@
 
 #include "libbaghash/constants.h"
 #include "libbaghash/errors.h"
-#include "libbaghash/util.h"
+#include "libbaghash/options.h"
+
+#include "libbaghash/baghash.c"
 
 void 
 mu_test_validate_parameters__outlen () 
@@ -80,3 +82,4 @@ mu_test_validate_parameters__saltlen ()
   mu_check ( validate_parameters (outlen, inlen, saltlen) == ERROR_SALTLEN_TOO_BIG);
 }
 
+// TODO: Test rest of options

@@ -4,15 +4,17 @@
 #include <stddef.h>
 
 #include "bitstream.h"
+#include "options.h"
 
 struct hash_state {
   size_t n_blocks;
   size_t block_size;
   unsigned char *buffer;
   struct bitstream bstream;
+  struct baghash_options *opts;
 };
 
-int hash_state_init (struct hash_state *s, size_t n_blocks, size_t block_size,
+int hash_state_init (struct hash_state *s, struct baghash_options *opts,
     const void *salt, size_t saltlen);
 
 void hash_state_free (struct hash_state *s);

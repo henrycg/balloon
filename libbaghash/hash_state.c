@@ -10,14 +10,16 @@
 #include "hash_state.h"
 
 int 
-hash_state_init (struct hash_state *s, size_t n_blocks, size_t block_size, 
+hash_state_init (struct hash_state *s, struct baghash_options *opts,
     const void *salt, size_t saltlen)
 {
-  s->n_blocks = n_blocks;
-  s->block_size = block_size;
-  // To avoid an integer overflow, we limit the block size 
-  // memory size
-  s->buffer = malloc (n_blocks * block_size);
+  s->n_blocks = options_n_blocks (opts);
+  s->block_size = options_block_size (opts);
+  s->opts = opts;
+
+  // TODO: Make sure this multiplication doesn't overflow (or use 
+  // calloc or realloc)
+  s->buffer = malloc (s->n_blocks * s->block_size);
 
   int error;
   if ((error = bitstream_init_with_seed (&s->bstream, salt, saltlen)))
@@ -56,9 +58,15 @@ hash_state_fill (struct hash_state *s,
 }
 
 static inline void *
-last_block (const struct hash_state *s)
+block_index (const struct hash_state *s, size_t i)
 {
-  return s->buffer + (s->block_size * (s->n_blocks - 1));
+  return s->buffer + (s->block_size * i);
+}
+
+static inline void *
+block_last (const struct hash_state *s)
+{
+  return block_index (s, s->n_blocks - 1);
 }
 
 int 
@@ -70,26 +78,26 @@ hash_state_mix (struct hash_state *s)
   
   // Simplest design: hash in place with one buffer
   for (size_t i = 0; i < s->n_blocks; i++) {
-    void *cur_block = s->buffer + (s->block_size * i);
+    void *cur_block = block_index (s, i);
 
-    const unsigned char *blocks[N_NEIGHBORS + 1];
+    const unsigned char *blocks[s->opts->n_neighbors + 1];
 
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
-    const unsigned char *prev_block = i ? cur_block - s->block_size : last_block (s);
+    const unsigned char *prev_block = i ? cur_block - s->block_size : block_last (s);
     blocks[0] = prev_block;
 
     // For each block, pick random neighbors
-    for (size_t n = 1; n < N_NEIGHBORS; n++) { 
+    for (size_t n = 1; n < s->opts->n_neighbors; n++) { 
 
       // Get next neighbor
       if ((error = bitstream_rand_int (&s->bstream, &neighbor, s->n_blocks)))
         return error;
-      blocks[n] = &s->buffer[s->block_size * neighbor];
+      blocks[n] = block_index (s, neighbor);
     }
 
     // Hash value of neighbors into temp buffer.
-    if ((error = compress (tmp_block, blocks, N_NEIGHBORS, s->block_size)))
+    if ((error = compress (tmp_block, blocks, s->opts->n_neighbors, s->block_size)))
       return error;
 
     // Copy output of compression function back into the 
@@ -106,7 +114,7 @@ hash_state_extract (struct hash_state *s, void *out, size_t outlen)
 {
   // For one-buffer design, just return the last block of the buffer
   memset (out, 0, outlen);
-  memcpy (out, last_block (s), s->block_size);
+  memcpy (out, block_last (s), s->block_size);
   return ERROR_NONE;
 }
 

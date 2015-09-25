@@ -14,18 +14,17 @@
 // to fill up the buffers initially.
 #define AES_CTR_KEY_LEN 256
 
+// Time cost (in number of passes over memory)
 #define TCOST_MIN 3ull
-#define MCOST_MIN 64ull
+// Memory cost (roughly in number of bytes)
+#define MCOST_MIN (8*1024ull)
+// Minimum number of blocks to use
+#define BLOCKS_MIN (32ull)
 
 // The product of these two values must be less
 // than 2^64 to avoid integer overflow in size_t.
 #define MCOST_MAX (1ull << 48)
 #define BLOCK_SIZE (168)
-
-// Degree of expander graph used in the construction.
-// TODO: Make sure that this number is big enough to 
-// get the expansion we need.
-#define N_NEIGHBORS 20
 
 #endif
 

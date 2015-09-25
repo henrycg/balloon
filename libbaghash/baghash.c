@@ -1,21 +1,21 @@
 
+// TODO: Add license text to every file
+
 #include <assert.h>
 #include <baghash.h>
 
 #include "constants.h"
 #include "errors.h"
 #include "hash_state.h"
-#include "util.h"
-struct {
-  size_t buflen;
-  unsigned char *buffer;
-} hash_state_t;
+#include "options.h"
+
+static int validate_parameters (size_t outlen, size_t inlen, size_t saltlen);
 
 int 
 BagHash (void *out, size_t outlen, 
     const void *in, size_t inlen, 
     const void *salt, size_t saltlen, 
-    unsigned int t_cost, unsigned int m_cost)
+    struct baghash_options *opts)
 {
   int error;
 
@@ -26,15 +26,11 @@ BagHash (void *out, size_t outlen,
   if ((error = validate_parameters (outlen, inlen, saltlen)))
     return error;
 
-  if (t_cost < TCOST_MIN)
-    t_cost = TCOST_MIN;
-  if (m_cost < MCOST_MIN)
-    m_cost = MCOST_MIN;
-  if (m_cost >= MCOST_MAX)
-    return ERROR_MCOST_TOO_BIG;
+  if ((error = options_validate (opts)))
+    return error;
 
   struct hash_state state;
-  if ((error = hash_state_init (&state, m_cost, BLOCK_SIZE, salt, saltlen)))
+  if ((error = hash_state_init (&state, opts, salt, saltlen)))
     return error;
 
   // Fill buffer of m_cost blocks with pseudo-random stuff derived
@@ -43,7 +39,7 @@ BagHash (void *out, size_t outlen,
     return error;
 
   // Mix the buffer t_cost times
-  for (unsigned int i = 0; i < t_cost; i++) {
+  for (unsigned int i = 0; i < opts->t_cost; i++) {
     hash_state_mix (&state);
   }
  
@@ -53,6 +49,27 @@ BagHash (void *out, size_t outlen,
   hash_state_free (&state);
 
   return ERROR_NONE;
+}
+
+static int
+validate_parameters (size_t outlen, size_t inlen, size_t saltlen)
+{
+  if (outlen < OUTLEN_MIN)
+    return ERROR_OUTLEN_TOO_SMALL;
+  if (outlen >= OUTLEN_MAX)
+    return ERROR_OUTLEN_TOO_BIG;
+
+  if (inlen < INLEN_MIN)
+    return ERROR_INLEN_TOO_SMALL;
+  if (inlen >= INLEN_MAX)
+    return ERROR_INLEN_TOO_BIG;
+
+  if (saltlen < SALTLEN_MIN)
+    return ERROR_SALTLEN_TOO_SMALL;
+  if (saltlen >= SALTLEN_MAX)
+    return ERROR_SALTLEN_TOO_BIG;
+
+  return 0;
 }
 
 

@@ -28,8 +28,6 @@ void
 Argon2FillBlock(unsigned char *out, const unsigned char* blockA, const unsigned char* blockB) {
     unsigned char tmp[ARGON2_BLOCK_SIZE];
     unsigned char blockR[ARGON2_BLOCK_SIZE];
-    memset (tmp, 0, ARGON2_BLOCK_SIZE);
-    memset (blockR, 0, ARGON2_BLOCK_SIZE);
     XorBlock (tmp, blockA, blockB);
     memcpy (blockR, tmp, ARGON2_BLOCK_SIZE);
 

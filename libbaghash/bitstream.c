@@ -75,6 +75,8 @@ bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen)
     return ERROR_BITSTREAM_UNINITIALIZED;
 
   memset (out, 0, outlen);
+  // TODO: Change this to use EVP routines, since non-EVP APIs
+  // do not use AES-NI
   AES_ctr128_encrypt (out, out, outlen, &b->key, b->init_vector, 
     b->ecount_buf, &b->n_bytes_encrypted);
   return ERROR_NONE;

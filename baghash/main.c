@@ -125,8 +125,8 @@ main (int argc, char *argv[])
   printf ("NRounds=%lld\n", (long long int)n_rounds);
   printf ("NSpace=%lld\n", (long long int)n_space);
   printf ("Neighbs=%lld\n", (long long int)n_neighbors);
-  printf ("Mix=%d\n", comp);
-  printf ("COMP=%d\n", mix);
+  printf ("Mix=%d\n", mix);
+  printf ("COMP=%d\n", comp);
   printf ("input=%s\n", in);
   printf ("salt=%s\n", salt);
 

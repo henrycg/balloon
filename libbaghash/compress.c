@@ -44,6 +44,8 @@ int
 compress(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
     enum comp_method comp)
 {
+  // TODO: Insert hash metadata (block index and node index) at
+  // each compression function call to prevent state reuse.
   switch (comp) {
     case COMP__KECCAK_1600:
       return compress_keccak (out, blocks, blocks_to_comp);

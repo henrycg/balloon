@@ -10,6 +10,8 @@ enum comp_method {
   COMP__END
 };
 
+// TODO: Add argon mixing method
+// TODO: Add parallel two-buffer mixing method
 enum mix_method {
   MIX__BAGHASH_ONE_BUFFER
 };

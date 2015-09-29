@@ -16,6 +16,10 @@ hash_state_init (struct hash_state *s, struct baghash_options *opts,
     const void *salt, size_t saltlen)
 {
   s->n_blocks = options_n_blocks (opts);
+
+  // Force number of blocks to be even
+  if (s->n_blocks % 2 != 0) s->n_blocks++;
+
   s->block_size = compress_block_size (opts->comp);
   s->opts = opts;
 
@@ -53,6 +57,7 @@ hash_state_fill (struct hash_state *s,
     return error;
 
   const size_t buflen = s->n_blocks * s->block_size;
+
   if ((error = bitstream_fill_buffer (&bits, s->buffer, buflen)))
     return error;
 
@@ -87,6 +92,8 @@ hash_state_mix (struct hash_state *s)
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
     const unsigned char *prev_block = i ? cur_block - s->block_size : block_last (s);
+    // TODO: Current block should go into the compression function
+    // also in the one-buffer design
     blocks[0] = prev_block;
 
     // For each block, pick random neighbors

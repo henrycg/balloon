@@ -1,4 +1,5 @@
 
+//#include <stdio.h>
 #include "mutest.h"
 
 #include "libbaghash/constants.h"
@@ -93,8 +94,8 @@ mu_test_bitstream__rand_byte (void)
   mu_ensure (!bitstream_init (&b));
 
   const unsigned char seed[] = "abcd";
-  mu_ensure (!bitstream_seed_add (&b, seed, 3));
-  mu_ensure (!bitstream_seed_add (&b, seed, 4));
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed) - 1));
 
   unsigned char cA, cB;
   // This call should fail, since seed hasn't been
@@ -116,6 +117,7 @@ mu_test_bitstream__rand_byte (void)
     mu_ensure (!bitstream_rand_byte (&b, &cA));
   }
 
+  mu_ensure (!bitstream_free (&b));
 }
 
 void 
@@ -125,8 +127,8 @@ mu_test_bitstream__fill_buffer (void)
   mu_ensure (!bitstream_init (&b));
 
   const unsigned char seed[] = "abcd";
-  mu_ensure (!bitstream_seed_add (&b, seed, 3));
-  mu_ensure (!bitstream_seed_add (&b, seed, 4));
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed) - 1));
 
   const int blen = 16;
   unsigned char bufA[blen];
@@ -148,6 +150,7 @@ mu_test_bitstream__fill_buffer (void)
   }
 
   mu_check (!equal);
+  mu_ensure (!bitstream_free (&b));
 }
 
 void 
@@ -158,8 +161,8 @@ mu_test_bitstream__fill_buffer_seeds (void)
   mu_ensure (!bitstream_init (&bB));
 
   const unsigned char seed[] = "abcdefg";
-  mu_ensure (!bitstream_seed_add (&bA, seed, 3));
-  mu_ensure (!bitstream_seed_add (&bB, seed, 4));
+  mu_ensure (!bitstream_seed_add (&bA, seed, sizeof (seed)));
+  mu_ensure (!bitstream_seed_add (&bB, seed, sizeof (seed) - 1));
 
   mu_ensure (!bitstream_seed_finalize (&bA));
   mu_ensure (!bitstream_seed_finalize (&bB));
@@ -177,6 +180,8 @@ mu_test_bitstream__fill_buffer_seeds (void)
   }
 
   mu_check (!equal);
+  mu_ensure (!bitstream_free (&bA));
+  mu_ensure (!bitstream_free (&bB));
 }
 
 void 
@@ -186,7 +191,7 @@ mu_test_bitstream__rand_int (void)
   mu_ensure (!bitstream_init (&b));
 
   const unsigned char seed[] = "abcd";
-  mu_ensure (!bitstream_seed_add (&b, seed, 4));
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
   mu_ensure (!bitstream_seed_finalize (&b));
 
   size_t out, max;
@@ -203,6 +208,31 @@ mu_test_bitstream__rand_int (void)
     mu_ensure (out < max);
   }
   mu_ensure (b.n_refreshes < 50);
+  mu_ensure (!bitstream_free (&b));
 }
 
+void 
+mu_test_bitstream__weird_size (void) 
+{
+  struct bitstream b;
+  mu_ensure (!bitstream_init (&b));
+
+  const unsigned char seed[] = "abcde";
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
+  mu_ensure (!bitstream_seed_finalize (&b));
+
+  unsigned char bufSmall[3];
+  unsigned char bufOdd[(1<<8) + 7];
+  unsigned char bufBigOdd[(1<<12) + 7];
+
+
+  mu_ensure (!bitstream_fill_buffer (&b, bufSmall, sizeof (bufSmall)));
+  mu_ensure (!bitstream_fill_buffer (&b, bufOdd, sizeof (bufOdd)));
+  mu_ensure (!bitstream_fill_buffer (&b, bufBigOdd, sizeof (bufBigOdd)));
+
+  //for (int i=0; i < sizeof(bufOdd); i++)
+  //  printf("%d\n", bufOdd[i]);
+
+  mu_ensure (!bitstream_free (&b));
+}
 

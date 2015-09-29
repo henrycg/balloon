@@ -17,7 +17,7 @@ struct hash_state {
 int hash_state_init (struct hash_state *s, struct baghash_options *opts,
     const void *salt, size_t saltlen);
 
-void hash_state_free (struct hash_state *s);
+int hash_state_free (struct hash_state *s);
 
 int hash_state_fill (struct hash_state *s, const void *in, size_t inlen,
     const void *salt, size_t saltlen);

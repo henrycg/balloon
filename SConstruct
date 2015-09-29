@@ -79,13 +79,14 @@ if os.environ.has_key('CXXFLAGS'):
 if os.environ.has_key('LDFLAGS'):
     env.Append(LINKFLAGS = SCons.Util.CLVar(os.environ['LDFLAGS']))
 
-env.Append(CFLAGS = [ "-Wall", "-Werror", "-O3", "-std=c99", "-g"])
+env.Append(CFLAGS = [ "-Wall", "-Werror", "-O3", "-std=c99"])
 
 if "WITH_GPROF" in env and env["WITH_GPROF"]:
     env.Append(CPPFLAGS = [ "-pg" ])
     env.Append(LINKFLAGS = [ "-pg" ])
 
 if env["BUILDTYPE"] == "DEBUG":
+    print "DEBUG MODE!"
     env.Append(CPPFLAGS = [ "-g", "-DDEBUG", "-Wall"])
 elif env["BUILDTYPE"] == "RELEASE":
     env.Append(CPPFLAGS = ["-DNDEBUG", "-Wall" ])

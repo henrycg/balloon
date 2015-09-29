@@ -34,10 +34,15 @@ hash_state_init (struct hash_state *s, struct baghash_options *opts,
   return (s->buffer) ?  ERROR_NONE : ERROR_MALLOC;
 }
 
-void 
+int
 hash_state_free (struct hash_state *s)
 {
+  int error;
+  if ((error = bitstream_free (&s->bstream)))
+    return error;
+
   free (s->buffer);
+  return ERROR_NONE;
 }
 
 int 
@@ -59,6 +64,9 @@ hash_state_fill (struct hash_state *s,
   const size_t buflen = s->n_blocks * s->block_size;
 
   if ((error = bitstream_fill_buffer (&bits, s->buffer, buflen)))
+    return error;
+
+  if ((error = bitstream_free (&bits)))
     return error;
 
   return ERROR_NONE;

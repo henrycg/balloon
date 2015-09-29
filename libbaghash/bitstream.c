@@ -1,9 +1,12 @@
-
+#include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "bitstream.h"
 #include "constants.h"
 #include "errors.h"
+
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 static int refresh_state (struct bitstream *b);
 static int bytes_required (size_t val);
@@ -18,11 +21,35 @@ bitstream_init (struct bitstream *b)
   if (!SHA256_Init(&b->c))
     return ERROR_OPENSSL_HASH;
   b->initialized = false;
-  memset(&b->init_vector, 0, AES_BLOCK_SIZE);
-  memset(&b->ecount_buf, 0, AES_BLOCK_SIZE);
-  b->n_bytes_encrypted = 0;
+
+  EVP_CIPHER_CTX_init (&b->ctx);
+
+  if (!(b->zeros = malloc (BITSTREAM_BUF_SIZE * sizeof (unsigned char))))
+    return ERROR_MALLOC;
+  if (!(b->generated = malloc (BITSTREAM_BUF_SIZE * sizeof (unsigned char))))
+    return ERROR_MALLOC;
+
+  memset (b->zeros, 0, BITSTREAM_BUF_SIZE);
+
   b->genp = NULL;
   b->n_refreshes = 0;
+
+  return ERROR_NONE;
+}
+
+int
+bitstream_free (struct bitstream *b)
+{
+  unsigned char out[AES_BLOCK_SIZE];
+  int outl;
+  if (!EVP_EncryptFinal (&b->ctx, out, &outl))
+    return ERROR_OPENSSL_AES;
+
+  if (!EVP_CIPHER_CTX_cleanup (&b->ctx))
+    return ERROR_OPENSSL_AES;
+
+  free (b->zeros);
+  free (b->generated);
 
   return ERROR_NONE;
 }
@@ -61,24 +88,69 @@ bitstream_seed_finalize (struct bitstream *b)
   if (!SHA256_Final(key_bytes, &b->c))
     return ERROR_OPENSSL_HASH;
 
-  if (AES_set_encrypt_key(key_bytes, AES_CTR_KEY_LEN, &b->key))
+  // TODO: Make the IV depend on the salt?
+  unsigned char iv[AES_BLOCK_SIZE];
+  memset (iv, 0, AES_BLOCK_SIZE);
+
+  if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 0))
+    return ERROR_OPENSSL_AES;
+
+  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_cbc (), key_bytes, iv))
     return ERROR_OPENSSL_AES;
 
   b->initialized = true;
   return ERROR_NONE;
 }
 
+static int 
+encrypt_partial (struct bitstream *b, void *outp, int to_encrypt)
+{
+  int encl;
+  if (to_encrypt % AES_BLOCK_SIZE == 0) {
+    // Encrypt directly into the output buffer
+    if (!EVP_EncryptUpdate (&b->ctx, outp, &encl, b->zeros, to_encrypt))
+      return ERROR_OPENSSL_AES;
+    assert (encl == to_encrypt);
+  } else {
+    // Round up to nearest block size
+    const int aligned_buf = ((to_encrypt / AES_BLOCK_SIZE) + 1) * AES_BLOCK_SIZE;
+
+    assert (to_encrypt < BITSTREAM_BUF_SIZE);
+    assert (aligned_buf < BITSTREAM_BUF_SIZE);
+    assert (aligned_buf >= to_encrypt);
+    assert (aligned_buf % AES_BLOCK_SIZE == 0);
+
+    // Encrypt to a temp buffer and copy the result over
+    unsigned char *buf = malloc (aligned_buf * sizeof (unsigned char));
+    if (!buf)
+      return ERROR_MALLOC;
+    if (!EVP_EncryptUpdate (&b->ctx, buf, &encl, b->zeros, aligned_buf))
+      return ERROR_OPENSSL_AES;
+    assert (encl > to_encrypt);
+    memcpy (outp, buf, to_encrypt);
+    free (buf);
+  }
+
+  return ERROR_NONE;
+}
+
 int 
 bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen)
 {
+  int error;
   if (!b->initialized)
     return ERROR_BITSTREAM_UNINITIALIZED;
 
-  memset (out, 0, outlen);
-  // TODO: Change this to use EVP routines, since non-EVP APIs
-  // do not use AES-NI
-  AES_ctr128_encrypt (out, out, outlen, &b->key, b->init_vector, 
-    b->ecount_buf, &b->n_bytes_encrypted);
+  size_t total = 0;
+  while (total < outlen) {
+    const int to_encrypt = MIN(outlen - total, BITSTREAM_BUF_SIZE);
+    if ((error = encrypt_partial (b, out + total, to_encrypt)))
+      return error;
+
+    total += to_encrypt;
+  }
+
+  assert (((size_t)total) == outlen);
   return ERROR_NONE;
 }
 
@@ -110,7 +182,6 @@ bitstream_rand_byte (struct bitstream *b, unsigned char *out)
   if (!b->initialized)
     return ERROR_BITSTREAM_UNINITIALIZED;
 
-  //printf("gp: %p, %lu, %p\n", b->genp, sizeof(size_t), b->generated);
   if (!b->genp || (b->genp + sizeof (size_t)) >= (b->generated + BITSTREAM_BUF_SIZE)) 
   {
     int error;

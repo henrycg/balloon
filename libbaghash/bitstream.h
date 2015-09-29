@@ -3,27 +3,29 @@
 
 #include <stdbool.h>
 #include <openssl/aes.h>
+#include <openssl/evp.h>
 #include <openssl/sha.h>
 
 // How many bytes to generate with AES at each invocation.
-#define BITSTREAM_BUF_SIZE 4096
+#define BITSTREAM_BUF_SIZE (4096 * (AES_BLOCK_SIZE))
 
 struct bitstream {
   // All of the below are directly passed to OpenSSL
   bool initialized;
   SHA256_CTX c;
-  AES_KEY key;
-  unsigned char init_vector[AES_BLOCK_SIZE];
-  unsigned char ecount_buf[AES_BLOCK_SIZE]; 
-  unsigned int n_bytes_encrypted;
+  EVP_CIPHER_CTX ctx;
+
+  unsigned char *zeros;
+  unsigned char *generated;
 
   unsigned char *genp;
-  unsigned char generated[BITSTREAM_BUF_SIZE];
   unsigned int n_refreshes;
 };
 
 
 int bitstream_init (struct bitstream *b);
+
+int bitstream_free (struct bitstream *b);
 
 int bitstream_init_with_seed (struct bitstream *b, const void *seed, size_t seedlen);
 

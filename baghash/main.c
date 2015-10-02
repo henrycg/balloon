@@ -9,6 +9,7 @@
 int
 main (int argc, char *argv[])
 {
+  int xor_then_hash = false;
   long long int n_rounds = 3;
   long long int n_space = (1024*1024);
   long long int n_neighbors = 16;
@@ -21,17 +22,19 @@ main (int argc, char *argv[])
         {
           /* These options don’t set a flag.
              We distinguish them by their indices. */
+          {"xor-then-hash", no_argument, &xor_then_hash, 1},
           {"comp",  required_argument, 0, 'c'},
           {"mix",  required_argument, 0, 'm'},
           {"space",  required_argument, 0, 's'},
           {"rounds",  required_argument, 0, 'r'},
+          {"neighbors",  required_argument, 0, 'n'},
           {"neighbors",  required_argument, 0, 'n'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      char c = getopt_long (argc, argv, "hc:m:s:r:n:",
+      char c = getopt_long (argc, argv, "xc:m:s:r:n:",
                        long_options, &option_index);
       char *end;
 
@@ -51,11 +54,16 @@ main (int argc, char *argv[])
           printf ("\n");
           break;
 
+        case 'x':
+          xor_then_hash = true;
+          break; 
         case 'c':
-          if (!strcmp (optarg, "sha3"))
+          if (!strcmp (optarg, "keccak"))
             comp = COMP__KECCAK_1600;
           else if (!strcmp (optarg, "blake2b"))
             comp = COMP__ARGON_BLAKE2B;
+          else if (!strcmp (optarg, "sha512"))
+            comp = COMP__SHA_512;
           else {
             fprintf (stderr, "Invalid compression method\n");
             return -1;
@@ -122,13 +130,14 @@ main (int argc, char *argv[])
   char *in = argv[optind];
   char *salt = argv[optind+1];
 
-  printf ("NRounds=%lld\n", (long long int)n_rounds);
-  printf ("NSpace=%lld\n", (long long int)n_space);
-  printf ("Neighbs=%lld\n", (long long int)n_neighbors);
-  printf ("Mix=%d\n", mix);
-  printf ("COMP=%d\n", comp);
-  printf ("input=%s\n", in);
-  printf ("salt=%s\n", salt);
+  printf ("NRounds        = %lld\n", (long long int)n_rounds);
+  printf ("NSpace         = %lld\n", (long long int)n_space);
+  printf ("Neighbs        = %lld\n", (long long int)n_neighbors);
+  printf ("Mix            = %d\n", mix);
+  printf ("Compression    = %d\n", comp);
+  printf ("XOR-then-hash  = %d\n", xor_then_hash);
+  printf ("Input          = %s\n", in);
+  printf ("Salt           = %s\n", salt);
 
   struct baghash_options opts;
   opts.m_cost = n_space;
@@ -136,6 +145,7 @@ main (int argc, char *argv[])
   opts.n_neighbors = n_neighbors;
   opts.comp = comp;
   opts.mix = mix;
+  opts.xor_then_hash = xor_then_hash;
 
   unsigned char out[32];
   int error;

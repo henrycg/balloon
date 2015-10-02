@@ -13,6 +13,9 @@
 int compress(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
     enum comp_method comp);
 
+int compress_xor(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+    enum comp_method comp);
+
 size_t compress_block_size (enum comp_method comp);
 
 #endif

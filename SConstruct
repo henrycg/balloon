@@ -140,4 +140,5 @@ SConscript('blake2b/SConscript', variant_dir='build/blake2b')
 if env["BUILD_BINARIES"]:
     SConscript('baghash/SConscript', variant_dir='build/baghash')
     SConscript('bagtest/SConscript', variant_dir='build/bagtest')
+    SConscript('matgen/SConscript', variant_dir='build/matgen')
 

@@ -1,11 +1,13 @@
 #ifndef __BAGHASH_H__
 #define __BAGHASH_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 
 enum comp_method {
   COMP__KECCAK_1600,
   COMP__ARGON_BLAKE2B,
+  COMP__SHA_512,
 
   COMP__END
 };
@@ -19,6 +21,8 @@ enum mix_method {
 struct baghash_options {
   unsigned int m_cost;
   unsigned int t_cost;
+
+  bool xor_then_hash;
 
   // Degree of expander graph used in the construction.
   // TODO: Make sure that this number is big enough to 

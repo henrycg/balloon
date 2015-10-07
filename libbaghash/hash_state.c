@@ -115,8 +115,13 @@ hash_state_mix (struct hash_state *s)
     assert (s->block_size == compress_block_size (s->opts->comp));
 
     // Hash value of neighbors into temp buffer.
-    if ((error = compress (tmp_block, blocks, s->opts->n_neighbors, s->opts->comp)))
-      return error;
+    if (s->opts->xor_then_hash) {
+      if ((error = compress_xor (tmp_block, blocks, s->opts->n_neighbors, s->opts->comp)))
+        return error;
+    } else {
+      if ((error = compress (tmp_block, blocks, s->opts->n_neighbors, s->opts->comp)))
+        return error;
+    }
 
     // Copy output of compression function back into the 
     // big memory buffer.

@@ -9,12 +9,13 @@ test_srcs = [
     "bitstream_test.c",
     "compress_test.c",
     "hash_state_test.c",
-    "options_test.c"
+    "matgen_test.c",
+    "options_test.c",
 ]
 
 libs = [
-  "baghash",
-  "crypto"
+  "libbaghash",
+  "libmatgen",
 ]
 
 # Run the mutest script to generate the test harness code

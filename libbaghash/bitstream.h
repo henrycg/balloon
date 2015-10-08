@@ -45,4 +45,9 @@ int bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen);
  */
 int bitstream_rand_int (struct bitstream *b, size_t *out, size_t max);
 
+/**
+ * Get a single char.
+ */
+int bitstream_rand_byte (struct bitstream *b, unsigned char *out);
+
 #endif

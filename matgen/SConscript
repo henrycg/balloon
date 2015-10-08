@@ -5,13 +5,13 @@ Import('env')
 baghash_env = env.Clone()
 
 src = [
-    "main.c",
+  "sample_row.cpp"
 ]
 
 libs = [
-  "crypto", 
 ]
 
+baghash_env.Append(CPPDEFINES = ["Boost_USE_STATIC_LIBS"])
 baghash_env.Append(LIBS = libs)
-baghash_env.Program("matgen", src)
+baghash_env.StaticLibrary("matgen", src)
 

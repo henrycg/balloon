@@ -58,7 +58,8 @@ opts.AddVariables(
 
 env = Environment(options = opts,
                   tools = ['default'],
-                  ENV = os.environ)
+                  ENV = os.environ,
+                  LINK = "g++")
 Help(opts.GenerateHelpText(env))
 
 # Copy environment variables
@@ -122,23 +123,27 @@ conf.Finish()
 Export('env')
 
 # Set compile options for binaries
-env.Append(LIBS = ["baghash"], LIBPATH = ['#build/libbaghash', '#build/keccak', '#build/blake2b'])
+env.Append(LIBS = ["baghash"], \
+  LIBPATH = ['#build/libbaghash', 
+            '#build/keccak', 
+            '#build/matgen',
+            '#build/blake2b'])
 
 # Add header files
 env.Append(CPPPATH = ["#include", "#."])
 
 env.Append(CPPFLAGS = ['-pthread'])
-env.Append(LIBS = ["pthread"])
+env.Append(LIBS = ["crypto", "pthread", "m", "stdc++"])
 
 
 # libbaghash
 SConscript('libbaghash/SConscript', variant_dir='build/libbaghash')
 SConscript('keccak/SConscript', variant_dir='build/keccak')
 SConscript('blake2b/SConscript', variant_dir='build/blake2b')
+SConscript('matgen/SConscript', variant_dir='build/matgen')
 
 # Utilities
 if env["BUILD_BINARIES"]:
     SConscript('baghash/SConscript', variant_dir='build/baghash')
     SConscript('bagtest/SConscript', variant_dir='build/bagtest')
-    SConscript('matgen/SConscript', variant_dir='build/matgen')
 

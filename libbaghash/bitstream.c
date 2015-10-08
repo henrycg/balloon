@@ -13,7 +13,6 @@ static int bytes_required (size_t val);
 static int bits_in_int (size_t val);
 static size_t bytes_to_int (const unsigned char *bytes, int n_bytes);
 static int generate_few_bytes (struct bitstream *b, unsigned char *out, size_t outlen);
-static int bitstream_rand_byte (struct bitstream *b, unsigned char *out);
 
 int
 bitstream_init (struct bitstream *b)
@@ -176,7 +175,7 @@ bitstream_rand_int (struct bitstream *b, size_t *out, size_t max)
   return ERROR_NONE;
 }
 
-static int
+int
 bitstream_rand_byte (struct bitstream *b, unsigned char *out)
 {
   if (!b->initialized)

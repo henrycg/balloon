@@ -5,7 +5,7 @@ Import('env')
 baghash_env = env.Clone()
 
 src = [
-  "sample_row.cpp"
+  "matrix_gen.cpp"
 ]
 
 libs = [

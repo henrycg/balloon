@@ -2,7 +2,7 @@
 #include "mutest.h"
 
 #include "libbaghash/bitstream.h"
-#include "matgen/sample_row.h"
+#include "matgen/matrix_gen.h"
 
 void 
 mu_test_matgen_sample_row (void) {
@@ -19,12 +19,17 @@ mu_test_matgen_sample_row (void) {
   mu_ensure (bitstream_rand_byte (&b, &cA));
   mu_ensure (!bitstream_seed_finalize (&b));
   mu_ensure (!bitstream_rand_byte (&b, &cA));
-  
-  size_t out;
+
   size_t nrows = 100;
-  mu_ensure (!nonzero_elms_in_row (&b, &out, nrows, 0));
+  struct matrix_generator *g = matrix_generator_init (&b, nrows, 10);  
+  size_t out;
+  for (int i=0; i<100; i++) {
+    mu_ensure (!matrix_generator_row_weight (g, &out));
+    //printf ("Out=%d\n", (int)out);
+  }
   mu_ensure (out > 0);
 
+  matrix_generator_free (g);
   mu_ensure (!bitstream_free (&b));
 }
 

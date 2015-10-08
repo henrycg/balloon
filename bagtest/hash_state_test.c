@@ -14,6 +14,7 @@ init_options (struct baghash_options *opts)
   opts->n_neighbors = 20;
   opts->comp = COMP__KECCAK_1600;
   opts->mix = MIX__BAGHASH_ONE_BUFFER;
+  opts->xor_then_hash = 0;
 }
 
 void 

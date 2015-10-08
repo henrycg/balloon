@@ -10,6 +10,9 @@
 int 
 options_validate (struct baghash_options *opts)
 {
+  // TODO: Make sure choice of compression function, mix function,
+  // and other parameters is sane.
+
   if (opts->t_cost < TCOST_MIN)
     opts->t_cost = TCOST_MIN;
   if (opts->m_cost < MCOST_MIN)
@@ -21,7 +24,7 @@ options_validate (struct baghash_options *opts)
     return ERROR_NO_NEIGHBORS;
 
   if (options_n_blocks (opts) > (1ull << 31) ||
-      compress_block_size (opts->comp) > (1ull << 31) )
+      compress_block_size (opts->comp_opts.comp) > (1ull << 31) )
     return ERROR_MCOST_TOO_BIG;
 
   return ERROR_NONE;
@@ -31,7 +34,7 @@ options_validate (struct baghash_options *opts)
 size_t
 options_n_blocks (struct baghash_options *opts)
 {
-  const size_t bsize = compress_block_size (opts->comp);
+  const size_t bsize = compress_block_size (opts->comp_opts.comp);
   size_t ret = opts->m_cost / bsize;
   return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
 }

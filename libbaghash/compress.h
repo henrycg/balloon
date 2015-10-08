@@ -1,6 +1,7 @@
 #ifndef __COMPRESS_H__
 #define __COMPRESS_H__
 
+#include <baghash.h>
 #include "constants.h"
 #include "hash_state.h"
 
@@ -11,10 +12,7 @@
 
 
 int compress(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
-    enum comp_method comp);
-
-int compress_xor(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
-    enum comp_method comp);
+    struct comp_options *opts);
 
 size_t compress_block_size (enum comp_method comp);
 

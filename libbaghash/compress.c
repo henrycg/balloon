@@ -10,6 +10,24 @@
 #include "compress.h"
 #include "errors.h"
 
+static int compress_hash (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+    enum comp_method meth);
+static int compress_xor (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+    enum comp_method meth);
+
+int 
+compress (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+    struct comp_options *opts)
+{
+  switch (opts->comb) {
+    case COMB__HASH:
+      return compress_hash (out, blocks, blocks_to_comp, opts->comp);
+    case COMB__XOR:
+      return compress_xor (out, blocks, blocks_to_comp, opts->comp);
+    default:
+      return ERROR_INVALID_COMPRESSION_METHOD;
+  }
+}
 
 static void
 xor_block (unsigned char *out, unsigned const char *blockA, unsigned const char *blockB,
@@ -68,8 +86,8 @@ compress_sha512 (unsigned char *out, unsigned const char *blocks[], unsigned int
   return ERROR_NONE;
 }
 
-int 
-compress(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+static int 
+compress_hash (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
     enum comp_method comp)
 {
   // TODO: Insert hash metadata (block index and node index) at
@@ -88,8 +106,9 @@ compress(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_
   return ERROR_INVALID_COMPRESSION_METHOD;
 }
 
-int 
-compress_xor(unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+
+static int 
+compress_xor (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
     enum comp_method comp)
 {
   // XOR
@@ -101,7 +120,7 @@ compress_xor(unsigned char *out, unsigned const char *blocks[], unsigned int blo
   }
 
   unsigned const char *to_hash[1] = { buf };
-  return compress(out, to_hash, 1, comp);
+  return compress_hash (out, to_hash, 1, comp);
 }
 
 size_t 

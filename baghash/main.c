@@ -9,11 +9,14 @@
 int
 main (int argc, char *argv[])
 {
+  struct comp_options comp_opts;
+  comp_opts.comp = 0;
+  comp_opts.comb = 0;
+
   int xor_then_hash = false;
   long long int n_rounds = 3;
   long long int n_space = (1024*1024);
   long long int n_neighbors = 16;
-  enum comp_method comp = 0;
   enum mix_method mix = 0;
 
   while (1)
@@ -59,11 +62,11 @@ main (int argc, char *argv[])
           break; 
         case 'c':
           if (!strcmp (optarg, "keccak"))
-            comp = COMP__KECCAK_1600;
+            comp_opts.comp = COMP__KECCAK_1600;
           else if (!strcmp (optarg, "blake2b"))
-            comp = COMP__ARGON_BLAKE2B;
+            comp_opts.comp = COMP__ARGON_BLAKE2B;
           else if (!strcmp (optarg, "sha512"))
-            comp = COMP__SHA_512;
+            comp_opts.comp = COMP__SHA_512;
           else {
             fprintf (stderr, "Invalid compression method\n");
             return -1;
@@ -71,8 +74,12 @@ main (int argc, char *argv[])
           break;
 
         case 'm':
-          if (!strcmp (optarg, "onebuffer"))
-            mix = MIX__BAGHASH_ONE_BUFFER;
+          if (!strcmp (optarg, "single"))
+            mix = MIX__BAGHASH_SINGLE_BUFFER;
+          if (!strcmp (optarg, "double"))
+            mix = MIX__BAGHASH_DOUBLE_BUFFER;
+          if (!strcmp (optarg, "argon2"))
+            mix = MIX__ARGON2_UNIFORM;
           else {
             fprintf (stderr, "Invalid mix method\n");
             return -1;
@@ -134,18 +141,18 @@ main (int argc, char *argv[])
   printf ("NSpace         = %lld\n", (long long int)n_space);
   printf ("Neighbs        = %lld\n", (long long int)n_neighbors);
   printf ("Mix            = %d\n", mix);
-  printf ("Compression    = %d\n", comp);
+  printf ("Compression    = %d\n", comp_opts.comp);
   printf ("XOR-then-hash  = %d\n", xor_then_hash);
   printf ("Input          = %s\n", in);
   printf ("Salt           = %s\n", salt);
 
+  comp_opts.comb = xor_then_hash ? COMB__XOR : COMB__HASH;
   struct baghash_options opts;
   opts.m_cost = n_space;
   opts.t_cost = n_rounds;
   opts.n_neighbors = n_neighbors;
-  opts.comp = comp;
+  opts.comp_opts = comp_opts;
   opts.mix = mix;
-  opts.xor_then_hash = xor_then_hash;
 
   unsigned char out[32];
   int error;

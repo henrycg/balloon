@@ -8,8 +8,49 @@
 #include "compress.h"
 #include "errors.h"
 #include "hash_state.h"
+#include "hash_state_argon2.h"
+#include "hash_state_single.h"
 
 #define MIN(a, b) ((a < b) ? (a) : (b))
+
+void *
+block_index (const struct hash_state *s, size_t i)
+{
+  return s->buffer + (s->block_size * i);
+}
+
+void *
+block_last (const struct hash_state *s)
+{
+  return block_index (s, s->n_blocks - 1);
+}
+
+static int
+init_func_pointers (struct hash_state *s)
+{
+  switch (s->opts->mix) {
+    case MIX__BAGHASH_SINGLE_BUFFER:
+      s->f_init = hash_state_single_init;
+      s->f_free = hash_state_single_free;
+      s->f_fill = hash_state_single_fill;
+      s->f_mix = hash_state_single_mix;
+      s->f_extract = hash_state_single_extract;
+      break;
+
+    case MIX__ARGON2_UNIFORM:
+      s->f_init = hash_state_argon2_init;
+      s->f_free = hash_state_argon2_free;
+      s->f_fill = hash_state_argon2_fill;
+      s->f_mix = hash_state_argon2_mix;
+      s->f_extract = hash_state_argon2_extract;
+      break;
+
+    default:
+      return ERROR_INVALID_MIX_METHOD;
+  } 
+
+  return ERROR_NONE;
+}
 
 int 
 hash_state_init (struct hash_state *s, struct baghash_options *opts,
@@ -20,7 +61,7 @@ hash_state_init (struct hash_state *s, struct baghash_options *opts,
   // Force number of blocks to be even
   if (s->n_blocks % 2 != 0) s->n_blocks++;
 
-  s->block_size = compress_block_size (opts->comp);
+  s->block_size = compress_block_size (opts->comp_opts.comp);
   s->opts = opts;
 
   // TODO: Make sure this multiplication doesn't overflow (or use 
@@ -28,10 +69,14 @@ hash_state_init (struct hash_state *s, struct baghash_options *opts,
   s->buffer = malloc (s->n_blocks * s->block_size);
 
   int error;
+  if ((error = init_func_pointers (s)))
+    return error;
   if ((error = bitstream_init_with_seed (&s->bstream, salt, saltlen)))
     return error;
+  if ((error = s->f_init (s, opts, salt, saltlen)))
+    return error;
 
-  return (s->buffer) ?  ERROR_NONE : ERROR_MALLOC;
+  return (s->buffer) ? ERROR_NONE : ERROR_MALLOC;
 }
 
 int
@@ -40,13 +85,35 @@ hash_state_free (struct hash_state *s)
   int error;
   if ((error = bitstream_free (&s->bstream)))
     return error;
-
+  if ((error = s->f_free (s)))
+    return error;
   free (s->buffer);
   return ERROR_NONE;
 }
 
 int 
 hash_state_fill (struct hash_state *s, 
+    const void *in, size_t inlen,
+    const void *salt, size_t saltlen)
+{
+  return s->f_fill (s, in, inlen, salt, saltlen);
+}
+
+int 
+hash_state_mix (struct hash_state *s)
+{
+  return s->f_mix (s);
+}
+
+int 
+hash_state_extract (struct hash_state *s, void *out, size_t outlen)
+{
+  return s->f_extract (s, out, outlen);
+}
+
+int 
+fill_bytes_from_strings (struct hash_state *s, 
+    unsigned char *block_start, size_t bytes_to_fill,
     const void *in, size_t inlen,
     const void *salt, size_t saltlen)
 {
@@ -60,84 +127,11 @@ hash_state_fill (struct hash_state *s,
     return error;
   if ((error = bitstream_seed_finalize (&bits)))
     return error;
-
-  const size_t buflen = s->n_blocks * s->block_size;
-
-  if ((error = bitstream_fill_buffer (&bits, s->buffer, buflen)))
+  if ((error = bitstream_fill_buffer (&bits, block_start, bytes_to_fill)))
     return error;
-
   if ((error = bitstream_free (&bits)))
     return error;
 
-  return ERROR_NONE;
-}
-
-static inline void *
-block_index (const struct hash_state *s, size_t i)
-{
-  return s->buffer + (s->block_size * i);
-}
-
-static inline void *
-block_last (const struct hash_state *s)
-{
-  return block_index (s, s->n_blocks - 1);
-}
-
-int 
-hash_state_mix (struct hash_state *s)
-{
-  int error;
-  unsigned char tmp_block[s->block_size];
-  size_t neighbor;
-  
-  // Simplest design: hash in place with one buffer
-  for (size_t i = 0; i < s->n_blocks; i++) {
-    void *cur_block = block_index (s, i);
-
-    const unsigned char *blocks[s->opts->n_neighbors + 1];
-
-    // Hash in the previous block (or the last block if this is
-    // the first block of the buffer).
-    const unsigned char *prev_block = i ? cur_block - s->block_size : block_last (s);
-    // TODO: Current block should go into the compression function
-    // also in the one-buffer design
-    blocks[0] = prev_block;
-
-    // For each block, pick random neighbors
-    for (size_t n = 0; n < s->opts->n_neighbors; n++) { 
-      // Get next neighbor
-      if ((error = bitstream_rand_int (&s->bstream, &neighbor, s->n_blocks)))
-        return error;
-      blocks[n] = block_index (s, neighbor);
-    }
-
-    assert (s->block_size == compress_block_size (s->opts->comp));
-
-    // Hash value of neighbors into temp buffer.
-    if (s->opts->xor_then_hash) {
-      if ((error = compress_xor (tmp_block, blocks, s->opts->n_neighbors, s->opts->comp)))
-        return error;
-    } else {
-      if ((error = compress (tmp_block, blocks, s->opts->n_neighbors, s->opts->comp)))
-        return error;
-    }
-
-    // Copy output of compression function back into the 
-    // big memory buffer.
-    memcpy (cur_block, tmp_block, s->block_size);
-    //printf("copy %p => %p\n", s->buffer + (s->block_size * i), tmp_block);
-  }
-
-  return ERROR_NONE;
-}
-
-int 
-hash_state_extract (struct hash_state *s, void *out, size_t outlen)
-{
-  // For one-buffer design, just return the last block of the buffer
-  memset (out, 0, outlen);
-  memcpy (out, block_last (s), MIN(outlen, s->block_size));
   return ERROR_NONE;
 }
 

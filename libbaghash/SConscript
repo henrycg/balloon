@@ -7,6 +7,8 @@ src = [
     "bitstream.c",
     "compress.c",
     "hash_state.c",
+    "hash_state_argon2.c",
+    "hash_state_single.c",
     "options.c",
 ]
 

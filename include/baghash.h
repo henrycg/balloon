@@ -12,23 +12,39 @@ enum comp_method {
   COMP__END
 };
 
+enum comb_method {
+  COMB__HASH,
+  COMB__XOR,
+
+  COMB__END
+};
+
+struct comp_options {
+  enum comp_method comp;
+  enum comb_method comb;
+};
+
 // TODO: Add argon mixing method
 // TODO: Add parallel two-buffer mixing method
+#define MIX__BAGHASH_DOUBLE_BUFFER 12
 enum mix_method {
-  MIX__BAGHASH_ONE_BUFFER
+  MIX__BAGHASH_SINGLE_BUFFER,
+  //MIX__BAGHASH_DOUBLE_BUFFER,
+
+  MIX__ARGON2_UNIFORM,
+
+  MIX__END
 };
 
 struct baghash_options {
   unsigned int m_cost;
   unsigned int t_cost;
 
-  bool xor_then_hash;
-
   // Degree of expander graph used in the construction.
   // TODO: Make sure that this number is big enough to 
   // get the expansion we need.
   unsigned int n_neighbors;
-  enum comp_method comp;
+  struct comp_options comp_opts;
   enum mix_method mix;
 };
 

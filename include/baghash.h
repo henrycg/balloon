@@ -24,12 +24,10 @@ struct comp_options {
   enum comb_method comb;
 };
 
-// TODO: Add argon mixing method
 // TODO: Add parallel two-buffer mixing method
-#define MIX__BAGHASH_DOUBLE_BUFFER 12
 enum mix_method {
   MIX__BAGHASH_SINGLE_BUFFER,
-  //MIX__BAGHASH_DOUBLE_BUFFER,
+  MIX__BAGHASH_DOUBLE_BUFFER,
 
   MIX__ARGON2_UNIFORM,
 
@@ -42,7 +40,9 @@ struct baghash_options {
 
   // Degree of expander graph used in the construction.
   // TODO: Make sure that this number is big enough to 
-  // get the expansion we need.
+  //       get the expansion we need.
+  // TODO: Set n_neighbors automatically and give warning
+  //       when user overrides the default.
   unsigned int n_neighbors;
   struct comp_options comp_opts;
   enum mix_method mix;

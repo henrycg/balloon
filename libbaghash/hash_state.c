@@ -9,6 +9,7 @@
 #include "errors.h"
 #include "hash_state.h"
 #include "hash_state_argon2.h"
+#include "hash_state_double.h"
 #include "hash_state_single.h"
 
 #define MIN(a, b) ((a < b) ? (a) : (b))
@@ -35,6 +36,14 @@ init_func_pointers (struct hash_state *s)
       s->f_fill = hash_state_single_fill;
       s->f_mix = hash_state_single_mix;
       s->f_extract = hash_state_single_extract;
+      break;
+
+    case MIX__BAGHASH_DOUBLE_BUFFER:
+      s->f_init = hash_state_double_init;
+      s->f_free = hash_state_double_free;
+      s->f_fill = hash_state_double_fill;
+      s->f_mix = hash_state_double_mix;
+      s->f_extract = hash_state_double_extract;
       break;
 
     case MIX__ARGON2_UNIFORM:

@@ -9,8 +9,6 @@
 #include "errors.h"
 #include "hash_state.h"
 
-#define MIN(a, b) ((a < b) ? (a) : (b))
-
 struct argon2_data {
   size_t round_count;
 };

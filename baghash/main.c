@@ -31,7 +31,6 @@ main (int argc, char *argv[])
           {"space",  required_argument, 0, 's'},
           {"rounds",  required_argument, 0, 'r'},
           {"neighbors",  required_argument, 0, 'n'},
-          {"neighbors",  required_argument, 0, 'n'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
@@ -76,9 +75,9 @@ main (int argc, char *argv[])
         case 'm':
           if (!strcmp (optarg, "single"))
             mix = MIX__BAGHASH_SINGLE_BUFFER;
-          if (!strcmp (optarg, "double"))
+          else if (!strcmp (optarg, "double"))
             mix = MIX__BAGHASH_DOUBLE_BUFFER;
-          if (!strcmp (optarg, "argon2"))
+          else if (!strcmp (optarg, "argon2"))
             mix = MIX__ARGON2_UNIFORM;
           else {
             fprintf (stderr, "Invalid mix method\n");

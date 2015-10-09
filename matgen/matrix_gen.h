@@ -2,6 +2,7 @@
 #define __MATRIX_GEN_H__
 
 #include <stdlib.h>
+#include "libbaghash/bitstream.h"
 
 struct matrix_generator *
 matrix_generator_init (struct bitstream *b, size_t n_rows, int c);

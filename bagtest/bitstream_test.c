@@ -236,3 +236,45 @@ mu_test_bitstream__weird_size (void)
   mu_ensure (!bitstream_free (&b));
 }
 
+void 
+mu_test_bitstream__rand_ints (void) 
+{
+  struct bitstream b;
+  mu_ensure (!bitstream_init (&b));
+
+  const unsigned char seed[] = "abcd";
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
+  mu_ensure (!bitstream_seed_finalize (&b));
+
+  size_t outs[15];
+  size_t max = 15ull;
+  mu_ensure (!bitstream_rand_ints (&b, outs, 15, max, true));
+  for (int i=0; i<15; i++) {
+    bool found = false;
+    for (int j=0; j<15; j++) {
+      if (outs[i] == j) found = true;
+    }
+    mu_check (found);
+  }
+
+  mu_ensure (!bitstream_free (&b));
+}
+
+void 
+mu_test_bitstream__rand_ints_small (void) 
+{
+  struct bitstream b;
+  mu_ensure (!bitstream_init (&b));
+
+  const unsigned char seed[] = "abcd";
+  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
+  mu_ensure (!bitstream_seed_finalize (&b));
+
+  size_t outs[15];
+  size_t max = 3ull;
+  mu_ensure (bitstream_rand_ints (&b, outs, 15, max, true) == ERROR_BITSTREAM_MAX_TOO_SMALL);
+  mu_ensure (!bitstream_rand_ints (&b, outs, 15, 16, true));
+
+  mu_ensure (!bitstream_free (&b));
+}
+

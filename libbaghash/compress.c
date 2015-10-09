@@ -115,12 +115,12 @@ compress_xor (unsigned char *out, unsigned const char *blocks[], unsigned int bl
   const size_t block_size = compress_block_size (comp);
   unsigned char buf[block_size];
   memset (buf, 0, sizeof (buf));
-  for (unsigned int i = 0; i < blocks_to_comp; i++) {
+  for (unsigned int i = 1; i < blocks_to_comp; i++) {
     xor_block (buf, buf, blocks[i], block_size);
   }
 
-  unsigned const char *to_hash[1] = { buf };
-  return compress_hash (out, to_hash, 1, comp);
+  unsigned const char *to_hash[2] = { blocks[0], buf };
+  return compress_hash (out, to_hash, 2, comp);
 }
 
 size_t 

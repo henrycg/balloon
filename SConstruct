@@ -51,6 +51,7 @@ opts.AddVariables(
     ("NUMCPUS", "Number of CPUs to use for build (0 means auto)", 0, None, int),
     EnumVariable("BUILDTYPE", "Build type", "RELEASE", ["RELEASE", "DEBUG", "PERF"]),
     BoolVariable("VERBOSE", "Show full build information", 0),
+    BoolVariable("WITH_GPROF", "Enable profiling", 0),
     BoolVariable("BUILD_BINARIES", "Build binaries", 1),
     PathVariable("PREFIX", "Installation target directory", "/usr/local/bin/", PathVariable.PathAccept),
     PathVariable("DESTDIR", "The root directory to install into. Useful mainly for binary package building", "", PathVariable.PathAccept),
@@ -83,6 +84,8 @@ if os.environ.has_key('LDFLAGS'):
 env.Append(CFLAGS = [ "-Wall", "-Werror", "-O3", "-std=c99"])
 
 if "WITH_GPROF" in env and env["WITH_GPROF"]:
+    print "With gprof"
+    env.Append(CFLAGS = [ "-pg" ])
     env.Append(CPPFLAGS = [ "-pg" ])
     env.Append(LINKFLAGS = [ "-pg" ])
 

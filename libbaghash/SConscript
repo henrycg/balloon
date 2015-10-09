@@ -16,6 +16,7 @@ src = [
 libs = [
   "blake2b",
   "keccak",
+  "matgen",
 ]
 
 env.Append(LIBS = libs)

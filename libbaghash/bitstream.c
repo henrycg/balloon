@@ -175,6 +175,35 @@ bitstream_rand_int (struct bitstream *b, size_t *out, size_t max)
   return ERROR_NONE;
 }
 
+static bool 
+is_duplicate (size_t *outs, size_t idx)
+{
+  // TODO: Use a sorted list here to speed up the search.
+  for (size_t i = 0; i < idx; i++) {
+    if (outs[i] == outs[idx]) return true;
+  }
+
+  return false;
+}
+
+int 
+bitstream_rand_ints (struct bitstream *b, size_t *outs, size_t outlen, 
+  size_t max, bool distinct)
+{
+  if (distinct && max < outlen)
+    return ERROR_BITSTREAM_MAX_TOO_SMALL;
+
+  int error;
+  for (size_t i = 0; i < outlen; i++) {
+    do {
+    if ((error =  bitstream_rand_int (b, &outs[i], max)))
+      return error;
+    } while (distinct && is_duplicate (outs, i));
+  }
+
+  return ERROR_NONE;
+}
+
 int
 bitstream_rand_byte (struct bitstream *b, unsigned char *out)
 {

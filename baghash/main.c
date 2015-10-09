@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "libbaghash/options.h"
+
 int
 main (int argc, char *argv[])
 {
@@ -14,9 +16,9 @@ main (int argc, char *argv[])
   comp_opts.comb = 0;
 
   int xor_then_hash = false;
-  long long int n_rounds = 3;
+  long long int n_rounds = 8;
   long long int n_space = (1024*1024);
-  long long int n_neighbors = 16;
+  long long int n_neighbors = 0;
   enum mix_method mix = 0;
 
   while (1)
@@ -136,14 +138,6 @@ main (int argc, char *argv[])
   char *in = argv[optind];
   char *salt = argv[optind+1];
 
-  printf ("NRounds        = %lld\n", (long long int)n_rounds);
-  printf ("NSpace         = %lld\n", (long long int)n_space);
-  printf ("Neighbs        = %lld\n", (long long int)n_neighbors);
-  printf ("Mix            = %d\n", mix);
-  printf ("Compression    = %d\n", comp_opts.comp);
-  printf ("XOR-then-hash  = %d\n", xor_then_hash);
-  printf ("Input          = %s\n", in);
-  printf ("Salt           = %s\n", salt);
 
   comp_opts.comb = xor_then_hash ? COMB__XOR : COMB__HASH;
   struct baghash_options opts;
@@ -152,6 +146,22 @@ main (int argc, char *argv[])
   opts.n_neighbors = n_neighbors;
   opts.comp_opts = comp_opts;
   opts.mix = mix;
+
+  const unsigned int rec_neighbs = options_n_neighbors (&opts);
+  if (n_neighbors && n_neighbors != rec_neighbs) {
+    fprintf (stderr, "Warning: using unrecommended n_neighbors param!\n");
+  }
+  if (!n_neighbors)
+    opts.n_neighbors = rec_neighbs;
+
+  printf ("NRounds        = %lld\n", (long long int)opts.t_cost);
+  printf ("NSpace         = %lld\n", (long long int)opts.m_cost);
+  printf ("Neighbs        = %lld\n", (long long int)opts.n_neighbors);
+  printf ("Mix            = %d\n", opts.mix);
+  printf ("Compression    = %d\n", opts.comp_opts.comp);
+  printf ("XOR-then-hash  = %d\n", opts.comp_opts.comb);
+  printf ("Input          = %s\n", in);
+  printf ("Salt           = %s\n", salt);
 
   unsigned char out[32];
   int error;

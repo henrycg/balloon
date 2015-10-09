@@ -25,7 +25,7 @@ matrix_generator_init (struct bitstream *b, size_t n_rows, int c)
   struct matrix_generator *m = (struct matrix_generator *)malloc (sizeof (*m));
   if (!m) return NULL;
 
-  double p = (log (n_rows) + c) / ((double)n_rows);
+  double p = (2 * (log (n_rows) + (double)c - 1.0f)) / ((double)n_rows);
   m->binom = new (std::nothrow) binomial_distribution<> (n_rows, p);
   if (!m->binom)
     return NULL;
@@ -36,6 +36,8 @@ matrix_generator_init (struct bitstream *b, size_t n_rows, int c)
     return NULL;
   }
 
+  // TODO: Make sure that the bias of this generator
+  // doesn't invalidate the security proofs.
   m->gen = new (std::nothrow) variate_generator<secure_random&, binomial_distribution<> > (*m->rng, *m->binom);
   if (!m->gen) {
     delete m->binom;

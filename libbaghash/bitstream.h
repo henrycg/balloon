@@ -7,7 +7,7 @@
 #include <openssl/sha.h>
 
 // How many bytes to generate with AES at each invocation.
-#define BITSTREAM_BUF_SIZE (4096 * (AES_BLOCK_SIZE))
+#define BITSTREAM_BUF_SIZE ((1 << 10) * (AES_BLOCK_SIZE))
 
 struct bitstream {
   // All of the below are directly passed to OpenSSL
@@ -44,6 +44,9 @@ int bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen);
  * [0, max) -- exclusive of max.
  */
 int bitstream_rand_int (struct bitstream *b, size_t *out, size_t max);
+
+int bitstream_rand_ints (struct bitstream *b, size_t *outs, size_t outlen, 
+  size_t max, bool distinct);
 
 /**
  * Get a single char.

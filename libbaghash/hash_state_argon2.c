@@ -59,6 +59,7 @@ hash_state_argon2_mix (struct hash_state *s)
     const size_t prev_idx = (i || data->round_count) ? ((i - 1) % s->n_blocks) : 0;
     const unsigned char *prev_block = block_index (s, prev_idx);
     blocks[0] = prev_block;
+
   
     // If it's not the first pass through the memory, it's okay to pick any block.
     // If it is the first pass through the memory, pick a block in {1, ..., i-1}. 
@@ -71,6 +72,10 @@ hash_state_argon2_mix (struct hash_state *s)
       neighbor = 0;
     }
     blocks[1] = block_index (s, neighbor);
+
+#ifdef DEBUG
+    printf("[%d] prev=%d, other=%d\n", i, (int)prev_idx, (int)neighbor);
+#endif
     
     // Hash value of neighbors into temp buffer.
     if ((error = compress (tmp_block, blocks, 2, &s->opts->comp_opts)))

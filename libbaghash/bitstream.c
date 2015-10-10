@@ -94,7 +94,7 @@ bitstream_seed_finalize (struct bitstream *b)
   if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 0))
     return ERROR_OPENSSL_AES;
 
-  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_cbc (), key_bytes, iv))
+  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_gcm (), key_bytes, iv))
     return ERROR_OPENSSL_AES;
 
   b->initialized = true;
@@ -104,6 +104,7 @@ bitstream_seed_finalize (struct bitstream *b)
 static int 
 encrypt_partial (struct bitstream *b, void *outp, int to_encrypt)
 {
+  // TODO: Make sure encrypt the right block size
   int encl;
   if (to_encrypt % AES_BLOCK_SIZE == 0) {
     // Encrypt directly into the output buffer

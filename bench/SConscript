@@ -1,0 +1,17 @@
+import sys
+
+Import('env')
+
+baghash_env = env.Clone()
+
+src = [
+    "main.c",
+]
+
+libs = [
+  "baghash",
+]
+
+baghash_env.Append(LIBS = libs)
+baghash_env.Program("bench", src)
+

@@ -149,4 +149,5 @@ SConscript('matgen/SConscript', variant_dir='build/matgen')
 if env["BUILD_BINARIES"]:
     SConscript('baghash/SConscript', variant_dir='build/baghash')
     SConscript('bagtest/SConscript', variant_dir='build/bagtest')
+    SConscript('bench/SConscript', variant_dir='build/bench')
 

@@ -23,10 +23,9 @@ options_validate (struct baghash_options *opts)
   if (!opts->n_neighbors)
     return ERROR_NO_NEIGHBORS;
 
-  uint64_t res;
   const uint64_t n_blocks = options_n_blocks (opts);
   const uint16_t block_size = compress_block_size (opts->comp_opts.comp);
-  if (__builtin_umulll_overflow (n_blocks, block_size, &res))
+  if (n_blocks > UINT64_MAX / block_size)
     return ERROR_MCOST_TOO_BIG;
 
   if (opts->mix != MIX__BAGHASH_DOUBLE_BUFFER && 

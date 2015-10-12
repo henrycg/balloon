@@ -2,6 +2,7 @@
 #define __BITSTREAM_H__
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
@@ -15,10 +16,10 @@ struct bitstream {
   SHA256_CTX c;
   EVP_CIPHER_CTX ctx;
 
-  unsigned char *zeros;
-  unsigned char *generated;
+  uint8_t *zeros;
+  uint8_t *generated;
 
-  unsigned char *genp;
+  uint8_t *genp;
   unsigned int n_refreshes;
 };
 
@@ -51,6 +52,6 @@ int bitstream_rand_ints (struct bitstream *b, uint64_t *outs, size_t outlen,
 /**
  * Get a single char.
  */
-int bitstream_rand_byte (struct bitstream *b, unsigned char *out);
+int bitstream_rand_byte (struct bitstream *b, uint8_t *out);
 
 #endif

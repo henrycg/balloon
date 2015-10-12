@@ -8,9 +8,7 @@
 
 #include "libbaghash/options.h"
 
-int
-main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]){
   struct comp_options comp_opts;
   comp_opts.comp = 0;
   comp_opts.comb = 0;

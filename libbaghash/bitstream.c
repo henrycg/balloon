@@ -40,7 +40,7 @@ bitstream_init (struct bitstream *b)
 int
 bitstream_free (struct bitstream *b)
 {
-  unsigned char out[AES_BLOCK_SIZE];
+  uint8_t out[AES_BLOCK_SIZE];
   int outl;
   if (!EVP_EncryptFinal (&b->ctx, out, &outl))
     return ERROR_OPENSSL_AES;
@@ -83,13 +83,13 @@ int
 bitstream_seed_finalize (struct bitstream *b)
 {
   // Hash in and salt into a 256-bit AES key
-  unsigned char key_bytes[SHA256_DIGEST_LENGTH];
+  uint8_t key_bytes[SHA256_DIGEST_LENGTH];
 
   if (!SHA256_Final(key_bytes, &b->c))
     return ERROR_OPENSSL_HASH;
 
   // TODO: Make the IV depend on the salt?
-  unsigned char iv[AES_BLOCK_SIZE];
+  uint8_t iv[AES_BLOCK_SIZE];
   memset (iv, 0, AES_BLOCK_SIZE);
 
   if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 0))
@@ -122,7 +122,7 @@ encrypt_partial (struct bitstream *b, void *outp, int to_encrypt)
     assert (aligned_buf % AES_BLOCK_SIZE == 0);
 
     // Encrypt to a temp buffer and copy the result over
-    unsigned char *buf = malloc (aligned_buf * sizeof (unsigned char));
+    uint8_t *buf = malloc (aligned_buf * sizeof (uint8_t));
     if (!buf)
       return ERROR_MALLOC;
     if (!EVP_EncryptUpdate (&b->ctx, buf, &encl, b->zeros, aligned_buf))
@@ -162,7 +162,7 @@ bitstream_rand_int (struct bitstream *b, uint64_t *out, uint64_t max)
   int error; 
   const int n_bytes = bytes_required (max);
   const uint8_t bits = bits_in_int (max);
-  unsigned char buf[n_bytes];
+  uint8_t buf[n_bytes];
   uint64_t retval;
 
   do {
@@ -207,7 +207,7 @@ bitstream_rand_ints (struct bitstream *b, uint64_t *outs, size_t outlen,
 }
 
 int
-bitstream_rand_byte (struct bitstream *b, unsigned char *out)
+bitstream_rand_byte (struct bitstream *b, uint8_t *out)
 {
   if (!b->initialized)
     return ERROR_BITSTREAM_UNINITIALIZED;
@@ -225,7 +225,7 @@ bitstream_rand_byte (struct bitstream *b, unsigned char *out)
 }
 
 static int
-generate_few_bytes (struct bitstream *b, unsigned char *out, size_t outlen)
+generate_few_bytes (struct bitstream *b, uint8_t *out, size_t outlen)
 {
   int error;
   for (size_t i = 0; i < outlen; i++) {
@@ -257,15 +257,16 @@ bytes_required (uint64_t val)
   if (val < 2) return 0;
 
   uint8_t bytes_reqd;
+  uint64_t one = 1;
   for (bytes_reqd = 0; bytes_reqd < 8; bytes_reqd++) {
-    if (val < (1 << (8*bytes_reqd))) break;
+    if (val < (one << (8*bytes_reqd))) break;
   }
 
   return bytes_reqd;
 }
 
 static uint64_t
-bytes_to_int (const unsigned char *bytes, size_t n_bytes)
+bytes_to_int (const uint8_t *bytes, size_t n_bytes)
 {
   uint64_t out = 0;
   for (size_t i = 0; i < n_bytes; i++) {

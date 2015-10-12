@@ -43,10 +43,10 @@ int bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen);
  * Return a random integer in the "out" parameter in the range
  * [0, max) -- exclusive of max.
  */
-int bitstream_rand_int (struct bitstream *b, size_t *out, size_t max);
+int bitstream_rand_int (struct bitstream *b, uint64_t *out, uint64_t max);
 
-int bitstream_rand_ints (struct bitstream *b, size_t *outs, size_t outlen, 
-  size_t max, bool distinct);
+int bitstream_rand_ints (struct bitstream *b, uint64_t *outs, size_t outlen, 
+  uint64_t max, bool distinct);
 
 /**
  * Get a single char.

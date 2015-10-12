@@ -52,7 +52,7 @@ int mutest_verbose_level = 1; /* exported for use in test suites */
  * only -v is supported right now, both "-v -v" and "-vv" are accepted for
  * increasing the verbosity by 2.
  */
-void parse_args(int argc, char* argv[]) {
+void parse_args(__attribute__((unused)) int argc, char* argv[]) {
 	while (*++argv) {
 		if (strncmp(*argv, "-v", 2) == 0) {
 			++mutest_verbose_level;

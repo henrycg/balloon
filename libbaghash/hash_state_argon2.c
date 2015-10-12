@@ -14,8 +14,7 @@ struct argon2_data {
 };
 
 int 
-hash_state_argon2_init (struct hash_state *s, struct baghash_options *opts,
-    const void *salt, size_t saltlen)
+hash_state_argon2_init (struct hash_state *s, UNUSED struct baghash_options *opts)
 {
   struct argon2_data *data = malloc (sizeof (*data));
   if (!data)
@@ -46,18 +45,18 @@ int
 hash_state_argon2_mix (struct hash_state *s)
 {
   int error;
-  unsigned char tmp_block[s->block_size];
-  size_t neighbor;
+  uint8_t tmp_block[s->block_size];
+  uint64_t neighbor;
   struct argon2_data *data = (struct argon2_data *)s->extra_data;
   
   // Simplest design: hash in place with one buffer
-  for (int i = 0; i < s->n_blocks; i++) {
-    const unsigned char *blocks[2];
+  for (uint64_t i = 0; i < s->n_blocks; i++) {
+    const uint8_t *blocks[2];
 
     // Hash in the previous block (or self if this is the first block
     // in the first pass).
     const size_t prev_idx = (i || data->round_count) ? ((i - 1) % s->n_blocks) : 0;
-    const unsigned char *prev_block = block_index (s, prev_idx);
+    const uint8_t *prev_block = block_index (s, prev_idx);
     blocks[0] = prev_block;
 
   
@@ -83,7 +82,7 @@ hash_state_argon2_mix (struct hash_state *s)
 
     // Copy output of compression function back into the 
     // big memory buffer.
-    unsigned char *cur_block = block_index (s, i);
+    uint8_t *cur_block = block_index (s, i);
     memcpy (cur_block, tmp_block, s->block_size);
   }
 

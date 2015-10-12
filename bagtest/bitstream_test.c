@@ -194,7 +194,7 @@ mu_test_bitstream__rand_int (void)
   mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
   mu_ensure (!bitstream_seed_finalize (&b));
 
-  size_t out, max;
+  uint64_t out, max;
   max = 3ull;
   for (int i=0; i<1000; i++) {
     mu_ensure (!bitstream_rand_int (&b, &out, max));
@@ -246,12 +246,12 @@ mu_test_bitstream__rand_ints (void)
   mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
   mu_ensure (!bitstream_seed_finalize (&b));
 
-  size_t outs[15];
-  size_t max = 15ull;
+  uint64_t outs[15];
+  uint64_t max = 15ull;
   mu_ensure (!bitstream_rand_ints (&b, outs, 15, max, true));
   for (int i=0; i<15; i++) {
     bool found = false;
-    for (int j=0; j<15; j++) {
+    for (uint64_t j=0; j<15; j++) {
       if (outs[i] == j) found = true;
     }
     mu_check (found);
@@ -270,8 +270,8 @@ mu_test_bitstream__rand_ints_small (void)
   mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
   mu_ensure (!bitstream_seed_finalize (&b));
 
-  size_t outs[15];
-  size_t max = 3ull;
+  uint64_t outs[15];
+  uint64_t max = 3ull;
   mu_ensure (bitstream_rand_ints (&b, outs, 15, max, true) == ERROR_BITSTREAM_MAX_TOO_SMALL);
   mu_ensure (!bitstream_rand_ints (&b, outs, 15, 16, true));
 

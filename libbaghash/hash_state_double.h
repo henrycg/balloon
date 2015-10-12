@@ -6,8 +6,7 @@
 #include "bitstream.h"
 #include "options.h"
 
-int hash_state_double_init (struct hash_state *s, struct baghash_options *opts,
-    const void *salt, size_t saltlen);
+int hash_state_double_init (struct hash_state *s, struct baghash_options *opts);
 
 int hash_state_double_free (struct hash_state *s);
 

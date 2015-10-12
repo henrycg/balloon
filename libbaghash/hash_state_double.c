@@ -12,14 +12,13 @@
 #include "hash_state.h"
 
 struct double_data {
-  unsigned char *src;
-  unsigned char *dst;
+  uint8_t *src;
+  uint8_t *dst;
   struct matrix_generator *matgen;
 };
 
 int 
-hash_state_double_init (struct hash_state *s, struct baghash_options *opts,
-    const void *salt, size_t saltlen)
+hash_state_double_init (struct hash_state *s, UNUSED struct baghash_options *opts)
 {
   struct double_data *data = malloc (sizeof (*data));
   if (!data)
@@ -56,8 +55,8 @@ hash_state_double_fill (struct hash_state *s,
   return fill_bytes_from_strings (s, s->buffer, s->n_blocks * s->block_size / 2, in, inlen, salt, saltlen);
 }
 
-static unsigned char *
-rel_block_index (struct hash_state *s, unsigned char *buf, size_t idx)
+static uint8_t *
+rel_block_index (struct hash_state *s, uint8_t *buf, size_t idx)
 {
   return buf + (s->block_size * idx);
 }
@@ -79,17 +78,17 @@ hash_state_double_mix (struct hash_state *s)
         return error;
     }
     const size_t n_blocks_to_hash = row_neighbors + 1;
-    const unsigned char *blocks[n_blocks_to_hash];
+    const uint8_t *blocks[n_blocks_to_hash];
 
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
-    const unsigned char *prev_block = i ? cur_block - s->block_size : rel_block_index (s, data->src, blocks_per_buf - 1);
+    const uint8_t *prev_block = i ? cur_block - s->block_size : rel_block_index (s, data->src, blocks_per_buf - 1);
     blocks[0] = prev_block;
 
     
     // TODO: Check if sorting the neighbors before accessing them improves
     // the performance at all.
-    size_t neighbors[row_neighbors];
+    uint64_t neighbors[row_neighbors];
     if ((error = bitstream_rand_ints (&s->bstream, neighbors, 
           row_neighbors, blocks_per_buf, distinct_neighbs)))
       return error;
@@ -113,7 +112,7 @@ hash_state_double_mix (struct hash_state *s)
 
   // Swap the role of the src and dst buffers.
   // At the entry of the mix function, we are always copying from src to dst.
-  unsigned char *tmp = data->src;
+  uint8_t *tmp = data->src;
   data->src = data->dst;
   data->dst = tmp; 
 

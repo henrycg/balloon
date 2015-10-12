@@ -1,7 +1,6 @@
 
 #include <baghash.h>
 #include <errno.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -46,7 +45,7 @@ run_once (struct baghash_options *opts)
   const double cpb = (double)clks_total/(double)bytes_total;
   const double wall_total = wall_end - wall_start;
 
-  printf ("%d\t%d\t%d\t%u\t%u\t%u\t%lg\t%u\t%u\t%lg\n", 
+  printf ("%d\t%d\t%d\t%" PRIu64 "\t%" PRIu64 "\t%" PRIu8 "\t%lg\t%u\t%u\t%lg\n", 
       opts->mix,
       opts->comp_opts.comp,
       opts->comp_opts.comb,
@@ -60,7 +59,7 @@ run_once (struct baghash_options *opts)
 }
 
 int
-main (int argc, char *argv[])
+main (void)
 {
   struct comp_options comp_opts;
   comp_opts.comp = 0;

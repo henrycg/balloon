@@ -6,10 +6,11 @@
 #include "bitstream.h"
 #include "options.h"
 
+#define UNUSED __attribute__ ((unused))
+
 struct hash_state;
 
-typedef int func_hash_state_init (struct hash_state *s, struct baghash_options *opts, 
-  const void *salt, size_t saltlen);
+typedef int func_hash_state_init (struct hash_state *s, struct baghash_options *opts);
 typedef int func_hash_state_free (struct hash_state *s);
 typedef int func_hash_state_fill (struct hash_state *s, const void *in, size_t inlen,
     const void *salt, size_t saltlen);
@@ -17,9 +18,9 @@ typedef int func_hash_state_mix (struct hash_state *s);
 typedef int func_hash_state_extract (struct hash_state *s, void *out, size_t outlen);
 
 struct hash_state {
-  size_t n_blocks;
-  size_t block_size;
-  unsigned char *buffer;
+  uint64_t n_blocks;
+  uint16_t block_size;
+  uint8_t *buffer;
   struct bitstream bstream;
   struct baghash_options *opts;
 
@@ -47,7 +48,7 @@ int hash_state_extract (struct hash_state *s, void *out, size_t outlen);
 
 
 int fill_bytes_from_strings (struct hash_state *s, 
-    unsigned char *block_start, size_t bytes_to_fill,
+    uint8_t *block_start, size_t bytes_to_fill,
     const void *in, size_t inlen,
     const void *salt, size_t saltlen);
 

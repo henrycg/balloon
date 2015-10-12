@@ -82,7 +82,7 @@ hash_state_init (struct hash_state *s, struct baghash_options *opts,
     return error;
   if ((error = bitstream_init_with_seed (&s->bstream, salt, saltlen)))
     return error;
-  if ((error = s->f_init (s, opts, salt, saltlen)))
+  if ((error = s->f_init (s, opts)))
     return error;
 
   return (s->buffer) ? ERROR_NONE : ERROR_MALLOC;
@@ -121,8 +121,8 @@ hash_state_extract (struct hash_state *s, void *out, size_t outlen)
 }
 
 int 
-fill_bytes_from_strings (struct hash_state *s, 
-    unsigned char *block_start, size_t bytes_to_fill,
+fill_bytes_from_strings (__attribute__  ((unused)) struct hash_state *s, 
+    uint8_t *block_start, size_t bytes_to_fill,
     const void *in, size_t inlen,
     const void *salt, size_t saltlen)
 {

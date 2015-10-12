@@ -1,6 +1,7 @@
 #ifndef __BAGHASH_H__
 #define __BAGHASH_H__
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -35,20 +36,21 @@ enum mix_method {
 };
 
 struct baghash_options {
-  unsigned int m_cost;
-  unsigned int t_cost;
+  uint64_t m_cost;
+  uint64_t t_cost;
 
   // Degree of expander graph used in the construction.
   // TODO: Make sure that this number is big enough to 
   //       get the expansion we need.
   // TODO: Set n_neighbors automatically and give warning
   //       when user overrides the default.
-  unsigned int n_neighbors;
+  uint8_t n_neighbors;
   struct comp_options comp_opts;
   enum mix_method mix;
 };
 
-int BagHash (void *out, size_t outlen, const void *in, size_t inlen, 
+int BagHash (void *out, size_t outlen, 
+    const void *in, size_t inlen, 
     const void *salt, size_t saltlen, 
     struct baghash_options *opts);
 

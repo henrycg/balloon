@@ -10,14 +10,14 @@
 #include "compress.h"
 #include "errors.h"
 
-static int compress_hash (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+static int compress_hash (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
     enum comp_method meth);
-static int compress_xor (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+static int compress_xor (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
     enum comp_method meth);
 
 int 
-compress (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
-    struct comp_options *opts)
+compress (uint8_t *out, const uint8_t *blocks[], 
+  size_t blocks_to_comp, struct comp_options *opts)
 {
   switch (opts->comb) {
     case COMB__HASH:
@@ -30,7 +30,7 @@ compress (unsigned char *out, unsigned const char *blocks[], unsigned int blocks
 }
 
 static void
-xor_block (unsigned char *out, unsigned const char *blockA, unsigned const char *blockB,
+xor_block (uint8_t *out, const uint8_t *blockA, const uint8_t *blockB,
   size_t block_size)
 {
   for (size_t i = 0; i < block_size; i++) {
@@ -39,7 +39,7 @@ xor_block (unsigned char *out, unsigned const char *blockA, unsigned const char 
 }
 
 static int 
-compress_keccak (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp)
+compress_keccak (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
 {
   spongeState sponge;
 
@@ -58,7 +58,7 @@ compress_keccak (unsigned char *out, unsigned const char *blocks[], unsigned int
 }
 
 static int 
-compress_blake2b (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp)
+compress_blake2b (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
 {
   Argon2FillBlock (out, blocks[0], (blocks_to_comp > 1 ? blocks[1] : out));
   for (unsigned int i = 2; i < blocks_to_comp; i++) {
@@ -69,7 +69,7 @@ compress_blake2b (unsigned char *out, unsigned const char *blocks[], unsigned in
 }
 
 static int 
-compress_sha512 (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp)
+compress_sha512 (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
 {
   SHA512_CTX ctx;
   if (!SHA512_Init (&ctx))
@@ -87,7 +87,7 @@ compress_sha512 (unsigned char *out, unsigned const char *blocks[], unsigned int
 }
 
 static int 
-compress_hash (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+compress_hash (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
     enum comp_method comp)
 {
   // TODO: Insert hash metadata (block index and node index) at
@@ -108,22 +108,22 @@ compress_hash (unsigned char *out, unsigned const char *blocks[], unsigned int b
 
 
 static int 
-compress_xor (unsigned char *out, unsigned const char *blocks[], unsigned int blocks_to_comp,
+compress_xor (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
     enum comp_method comp)
 {
   // XOR
-  const size_t block_size = compress_block_size (comp);
-  unsigned char buf[block_size];
+  const uint16_t block_size = compress_block_size (comp);
+  uint8_t buf[block_size];
   memset (buf, 0, sizeof (buf));
   for (unsigned int i = 1; i < blocks_to_comp; i++) {
     xor_block (buf, buf, blocks[i], block_size);
   }
 
-  unsigned const char *to_hash[2] = { blocks[0], buf };
+  const uint8_t *to_hash[2] = { blocks[0], buf };
   return compress_hash (out, to_hash, 2, comp);
 }
 
-size_t 
+uint16_t
 compress_block_size (enum comp_method comp)
 {
   switch (comp)

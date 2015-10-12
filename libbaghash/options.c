@@ -23,8 +23,10 @@ options_validate (struct baghash_options *opts)
   if (!opts->n_neighbors)
     return ERROR_NO_NEIGHBORS;
 
-  if (options_n_blocks (opts) > (1ull << 31) ||
-      compress_block_size (opts->comp_opts.comp) > (1ull << 31) )
+  uint64_t res;
+  const uint64_t n_blocks = options_n_blocks (opts);
+  const uint16_t block_size = compress_block_size (opts->comp_opts.comp);
+  if (__builtin_umulll_overflow (n_blocks, block_size, &res))
     return ERROR_MCOST_TOO_BIG;
 
   if (opts->mix != MIX__BAGHASH_DOUBLE_BUFFER && 
@@ -34,12 +36,12 @@ options_validate (struct baghash_options *opts)
   return ERROR_NONE;
 }
 
-static unsigned int
+static uint8_t
 number_of_neighbors_single (const struct baghash_options *opts) 
 {
   // We need sets of size N/4 to expand to sets of size 5N/8.
-  unsigned int ret; 
-  const size_t n_blocks = options_n_blocks (opts);
+  uint8_t ret; 
+  const uint64_t n_blocks = options_n_blocks (opts);
   if (n_blocks > 2048)
     ret = 13;
   else if (n_blocks > 1024)
@@ -90,7 +92,7 @@ number_of_neighbors_double (const struct baghash_options *opts)
   return ret;
 }
 
-unsigned int 
+uint8_t
 options_n_neighbors (const struct baghash_options *opts)
 {
   switch (opts->mix) {
@@ -105,11 +107,11 @@ options_n_neighbors (const struct baghash_options *opts)
   }
 }
 
-size_t
+uint64_t
 options_n_blocks (const struct baghash_options *opts)
 {
-  const size_t bsize = compress_block_size (opts->comp_opts.comp);
-  size_t ret = opts->m_cost / bsize;
+  const uint16_t bsize = compress_block_size (opts->comp_opts.comp);
+  uint64_t ret = opts->m_cost / bsize;
   return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
 }
 

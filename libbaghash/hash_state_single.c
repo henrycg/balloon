@@ -12,14 +12,13 @@
 #define MIN(a, b) ((a < b) ? (a) : (b))
 
 int 
-hash_state_single_init (struct hash_state *s, struct baghash_options *opts,
-    const void *salt, size_t saltlen)
+hash_state_single_init (UNUSED struct hash_state *s, UNUSED struct baghash_options *opts)
 {
   return ERROR_NONE; 
 }
 
 int
-hash_state_single_free (struct hash_state *s)
+hash_state_single_free (UNUSED struct hash_state *s)
 {
   return ERROR_NONE;
 }
@@ -37,19 +36,19 @@ int
 hash_state_single_mix (struct hash_state *s)
 {
   int error;
-  unsigned char tmp_block[s->block_size];
-  size_t neighbor;
+  uint8_t tmp_block[s->block_size];
+  uint64_t neighbor;
   
   // Simplest design: hash in place with one buffer
   for (size_t i = 0; i < s->n_blocks; i++) {
     void *cur_block = block_index (s, i);
 
     const size_t n_blocks_to_hash = s->opts->n_neighbors + 2;
-    const unsigned char *blocks[n_blocks_to_hash];
+    const uint8_t *blocks[n_blocks_to_hash];
 
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
-    const unsigned char *prev_block = i ? cur_block - s->block_size : block_last (s);
+    const uint8_t *prev_block = i ? cur_block - s->block_size : block_last (s);
 
     blocks[0] = prev_block;
     blocks[1] = cur_block;

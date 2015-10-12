@@ -9,10 +9,11 @@
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 static int refresh_state (struct bitstream *b);
-static int bytes_required (size_t val);
-static int bits_in_int (size_t val);
-static size_t bytes_to_int (const unsigned char *bytes, int n_bytes);
-static int generate_few_bytes (struct bitstream *b, unsigned char *out, size_t outlen);
+static uint8_t bytes_required (uint64_t val);
+static uint8_t bits_in_int (uint64_t val);
+static uint64_t bytes_to_int (const uint8_t *bytes, size_t n_bytes);
+static int generate_few_bytes (struct bitstream *b, uint8_t *out, size_t outlen);
+static bool is_duplicate (uint64_t *outs, size_t idx);
 
 int
 bitstream_init (struct bitstream *b)
@@ -23,9 +24,9 @@ bitstream_init (struct bitstream *b)
 
   EVP_CIPHER_CTX_init (&b->ctx);
 
-  if (!(b->zeros = malloc (BITSTREAM_BUF_SIZE * sizeof (unsigned char))))
+  if (!(b->zeros = malloc (BITSTREAM_BUF_SIZE * sizeof (uint8_t))))
     return ERROR_MALLOC;
-  if (!(b->generated = malloc (BITSTREAM_BUF_SIZE * sizeof (unsigned char))))
+  if (!(b->generated = malloc (BITSTREAM_BUF_SIZE * sizeof (uint8_t))))
     return ERROR_MALLOC;
 
   memset (b->zeros, 0, BITSTREAM_BUF_SIZE);
@@ -94,7 +95,7 @@ bitstream_seed_finalize (struct bitstream *b)
   if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 0))
     return ERROR_OPENSSL_AES;
 
-  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_gcm (), key_bytes, iv))
+  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_cbc (), key_bytes, iv))
     return ERROR_OPENSSL_AES;
 
   b->initialized = true;
@@ -156,13 +157,13 @@ bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen)
 
 
 int
-bitstream_rand_int (struct bitstream *b, size_t *out, size_t max)
+bitstream_rand_int (struct bitstream *b, uint64_t *out, uint64_t max)
 {
   int error; 
   const int n_bytes = bytes_required (max);
-  const int bits = bits_in_int (max);
+  const uint8_t bits = bits_in_int (max);
   unsigned char buf[n_bytes];
-  size_t retval;
+  uint64_t retval;
 
   do {
     if ((error = generate_few_bytes (b, buf, n_bytes)))
@@ -177,7 +178,7 @@ bitstream_rand_int (struct bitstream *b, size_t *out, size_t max)
 }
 
 static bool 
-is_duplicate (size_t *outs, size_t idx)
+is_duplicate (uint64_t *outs, size_t idx)
 {
   // TODO: Use a sorted list here to speed up the search.
   for (size_t i = 0; i < idx; i++) {
@@ -188,8 +189,8 @@ is_duplicate (size_t *outs, size_t idx)
 }
 
 int 
-bitstream_rand_ints (struct bitstream *b, size_t *outs, size_t outlen, 
-  size_t max, bool distinct)
+bitstream_rand_ints (struct bitstream *b, uint64_t *outs, size_t outlen, 
+  uint64_t max, bool distinct)
 {
   if (distinct && max < outlen)
     return ERROR_BITSTREAM_MAX_TOO_SMALL;
@@ -227,7 +228,7 @@ static int
 generate_few_bytes (struct bitstream *b, unsigned char *out, size_t outlen)
 {
   int error;
-  for (int i = 0; i < outlen; i++) {
+  for (size_t i = 0; i < outlen; i++) {
     if ((error = bitstream_rand_byte (b, &out[i])))
       return error;
   }
@@ -250,12 +251,12 @@ refresh_state (struct bitstream *b)
  * in the range [0, max). This should be zero for when max == 0 or
  * max == 1. 
  */
-static int
-bytes_required (size_t val)
+static uint8_t
+bytes_required (uint64_t val)
 {
   if (val < 2) return 0;
 
-  int bytes_reqd;
+  uint8_t bytes_reqd;
   for (bytes_reqd = 0; bytes_reqd < 8; bytes_reqd++) {
     if (val < (1 << (8*bytes_reqd))) break;
   }
@@ -263,11 +264,11 @@ bytes_required (size_t val)
   return bytes_reqd;
 }
 
-static size_t
-bytes_to_int (const unsigned char *bytes, int n_bytes)
+static uint64_t
+bytes_to_int (const unsigned char *bytes, size_t n_bytes)
 {
-  size_t out = 0;
-  for (int i = 0; i < n_bytes; i++) {
+  uint64_t out = 0;
+  for (size_t i = 0; i < n_bytes; i++) {
     out <<= 8;
     out |= bytes[i];
   }
@@ -275,10 +276,10 @@ bytes_to_int (const unsigned char *bytes, int n_bytes)
   return out;
 }
 
-static int 
-bits_in_int (size_t val)
+static uint8_t
+bits_in_int (uint64_t val)
 {
-    int ret = 0;
+    uint8_t ret = 0;
 
     while (val) {
       val >>= 1;

@@ -1,5 +1,4 @@
 - Parallel implementation
 - Log(n) thing
 - Add license to files
-- Rewrite using uint64_t instead of size_t
-
+- Remove boost stuff from code

@@ -8,7 +8,7 @@
 #include <openssl/sha.h>
 
 // How many bytes to generate with AES at each invocation.
-#define BITSTREAM_BUF_SIZE ((1 << 10) * (AES_BLOCK_SIZE))
+#define BITSTREAM_BUF_SIZE ((32) * (AES_BLOCK_SIZE))
 
 struct bitstream {
   // All of the below are directly passed to OpenSSL

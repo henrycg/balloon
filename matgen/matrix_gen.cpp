@@ -25,7 +25,7 @@ matrix_generator_init (struct bitstream *b, size_t n_rows, int c)
   struct matrix_generator *m = (struct matrix_generator *)malloc (sizeof (*m));
   if (!m) return NULL;
 
-  double p = (2 * (log (n_rows) + (double)c - 1.0f)) / ((double)n_rows);
+  double p = (4 * (log (n_rows) + (double)c - 1.0f)) / ((double)n_rows);
   m->binom = new (std::nothrow) binomial_distribution<> (n_rows, p);
   if (!m->binom)
     return NULL;

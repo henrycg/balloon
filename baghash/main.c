@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "libbaghash/options.h"
+#include "libbaghash/timing.h"
 
 int main (int argc, char *argv[]){
   struct comp_options comp_opts;
@@ -14,9 +15,10 @@ int main (int argc, char *argv[]){
   comp_opts.comb = 0;
 
   int xor_then_hash = false;
-  long long int n_rounds = 8;
-  long long int n_space = (1024*1024);
-  long long int n_neighbors = 0;
+  int32_t n_rounds = 8;
+  int64_t n_space = (1024*1024);
+  int16_t n_neighbors = 0;
+  int32_t n_iters = 1;
   enum mix_method mix = 0;
 
   while (1)
@@ -31,12 +33,13 @@ int main (int argc, char *argv[]){
           {"space",  required_argument, 0, 's'},
           {"rounds",  required_argument, 0, 'r'},
           {"neighbors",  required_argument, 0, 'n'},
+          {"iterations",  required_argument, 0, 'i'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      char c = getopt_long (argc, argv, "xc:m:s:r:n:",
+      char c = getopt_long (argc, argv, "xc:m:s:r:n:i:",
                        long_options, &option_index);
       char *end;
 
@@ -113,6 +116,16 @@ int main (int argc, char *argv[]){
           }
           break;
 
+        case 'i':
+          errno = 0;
+          n_iters = strtoll (optarg, &end, 10);
+          if (errno > 0 || *end != '\0' || n_iters < 0) {
+            fprintf (stderr, "Invalid argument to -i\n");
+            return -1;
+          }
+          break;
+          
+
         case '?':
           printf ("help\n");
           /* getopt_long already printed an error message. */
@@ -146,7 +159,7 @@ int main (int argc, char *argv[]){
   opts.mix = mix;
 
   const unsigned int rec_neighbs = options_n_neighbors (&opts);
-  if (n_neighbors && n_neighbors != rec_neighbs) {
+  if (n_neighbors && ((uint16_t) n_neighbors) != rec_neighbs) {
     fprintf (stderr, "Warning: using unrecommended n_neighbors param!\n");
   }
   if (!n_neighbors)
@@ -155,6 +168,7 @@ int main (int argc, char *argv[]){
   printf ("NRounds        = %lld\n", (long long int)opts.t_cost);
   printf ("NSpace         = %lld\n", (long long int)opts.m_cost);
   printf ("Neighbs        = %lld\n", (long long int)opts.n_neighbors);
+  printf ("Niters         = %lld\n", (long long int)n_iters);
   printf ("Mix            = %d\n", opts.mix);
   printf ("Compression    = %d\n", opts.comp_opts.comp);
   printf ("XOR-then-hash  = %d\n", opts.comp_opts.comb);
@@ -163,11 +177,17 @@ int main (int argc, char *argv[]){
 
   unsigned char out[32];
   int error;
-  if ((error = BagHash (out, 32, in, strlen (in), salt, strlen (salt), &opts))) {
-    fprintf (stderr, "BagHash failed with error: %d\n", error);
-    return -1;
+  const double wall_start = wall_sec ();
+  for (int32_t i = 0; i < n_iters; i++) {
+    if ((error = BagHash (out, 32, in, strlen (in), salt, strlen (salt), &opts))) {
+      fprintf (stderr, "BagHash failed with error: %d\n", error);
+      return -1;
+    }
   }
-
+  const double wall_end = wall_sec ();
+  const double wall_diff = wall_end - wall_start;
+  printf("Time total      : %lg\n", wall_diff);
+  printf("Hashes per sec  : %lg\n", ((double) n_iters) / wall_diff);
   return 0;
 }
 

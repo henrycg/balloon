@@ -3,24 +3,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
-#include <sys/time.h>
 
 #include "libbaghash/options.h"
-
-uint64_t rdtsc (void)
-{
-    unsigned int lo,hi;
-    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-    return ((uint64_t)hi << 32) | lo;
-}
-
-double wall_sec (void)
-{
-    struct timeval t;
-    gettimeofday (&t, NULL);
-    return (double)t.tv_sec + ((double)t.tv_usec/1000000.0);
-}
+#include "libbaghash/timing.h"
 
 static void
 run_once (struct baghash_options *opts)

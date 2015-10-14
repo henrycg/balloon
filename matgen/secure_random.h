@@ -1,5 +1,4 @@
 
-#include <boost/random/uniform_int.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -14,8 +13,8 @@ class secure_random {
     secure_random (struct bitstream *bits) : _b(bits) {};
 
     // public member functions
-    inline result_type min() const { return 0; };
-    inline result_type max() const { return 0xff; };
+    static constexpr result_type min (void) { return 0x00; };
+    static constexpr result_type max (void) { return 0xff; };
     inline unsigned char operator()() {
       unsigned char out;
       if (bitstream_rand_byte (_b, &out)) {

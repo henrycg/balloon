@@ -82,6 +82,7 @@ if os.environ.has_key('LDFLAGS'):
     env.Append(LINKFLAGS = SCons.Util.CLVar(os.environ['LDFLAGS']))
 
 env.Append(CFLAGS = [ "-Wall", "-Werror", "-Wextra", "-O3", "-std=c99"])
+env.Append(CXXFLAGS = [ "-Wall", "-Werror", "-Wextra", "-O3", "-std=c++11"])
 
 if "WITH_GPROF" in env and env["WITH_GPROF"]:
     print "With gprof"

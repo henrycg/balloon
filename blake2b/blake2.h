@@ -18,10 +18,12 @@
 #include <stdint.h>
 
 /* Argon2 Team - Begin Code */
+#ifndef ALIGN
 #if defined(_MSC_VER)
 #define ALIGN(x) __declspec(align(x))
 #else
 #define ALIGN(x) __attribute__ ((__aligned__(x)))
+#endif
 #endif
 /* Argon2 Team - End Code */
 

@@ -7,7 +7,8 @@
 
 enum comp_method {
   COMP__KECCAK_1600,
-  COMP__ARGON_BLAKE2B,
+  COMP__ARGON,
+  COMP__BLAKE_2B,
   COMP__SHA_512,
 
   COMP__END

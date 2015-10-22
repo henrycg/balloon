@@ -140,3 +140,4 @@ mu_test_hash_state_mix (void)
   for (int i = 0; i < MIX__END; i++)
     test_hash_state_mix (i);
 }
+

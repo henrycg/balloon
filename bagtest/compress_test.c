@@ -25,7 +25,7 @@ mu_test_compress ()
       unsigned const char *blocks[2];
       blocks[0] = bufA;
       blocks[1] = bufB;
-      compress (out, blocks, 2, &comp);
+      mu_ensure (!compress (out, blocks, 2, &comp));
     } 
   }
 }

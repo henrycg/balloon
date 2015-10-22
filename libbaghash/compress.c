@@ -5,6 +5,9 @@
 #include <string.h>
 
 #include "blake2b/argon2-core.h"
+#include "blake2b/blake2.h"
+// This both Blake2b and Keccak use this macro
+#undef ALIGN
 #include "keccak/KeccakSponge.h"
 
 #include "compress.h"
@@ -58,12 +61,30 @@ compress_keccak (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_c
 }
 
 static int 
-compress_blake2b (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
+compress_argon (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
 {
   Argon2FillBlock (out, blocks[0], (blocks_to_comp > 1 ? blocks[1] : out));
   for (unsigned int i = 2; i < blocks_to_comp; i++) {
     Argon2FillBlock (out, out, blocks[i]);
   }
+
+  return ERROR_NONE;
+}
+
+static int 
+compress_blake2b (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
+{
+  blake2b_state s;
+  if (blake2b_init (&s, BLAKE_2B_BLOCK_SIZE))
+    return ERROR_BLAKE_2B;
+
+  for (unsigned int i = 0; i < blocks_to_comp; i++) {
+    if (blake2b_update (&s, blocks[i], BLAKE_2B_BLOCK_SIZE))
+      return ERROR_BLAKE_2B;
+  }
+
+  if (blake2b_final (&s, out, BLAKE_2B_BLOCK_SIZE))
+    return ERROR_BLAKE_2B;
 
   return ERROR_NONE;
 }
@@ -95,7 +116,9 @@ compress_hash (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
   switch (comp) {
     case COMP__KECCAK_1600:
       return compress_keccak (out, blocks, blocks_to_comp);
-    case COMP__ARGON_BLAKE2B:
+    case COMP__ARGON:
+      return compress_argon (out, blocks, blocks_to_comp);
+    case COMP__BLAKE_2B:
       return compress_blake2b (out, blocks, blocks_to_comp);
     case COMP__SHA_512:
       return compress_sha512 (out, blocks, blocks_to_comp);
@@ -130,7 +153,9 @@ compress_block_size (enum comp_method comp)
   {
     case COMP__KECCAK_1600:
       return KECCAK_1600_BLOCK_SIZE;
-    case COMP__ARGON_BLAKE2B:
+    case COMP__BLAKE_2B:
+      return BLAKE_2B_BLOCK_SIZE;
+    case COMP__ARGON:
       return ARGON2_BLOCK_SIZE;
     case COMP__SHA_512:
       return SHA512_DIGEST_LENGTH;

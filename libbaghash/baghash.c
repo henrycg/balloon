@@ -41,11 +41,13 @@ BagHash (void *out, size_t outlen,
 
   // Mix the buffer t_cost times
   for (unsigned int i = 0; i < opts->t_cost; i++) {
-    hash_state_mix (&state);
+    if ((error = hash_state_mix (&state)))
+      return error;
   }
  
   // Extract the output from the hash state
-  hash_state_extract (&state, out, outlen);
+  if ((error = hash_state_extract (&state, out, outlen)))
+    return error;
  
   hash_state_free (&state);
 

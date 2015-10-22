@@ -84,7 +84,7 @@ compress_blake2b (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_
   }
 
   if (blake2b_final (&s, out, BLAKE_2B_BLOCK_SIZE))
-    return ERROR_BLAKE_2B;
+      return ERROR_BLAKE_2B;
 
   return ERROR_NONE;
 }

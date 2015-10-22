@@ -129,6 +129,7 @@ Export('env')
 # Set compile options for binaries
 env.Append(LIBS = ["baghash"], \
   LIBPATH = ['#build/libbaghash', 
+            '#build/echo',
             '#build/keccak', 
             '#build/matgen',
             '#build/blake2b'])
@@ -145,6 +146,7 @@ SConscript('libbaghash/SConscript', variant_dir='build/libbaghash')
 SConscript('keccak/SConscript', variant_dir='build/keccak')
 SConscript('blake2b/SConscript', variant_dir='build/blake2b')
 SConscript('matgen/SConscript', variant_dir='build/matgen')
+SConscript('echo/SConscript', variant_dir='build/echo')
 
 # Utilities
 if env["BUILD_BINARIES"]:

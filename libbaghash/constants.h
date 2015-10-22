@@ -33,5 +33,7 @@
 
 #define BLAKE_2B_BLOCK_SIZE (64)
 
+#define ECHO_BLOCK_SIZE (64)
+
 #endif
 

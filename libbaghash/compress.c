@@ -8,6 +8,7 @@
 #include "blake2b/blake2.h"
 // This both Blake2b and Keccak use this macro
 #undef ALIGN
+#include "echo/echo.h"
 #include "keccak/KeccakSponge.h"
 
 #include "compress.h"
@@ -90,6 +91,25 @@ compress_blake2b (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_
 }
 
 static int 
+compress_echo (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
+{
+  hashState s;
+  
+  if (Init (&s, 8*ECHO_BLOCK_SIZE))
+    return ERROR_ECHO;
+
+  for (unsigned int i = 0; i < blocks_to_comp; i++) {
+    if (Update (&s, blocks[i], ECHO_BLOCK_SIZE))
+      return ERROR_ECHO;
+  }
+
+  if (Final (&s, out))
+      return ERROR_ECHO;
+
+  return ERROR_NONE;
+}
+
+static int 
 compress_sha512 (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
 {
   SHA512_CTX ctx;
@@ -122,6 +142,8 @@ compress_hash (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
       return compress_blake2b (out, blocks, blocks_to_comp);
     case COMP__SHA_512:
       return compress_sha512 (out, blocks, blocks_to_comp);
+    case COMP__ECHO:
+      return compress_echo (out, blocks, blocks_to_comp);
     case COMP__END:
       break;
   }
@@ -159,6 +181,8 @@ compress_block_size (enum comp_method comp)
       return ARGON2_BLOCK_SIZE;
     case COMP__SHA_512:
       return SHA512_DIGEST_LENGTH;
+    case COMP__ECHO:
+      return ECHO_BLOCK_SIZE;
     case COMP__END:
       break;
   }

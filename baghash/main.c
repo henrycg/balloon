@@ -71,6 +71,8 @@ int main (int argc, char *argv[]){
             comp_opts.comp = COMP__BLAKE_2B;
           else if (!strcmp (optarg, "sha512"))
             comp_opts.comp = COMP__SHA_512;
+          else if (!strcmp (optarg, "echo"))
+            comp_opts.comp = COMP__ECHO;
           else {
             fprintf (stderr, "Invalid compression method\n");
             return -1;

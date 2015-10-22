@@ -15,6 +15,7 @@ src = [
 
 libs = [
   "blake2b",
+  "echo",
   "keccak",
   "matgen",
 ]

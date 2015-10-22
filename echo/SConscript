@@ -1,0 +1,12 @@
+import os
+
+Import('env')
+
+src = [
+#    "echo_64.c",
+    "echo64.s"
+]
+
+env.Append(CFLAGS = ["-Wno-error=strict-aliasing"])
+env.StaticLibrary("echo", src)
+

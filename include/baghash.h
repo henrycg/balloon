@@ -10,6 +10,7 @@ enum comp_method {
   COMP__ARGON,
   COMP__BLAKE_2B,
   COMP__SHA_512,
+  COMP__ECHO,
 
   COMP__END
 };

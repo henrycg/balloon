@@ -65,8 +65,10 @@ int main (int argc, char *argv[]){
         case 'c':
           if (!strcmp (optarg, "keccak"))
             comp_opts.comp = COMP__KECCAK_1600;
+          else if (!strcmp (optarg, "argon"))
+            comp_opts.comp = COMP__ARGON;
           else if (!strcmp (optarg, "blake2b"))
-            comp_opts.comp = COMP__ARGON_BLAKE2B;
+            comp_opts.comp = COMP__BLAKE_2B;
           else if (!strcmp (optarg, "sha512"))
             comp_opts.comp = COMP__SHA_512;
           else {

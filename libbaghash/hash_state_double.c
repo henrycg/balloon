@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,9 +28,13 @@ hash_state_double_init (struct hash_state *s, UNUSED struct baghash_options *opt
   data->src = block_index (s, 0);
   data->dst = block_index (s, s->n_blocks / 2);
   if (s->opts->comp_opts.comb == COMB__XOR) {
-    data->matgen = matrix_generator_init (&s->bstream, s->n_blocks / 2, 0);
-    if (!data->matgen)
-      return ERROR_MALLOC;
+    if (s->opts->n_neighbors) {
+      fprintf(stderr, "Warning: Using non-standard n_neighbors\n"); 
+    } else {
+      data->matgen = matrix_generator_init (&s->bstream, s->n_blocks / 2, 0);
+      if (!data->matgen)
+        return ERROR_MALLOC;
+    }
   } 
   s->extra_data = data;
   return ERROR_NONE; 
@@ -39,7 +44,7 @@ int
 hash_state_double_free (struct hash_state *s)
 {
   struct double_data *data = (struct double_data *)s->extra_data;
-  if (s->opts->comp_opts.comb == COMB__XOR) {
+  if (s->opts->comp_opts.comb == COMB__XOR && !s->opts->n_neighbors) {
     matrix_generator_free (data->matgen);
   }
   free (s->extra_data);
@@ -73,7 +78,9 @@ hash_state_double_mix (struct hash_state *s)
     void *cur_block = rel_block_index (s, data->dst, i);
 
     size_t row_neighbors = s->opts->n_neighbors;
-    if (s->opts->comp_opts.comb == COMB__XOR) {
+    // Only use the fancy distribution if the user has not specified
+    // a number of neighbors to use.
+    if (s->opts->comp_opts.comb == COMB__XOR && !s->opts->n_neighbors) {
       if ((error = matrix_generator_row_weight (data->matgen, &row_neighbors)))
         return error;
     }

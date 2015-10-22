@@ -20,8 +20,10 @@ options_validate (struct baghash_options *opts)
   if (opts->m_cost >= MCOST_MAX)
     return ERROR_MCOST_TOO_BIG;
 
-  if (!opts->n_neighbors)
-    return ERROR_NO_NEIGHBORS;
+  if (!opts->n_neighbors) {
+    if (opts->comp_opts.comb != COMB__XOR)
+      return ERROR_NO_NEIGHBORS;
+  }
 
   const uint64_t n_blocks = options_n_blocks (opts);
   const uint16_t block_size = compress_block_size (opts->comp_opts.comp);
@@ -94,6 +96,9 @@ number_of_neighbors_double (const struct baghash_options *opts)
 uint8_t
 options_n_neighbors (const struct baghash_options *opts)
 {
+  if (opts->comp_opts.comb == COMB__XOR)
+    return 0;
+
   switch (opts->mix) {
     case MIX__BAGHASH_SINGLE_BUFFER:
       return number_of_neighbors_single (opts);

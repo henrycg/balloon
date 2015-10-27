@@ -1,36 +1,60 @@
 
 #include <baghash.h>
 #include <errno.h>
+#include <papi.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "libbaghash/options.h"
 #include "libbaghash/timing.h"
 
+#define ITERS 32
+
 static void
 run_once (struct baghash_options *opts)
 {
+  const int n_events = 2;
+  int events[n_events];
+  events[0] = PAPI_L1_DCM;
+  events[1] = PAPI_L2_DCM;
+  //events[2] = PAPI_BR_PRC;
+  
+  int error;
+  if ((error = PAPI_start_counters (events, n_events)) != PAPI_OK) {
+    const char *e = PAPI_strerror (error);
+    fprintf (stderr, "PAPI start failed with error: %s\n", e ? e : "");
+    return;
+  }
+
   const char in[] = "test input";
   const char salt[] = "test salt";
 
-  const clock_t clk_start = rdtsc ();
   const double wall_start = wall_sec ();
+  long long counters[n_events];
+  const clock_t clk_start = rdtsc ();
 
   unsigned char out[32];
-  int error;
-  if ((error = BagHash (out, 32, in, strlen (in), salt, strlen (salt), opts))) {
-    fprintf (stderr, "BagHash failed with error: %d\n", error);
-    return;
+  for (int i = 0; i < ITERS; i++) {
+    if ((error = BagHash (out, 32, in, strlen (in), salt, strlen (salt), opts))) {
+      fprintf (stderr, "BagHash failed with error: %d\n", error);
+      return;
+    }
   }
 
   const clock_t clk_end = rdtsc ();
   const double wall_end = wall_sec ();
-  const unsigned int bytes_total = opts->m_cost * opts->t_cost;
-  const unsigned int clks_total = (unsigned int)(clk_end - clk_start);
+  const unsigned int bytes_total = opts->m_cost * opts->t_cost * ITERS;
+  const unsigned int clks_total = (double)(clk_end - clk_start)/((double)ITERS);
   const double cpb = (double)clks_total/(double)bytes_total;
-  const double wall_total = wall_end - wall_start;
+  const double wall_total = (wall_end - wall_start)/((double)ITERS);
 
-  printf ("%d\t%d\t%d\t%" PRIu64 "\t%" PRIu64 "\t%" PRIu8 "\t%lg\t%u\t%u\t%lg\n", 
+  if ((error = PAPI_stop_counters (counters, n_events)) != PAPI_OK) {
+    const char *e = PAPI_strerror (error);
+    fprintf (stderr, "PAPI start failed with error: %s\n", e ? e : "");
+    return;
+  }
+
+  printf ("%d\t%d\t%d\t%" PRIu64 "\t%" PRIu64 "\t%" PRIu8 "\t%lg\t%u\t%u\t%lg\t%lld\t%lld\n", 
       opts->mix,
       opts->comp_opts.comp,
       opts->comp_opts.comb,
@@ -40,41 +64,104 @@ run_once (struct baghash_options *opts)
       wall_total,
       bytes_total, 
       clks_total,
-      cpb);
+      cpb,
+      counters[0]/ITERS,
+      counters[1]/ITERS);
+}
+
+static void
+bench_neighbors (void)
+{
+  // Run number of neighbors
+  struct comp_options comp_opts;
+  comp_opts.comp = COMP__KECCAK_1600;
+  comp_opts.comb = COMB__XOR;
+
+  struct baghash_options opts;
+  opts.m_cost = 128 * 1024; 
+  opts.t_cost = 5;
+  opts.comp_opts = comp_opts;
+  opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
+
+  for (unsigned n_neighb = 1; n_neighb < 128; n_neighb += 2) {
+    opts.n_neighbors = n_neighb;
+    run_once (&opts); 
+  }
+}
+
+static void
+bench_mix (void)
+{
+  struct comp_options comp_opts;
+  comp_opts.comp = COMP__KECCAK_1600;
+
+  struct baghash_options opts;
+  opts.t_cost = 5;
+  opts.comp_opts = comp_opts;
+  for (unsigned m_cost = 4*1024; m_cost < 16*1024*1024 + 1; m_cost *= 2) {
+    for (int mix = 0; mix < MIX__END; mix++) {
+      for (int comb = 0; comb < COMB__END; comb ++) {
+        opts.comp_opts.comb = comb;
+        opts.mix = mix;
+        opts.m_cost = m_cost;
+        opts.n_neighbors = options_n_neighbors (&opts);
+
+        // Skip invalid combinations
+        if (options_validate (&opts))
+          continue;
+
+        run_once (&opts); 
+      }
+    }
+  }
+}
+
+static void
+bench_hash (void)
+{
+  struct comp_options comp_opts;
+  comp_opts.comb = COMB__XOR;
+
+  struct baghash_options opts;
+  opts.m_cost = 128 * 1024;
+  opts.t_cost = 5;
+  opts.comp_opts = comp_opts;
+  opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
+
+  for (unsigned m_cost = 4*1024; m_cost < 16*1024*1024 + 1; m_cost *= 2) {
+    for (int comp = 0; comp < COMP__END; comp++) {
+      opts.m_cost = m_cost;
+      opts.comp_opts.comp = comp;
+      opts.n_neighbors = options_n_neighbors (&opts);
+
+      // Skip invalid combinations
+      if (options_validate (&opts))
+        continue;
+
+      run_once (&opts); 
+    }
+  }
 }
 
 int
-main (void)
+main (int argc, char *argv[])
 {
-  struct comp_options comp_opts;
-  comp_opts.comp = 0;
-  comp_opts.comb = 0;
+  if (argc < 2) {
+    fprintf (stderr, "Must specify test name.\n");
+    return -1;
+  }
 
-  printf ("Mix\tComp\tComb\tMCost\tTCost\tNeighb\tWall\tBytesTotal\tCycles\tCpb\n");
-  struct baghash_options opts;
-  opts.m_cost = 0;
-  opts.t_cost = 5;
-  opts.comp_opts = comp_opts;
-  opts.mix = 0;
+  printf ("Mix\tComp\tComb\tMCost\tTCost\tNeighb\tWall\tBytesTotal\tCycles\tCpb\tL1miss\tL2miss\n");
 
-  for (unsigned m_cost = 256*1024; m_cost < 32*1024*1024 + 1; m_cost *= 2) {
-    opts.m_cost = m_cost;
-    for (int i = 0; i < MIX__END; i++) {
-      opts.mix = i;
-      for (int j = 0; j < COMP__END; j++) {
-        opts.comp_opts.comp = j;
-        for (int k = 0; k < COMB__END; k++) {
-          opts.comp_opts.comb = k;
-          opts.n_neighbors = options_n_neighbors (&opts);
-
-          // Skip invalid combinations
-          if (options_validate (&opts))
-            continue;
-
-          run_once (&opts);
-        }
-      }
-    }
+  if (!strcmp (argv[1], "neighbors")) {
+    bench_neighbors (); 
+  } else if (!strcmp (argv[1], "mix")) {
+    bench_mix ();
+  } else if (!strcmp (argv[1], "hash")) {
+    bench_hash ();
+  } else {
+    fprintf (stderr, "Unknown benchmark\n");
+    return 1;
   }
 
   return 0;

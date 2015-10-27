@@ -42,3 +42,6 @@ config.log
 # vi swap files
 .*.swp
 
+# Data files
+*.dat
+

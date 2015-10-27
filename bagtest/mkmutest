@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This file is part of mutest, a simple micro unit testing framework for C.
 #

@@ -51,7 +51,7 @@ run_once (struct baghash_options *opts)
   const clock_t clk_end = rdtsc ();
   const double wall_end = wall_sec ();
   const unsigned int bytes_total = opts->m_cost * opts->t_cost * ITERS;
-  const unsigned int clks_total = (double)(clk_end - clk_start)/((double)ITERS);
+  const unsigned int clks_total = (clk_end - clk_start);
   const double cpb = (double)clks_total/(double)bytes_total;
   const double wall_total = (wall_end - wall_start)/((double)ITERS);
 
@@ -107,7 +107,7 @@ bench_mix (void)
   struct baghash_options opts;
   opts.t_cost = 5;
   opts.comp_opts = comp_opts;
-  for (unsigned m_cost = 4*1024; m_cost < 16*1024*1024 + 1; m_cost *= 2) {
+  for (unsigned m_cost = 4*1024; m_cost < 4*1024*1024 + 1; m_cost *= 2) {
     for (int mix = 0; mix < MIX__END; mix++) {
       for (int comb = 0; comb < COMB__END; comb ++) {
         opts.comp_opts.comb = comb;
@@ -137,7 +137,7 @@ bench_hash (void)
   opts.comp_opts = comp_opts;
   opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
 
-  for (unsigned m_cost = 4*1024; m_cost < 16*1024*1024 + 1; m_cost *= 2) {
+  for (unsigned m_cost = 4*1024; m_cost < 4*1024*1024 + 1; m_cost *= 2) {
     for (int comp = 0; comp < COMP__END; comp++) {
       opts.m_cost = m_cost;
       opts.comp_opts.comp = comp;

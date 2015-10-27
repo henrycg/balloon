@@ -10,6 +10,8 @@
 
 #define ITERS 32
 
+static bool use_papi = false;
+
 static void
 run_once (struct baghash_options *opts)
 {
@@ -20,10 +22,12 @@ run_once (struct baghash_options *opts)
   //events[2] = PAPI_BR_PRC;
   
   int error;
-  if ((error = PAPI_start_counters (events, n_events)) != PAPI_OK) {
-    const char *e = PAPI_strerror (error);
-    fprintf (stderr, "PAPI start failed with error: %s\n", e ? e : "");
-    return;
+  if (use_papi) {
+    if ((error = PAPI_start_counters (events, n_events)) != PAPI_OK) {
+      const char *e = PAPI_strerror (error);
+      fprintf (stderr, "PAPI start failed with error: %s\n", e ? e : "");
+      return;
+    }
   }
 
   const char in[] = "test input";
@@ -31,6 +35,9 @@ run_once (struct baghash_options *opts)
 
   const double wall_start = wall_sec ();
   long long counters[n_events];
+  for (int i = 0; i < n_events; i++) {
+    counters[i] = 0;
+  }
   const clock_t clk_start = rdtsc ();
 
   unsigned char out[32];
@@ -48,10 +55,12 @@ run_once (struct baghash_options *opts)
   const double cpb = (double)clks_total/(double)bytes_total;
   const double wall_total = (wall_end - wall_start)/((double)ITERS);
 
-  if ((error = PAPI_stop_counters (counters, n_events)) != PAPI_OK) {
-    const char *e = PAPI_strerror (error);
-    fprintf (stderr, "PAPI start failed with error: %s\n", e ? e : "");
-    return;
+  if (use_papi) {
+    if ((error = PAPI_stop_counters (counters, n_events)) != PAPI_OK) {
+      const char *e = PAPI_strerror (error);
+      fprintf (stderr, "PAPI start failed with error: %s\n", e ? e : "");
+      return;
+    }
   }
 
   printf ("%d\t%d\t%d\t%" PRIu64 "\t%" PRIu64 "\t%" PRIu8 "\t%lg\t%u\t%u\t%lg\t%lld\t%lld\n", 
@@ -143,13 +152,16 @@ bench_hash (void)
   }
 }
 
+
 int
 main (int argc, char *argv[])
 {
-  if (argc < 2) {
-    fprintf (stderr, "Must specify test name.\n");
+  if (argc < 2 || (argc == 3 && strcmp (argv[2], "-p"))) {
+    fprintf (stderr, "Usage: %s [test name] -p\n", argv[0]);
     return -1;
   }
+
+  use_papi = argc > 2;
 
   printf ("Mix\tComp\tComb\tMCost\tTCost\tNeighb\tWall\tBytesTotal\tCycles\tCpb\tL1miss\tL2miss\n");
 

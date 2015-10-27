@@ -37,6 +37,7 @@ options_validate (struct baghash_options *opts)
   return ERROR_NONE;
 }
 
+#if 0
 static uint8_t
 number_of_neighbors_single (const struct baghash_options *opts) 
 {
@@ -45,10 +46,6 @@ number_of_neighbors_single (const struct baghash_options *opts)
   const uint64_t n_blocks = options_n_blocks (opts);
   if (n_blocks > 2048)
     ret = 13;
-  else if (n_blocks > 1024)
-    ret = 15;
-  else if (n_blocks > 512)
-    ret = 14;
   else if (n_blocks > 256)
     ret = 15;
   else if (n_blocks > 128) 
@@ -73,13 +70,11 @@ number_of_neighbors_double (const struct baghash_options *opts)
   // of n/4 to expand to sets of size n/2.
   // We choose these values to make the probability of failure
   // less than 2^{-80}.
-  
+
   unsigned int ret; 
   const size_t n_blocks = options_n_blocks (opts);
   if (n_blocks > 2048)
     ret = 13;
-  else if (n_blocks > 1024)
-    ret = 15;
   else if (n_blocks > 512)
     ret = 15;
   else if (n_blocks > 256)
@@ -92,18 +87,22 @@ number_of_neighbors_double (const struct baghash_options *opts)
     ret = 40;
   return ret;
 }
+#endif
 
 uint8_t
 options_n_neighbors (const struct baghash_options *opts)
 {
+  // Note: to keep performance evaluation statistics consistent,
+  // fix these values to relatively conservative ones. In practice,
+  // we would reduce the degree for large block sizes.
   if (opts->comp_opts.comb == COMB__XOR)
     return 0;
 
   switch (opts->mix) {
     case MIX__BAGHASH_SINGLE_BUFFER:
-      return number_of_neighbors_single (opts);
+      return 15; // number_of_neighbors_single (opts);
     case MIX__BAGHASH_DOUBLE_BUFFER:
-      return number_of_neighbors_double (opts);
+      return 15; // number_of_neighbors_double (opts);
     case MIX__ARGON2_UNIFORM:
       return 1;
     default: 

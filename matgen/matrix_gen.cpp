@@ -15,14 +15,17 @@ struct matrix_generator {
 
 extern "C" 
 struct matrix_generator * 
-matrix_generator_init (struct bitstream *b, size_t n_rows, int c)
+matrix_generator_init (struct bitstream *b, size_t n_rows)
 {
   struct matrix_generator *m = (struct matrix_generator *)malloc (sizeof (*m));
   if (!m) return NULL;
 
   // TODO: Make sure that the bias of this generator
   // doesn't invalidate the security proofs.
-  double p = (4 * (log (n_rows) + (double)c - 1.0f)) / ((double)n_rows);
+  const double alpha = 4.0f;
+  const double dn_rows = n_rows;
+  const double n_over_alpha_plus_one = (dn_rows/alpha) + 1;
+  const double p = (alpha / dn_rows) * log (n_over_alpha_plus_one); 
   m->binom = new (std::nothrow) std::binomial_distribution<>(n_rows, p);
   if (!m->binom)
     return NULL;

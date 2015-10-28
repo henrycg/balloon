@@ -31,7 +31,7 @@ hash_state_double_init (struct hash_state *s, UNUSED struct baghash_options *opt
     if (s->opts->n_neighbors) {
       fprintf(stderr, "Warning: Using non-standard n_neighbors\n"); 
     } else {
-      data->matgen = matrix_generator_init (&s->bstream, s->n_blocks / 2, 0);
+      data->matgen = matrix_generator_init (&s->bstream, s->n_blocks / 2);
       if (!data->matgen)
         return ERROR_MALLOC;
     }

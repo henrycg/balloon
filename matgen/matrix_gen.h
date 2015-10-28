@@ -5,7 +5,7 @@
 #include "libbaghash/bitstream.h"
 
 struct matrix_generator *
-matrix_generator_init (struct bitstream *b, size_t n_rows, int c);
+matrix_generator_init (struct bitstream *b, size_t n_rows);
 
 void
 matrix_generator_free (struct matrix_generator *m);

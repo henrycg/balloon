@@ -21,7 +21,7 @@ mu_test_matgen_sample_row (void) {
   mu_ensure (!bitstream_rand_byte (&b, &cA));
 
   size_t nrows = 100;
-  struct matrix_generator *g = matrix_generator_init (&b, nrows, 10);  
+  struct matrix_generator *g = matrix_generator_init (&b, nrows);  
   size_t out;
   for (int i=0; i<100; i++) {
     mu_ensure (!matrix_generator_row_weight (g, &out));

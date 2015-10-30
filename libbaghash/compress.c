@@ -13,6 +13,7 @@
 
 #include "compress.h"
 #include "errors.h"
+#include "xor.h"
 
 static int compress_hash (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
     enum comp_method meth);
@@ -33,14 +34,6 @@ compress (uint8_t *out, const uint8_t *blocks[],
   }
 }
 
-static void
-xor_block (uint8_t *out, const uint8_t *blockA, const uint8_t *blockB,
-  size_t block_size)
-{
-  for (size_t i = 0; i < block_size; i++) {
-    out[i] = blockA[i] ^ blockB[i];
-  }
-}
 
 static int 
 compress_keccak (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)

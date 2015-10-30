@@ -11,6 +11,7 @@ src = [
     "hash_state_double.c",
     "hash_state_single.c",
     "options.c",
+    "xor.c"
 ]
 
 libs = [

@@ -19,7 +19,7 @@ struct double_data {
 };
 
 int 
-hash_state_double_init (struct hash_state *s, UNUSED struct baghash_options *opts)
+hash_statedouble_par_init (struct hash_state *s, UNUSED struct baghash_options *opts)
 {
   struct double_data *data = malloc (sizeof (*data));
   if (!data)
@@ -41,7 +41,7 @@ hash_state_double_init (struct hash_state *s, UNUSED struct baghash_options *opt
 }
 
 int
-hash_state_double_free (struct hash_state *s)
+hash_statedouble_par_free (struct hash_state *s)
 {
   struct double_data *data = (struct double_data *)s->extra_data;
   if (s->opts->comp_opts.comb == COMB__XOR && !s->opts->n_neighbors) {
@@ -52,7 +52,7 @@ hash_state_double_free (struct hash_state *s)
 }
 
 int 
-hash_state_double_fill (struct hash_state *s, 
+hash_statedouble_par_fill (struct hash_state *s, 
     const void *in, size_t inlen,
     const void *salt, size_t saltlen)
 {
@@ -67,7 +67,7 @@ rel_block_index (struct hash_state *s, uint8_t *buf, size_t idx)
 }
 
 int 
-hash_state_double_mix (struct hash_state *s)
+hash_statedouble_par_mix (struct hash_state *s)
 {
   int error;
   const bool distinct_neighbs = (s->opts->comp_opts.comb == COMB__XOR);
@@ -127,12 +127,11 @@ hash_state_double_mix (struct hash_state *s)
 }
 
 int 
-hash_state_double_extract (struct hash_state *s, void *out, size_t outlen)
+hash_statedouble_par_extract (struct hash_state *s, void *out, size_t outlen)
 {
-  // For two-buffer design, hash all the last block in the src buffer together.
+  // For two-buffer design, hash all of the bytes in the src buffer together.
   // TODO: Check for multiplication overflow here.
-  const size_t last_index = (s->n_blocks / 2) - 1;
-  const uint8_t *last_block = s->buffer + (last_index * s->block_size);
-  return fill_bytes_from_strings (s, out, outlen, last_block, s->block_size, NULL, 0);
+  return fill_bytes_from_strings (s, out, outlen, 
+    s->buffer, s->block_size * s->n_blocks / 2, NULL, 0);
 }
 

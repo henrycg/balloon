@@ -25,14 +25,23 @@ options_validate (struct baghash_options *opts)
       return ERROR_NO_NEIGHBORS;
   }
 
+  if (opts->n_threads > THREADS_MAX)
+    return ERROR_NTHREADS_TOO_BIG;
+
+  if (opts->mix != MIX__BAGHASH_DOUBLE_BUFFER_PAR && opts->n_threads > 1) {
+    return ERROR_INCOMPATIBLE_OPTIONS;
+  }
+
   const uint64_t n_blocks = options_n_blocks (opts);
   const uint16_t block_size = compress_block_size (opts->comp_opts.comp);
   if (n_blocks > UINT64_MAX / block_size)
     return ERROR_MCOST_TOO_BIG;
 
-  if (opts->mix != MIX__BAGHASH_DOUBLE_BUFFER && 
-      opts->comp_opts.comb == COMB__XOR)
-    return ERROR_INCOMPATIBLE_OPTIONS;
+  if (opts->comp_opts.comb == COMB__XOR) {
+    if (opts->mix != MIX__BAGHASH_DOUBLE_BUFFER && 
+        opts->mix != MIX__BAGHASH_DOUBLE_BUFFER_PAR)
+      return ERROR_INCOMPATIBLE_OPTIONS;
+  }
 
   return ERROR_NONE;
 }
@@ -101,6 +110,7 @@ options_n_neighbors (const struct baghash_options *opts)
   switch (opts->mix) {
     case MIX__BAGHASH_SINGLE_BUFFER:
       return 15; // number_of_neighbors_single (opts);
+    case MIX__BAGHASH_DOUBLE_BUFFER_PAR:
     case MIX__BAGHASH_DOUBLE_BUFFER:
       return 15; // number_of_neighbors_double (opts);
     case MIX__ARGON2_UNIFORM:

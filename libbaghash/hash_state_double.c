@@ -1,7 +1,6 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "matgen/matrix_gen.h"
@@ -11,6 +10,7 @@
 #include "compress.h"
 #include "errors.h"
 #include "hash_state.h"
+#include "hash_state_double.h"
 
 struct double_data {
   uint8_t *src;
@@ -100,7 +100,7 @@ hash_state_double_mix (struct hash_state *s)
           row_neighbors, blocks_per_buf, distinct_neighbs)))
       return error;
 
-#ifdef DEBUG
+#if 0
     for (size_t j=0; j<row_neighbors; j++) {
       printf("[%d] (%d) neighb=%d\n", (int)i, (int)j, (int)neighbors[j]);
     }

@@ -19,6 +19,7 @@ int main (int argc, char *argv[]){
   int64_t n_space = (1024*1024);
   int16_t n_neighbors = 0;
   int32_t n_iters = 1;
+  int16_t n_threads = 1;
   enum mix_method mix = 0;
 
   while (1)
@@ -34,12 +35,13 @@ int main (int argc, char *argv[]){
           {"rounds",  required_argument, 0, 'r'},
           {"neighbors",  required_argument, 0, 'n'},
           {"iterations",  required_argument, 0, 'i'},
+          {"threads",  required_argument, 0, 't'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      char c = getopt_long (argc, argv, "xc:m:s:r:n:i:",
+      char c = getopt_long (argc, argv, "xc:m:s:r:n:i:t:",
                        long_options, &option_index);
       char *end;
 
@@ -84,6 +86,8 @@ int main (int argc, char *argv[]){
             mix = MIX__BAGHASH_SINGLE_BUFFER;
           else if (!strcmp (optarg, "double"))
             mix = MIX__BAGHASH_DOUBLE_BUFFER;
+          else if (!strcmp (optarg, "double-par"))
+            mix = MIX__BAGHASH_DOUBLE_BUFFER_PAR;
           else if (!strcmp (optarg, "argon2"))
             mix = MIX__ARGON2_UNIFORM;
           else {
@@ -107,6 +111,15 @@ int main (int argc, char *argv[]){
           n_neighbors = strtoll (optarg, &end, 10);
           if (errno > 0 || *end != '\0' || n_neighbors < 0) {
             fprintf (stderr, "Invalid argument to -n\n");
+            return -1;
+          }
+          break;
+
+        case 't':
+          errno = 0;
+          n_threads = strtoll (optarg, &end, 10);
+          if (errno > 0 || *end != '\0' || n_threads <= 0) {
+            fprintf (stderr, "Invalid argument to -t\n");
             return -1;
           }
           break;
@@ -159,6 +172,7 @@ int main (int argc, char *argv[]){
   opts.m_cost = n_space;
   opts.t_cost = n_rounds;
   opts.n_neighbors = n_neighbors;
+  opts.n_threads = n_threads;
   opts.comp_opts = comp_opts;
   opts.mix = mix;
 
@@ -173,6 +187,7 @@ int main (int argc, char *argv[]){
   printf ("NSpace         = %lld\n", (long long int)opts.m_cost);
   printf ("Neighbs        = %lld\n", (long long int)opts.n_neighbors);
   printf ("Niters         = %lld\n", (long long int)n_iters);
+  printf ("Nthreads       = %d\n", (int)n_threads);
   printf ("Mix            = %d\n", opts.mix);
   printf ("Compression    = %d\n", opts.comp_opts.comp);
   printf ("XOR-then-hash  = %d\n", opts.comp_opts.comb);

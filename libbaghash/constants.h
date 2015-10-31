@@ -21,10 +21,13 @@
 // Minimum number of blocks to use
 #define BLOCKS_MIN (32ull)
 
+// Maximum number of threads
+#define THREADS_MAX 255
+
 // The product of these two values must be less
 // than 2^64 to avoid integer overflow in size_t.
 #define MCOST_MAX (1ull << 48)
-#define KECCAK_1600_BLOCK_SIZE (168)
+#define KECCAK_1600_BLOCK_SIZE (128)
 
 // These are parameters of the Keccak hash function.
 // The sum of these two must be equal to 1600. 

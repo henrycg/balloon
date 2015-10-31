@@ -16,7 +16,5 @@ int hash_state_double_par_fill (struct hash_state *s,
 
 int hash_state_double_par_mix (struct hash_state *s);
 
-int hash_state_double_par_extract (struct hash_state *s, void *out, size_t outlen);
-
 #endif
 

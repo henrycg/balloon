@@ -9,6 +9,7 @@ src = [
     "hash_state.c",
     "hash_state_argon2.c",
     "hash_state_double.c",
+    "hash_state_double_par.c",
     "hash_state_single.c",
     "options.c",
     "xor.c"

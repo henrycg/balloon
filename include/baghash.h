@@ -31,6 +31,7 @@ struct comp_options {
 enum mix_method {
   MIX__BAGHASH_SINGLE_BUFFER,
   MIX__BAGHASH_DOUBLE_BUFFER,
+  MIX__BAGHASH_DOUBLE_BUFFER_PAR,
 
   MIX__ARGON2_UNIFORM,
 
@@ -40,6 +41,8 @@ enum mix_method {
 struct baghash_options {
   uint64_t m_cost;
   uint64_t t_cost;
+
+  uint16_t n_threads;
 
   // Degree of expander graph used in the construction.
   // TODO: Make sure that this number is big enough to 

@@ -50,11 +50,11 @@ test_hash_state_fill (enum mix_method mix)
 
   if (mix != MIX__ARGON2_UNIFORM) {
     size_t n_zero = 0;
-    for (size_t i = 0; i < s.n_blocks; i++) {
+    for (size_t i = 0; i < s.block_size*s.n_blocks; i++) {
       if (!s.buffer[i]) n_zero++;
     }
 
-    mu_ensure (n_zero < s.n_blocks/200);
+    mu_ensure (n_zero < (s.n_blocks*s.block_size)/200);
   }
 
   hash_state_free (&s);

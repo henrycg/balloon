@@ -72,7 +72,7 @@ hash_state_argon2_mix (struct hash_state *s)
     }
     blocks[1] = block_index (s, neighbor);
 
-#ifdef DEBUG
+#if 0
     printf("[%d] prev=%d, other=%d\n", i, (int)prev_idx, (int)neighbor);
 #endif
     

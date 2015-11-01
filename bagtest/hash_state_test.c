@@ -15,6 +15,7 @@ init_options (struct baghash_options *opts, enum mix_method mix)
   opts->comp_opts.comp = COMP__KECCAK_1600;
   opts->comp_opts.comb = COMB__HASH;
   opts->mix = mix;
+  opts->n_threads = 1;
 }
 
 void 
@@ -22,7 +23,9 @@ test_hash_state_init_free (enum mix_method mix)
 {
   struct hash_state s;
   struct baghash_options opts;
+ 
   init_options (&opts, mix);
+  mu_ensure ( !options_validate (&opts) );
 
   const unsigned char salt[] = "abcdefghijkl";
   mu_ensure ( !hash_state_init (&s, &opts, salt, sizeof (salt)) );
@@ -42,6 +45,7 @@ test_hash_state_fill (enum mix_method mix)
   struct hash_state s;
   struct baghash_options opts;
   init_options (&opts, mix);
+  mu_ensure ( !options_validate (&opts) );
   const unsigned char salt[] = "abcdefghijkl";
   const unsigned char in[] = "ZZZZZZZZZZZZ";
   mu_ensure ( !hash_state_init (&s, &opts, salt, sizeof (salt)) );
@@ -141,3 +145,25 @@ mu_test_hash_state_mix (void)
     test_hash_state_mix (i);
 }
 
+void 
+test_hash_state_mix_threads (void)
+{
+  struct baghash_options opts;
+  init_options (&opts, MIX__BAGHASH_DOUBLE_BUFFER_PAR);
+  opts.n_threads = 7;
+
+  mu_ensure ( !options_validate (&opts) );
+  struct hash_state s;
+  const unsigned char salt[] = "abcdefghijkl";
+  const unsigned char in[] = "ZZZZZZZZZZZZ";
+  mu_ensure ( !hash_state_init (&s, &opts, salt, sizeof (salt)) );
+  mu_ensure ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
+
+  for (int i = 0; i < 10; i++)
+    mu_ensure ( !hash_state_mix (&s) );
+
+  unsigned char out[1024];
+  mu_ensure ( !hash_state_extract (&s, out, 1024) );
+  mu_ensure ( out[0] || out[1] || out[2] || out[3] );
+  hash_state_free (&s);
+}

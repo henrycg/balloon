@@ -29,7 +29,7 @@ matrix_generator_init (struct bitstream *b, size_t n_rows)
   const double n_over_alpha_plus_one = (dn_rows/alpha) + 1;
   const double p = (alpha / dn_rows) * log (n_over_alpha_plus_one); 
   */
-  const double p = 20.0f / ((double) n_rows);
+  const double p = (n_rows <= 20) ? 1.0f : 20.0f / ((double) n_rows);
   m->binom = new (std::nothrow) std::binomial_distribution<>(n_rows, p);
   if (!m->binom)
     return NULL;

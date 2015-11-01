@@ -9,6 +9,7 @@
 #include "libbaghash/timing.h"
 
 #define ITERS 1
+#define MEM_MAX (32 * 1024 * 1024)
 
 static bool use_papi = false;
 
@@ -85,7 +86,6 @@ bench_neighbors (void)
   // Run number of neighbors
   struct comp_options comp_opts;
   comp_opts.comp = COMP__KECCAK_1600;
-  comp_opts.comb = COMB__XOR;
 
   struct baghash_options opts;
   opts.m_cost = 128 * 1024; 
@@ -94,9 +94,13 @@ bench_neighbors (void)
   opts.comp_opts = comp_opts;
   opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
 
-  for (unsigned n_neighb = 1; n_neighb < 128; n_neighb += 2) {
-    opts.n_neighbors = n_neighb;
-    run_once (&opts); 
+  for (int comb = 0; comb < COMB__END; comb++) {
+    comp_opts.comb = comb;
+    opts.comp_opts = comp_opts;
+    for (unsigned n_neighb = 1; n_neighb < 128; n_neighb += 2) {
+      opts.n_neighbors = n_neighb;
+      run_once (&opts); 
+    }
   }
 }
 
@@ -110,7 +114,7 @@ bench_mix (void)
   opts.t_cost = 5;
   opts.comp_opts = comp_opts;
   opts.n_threads = 1;
-  for (unsigned m_cost = 4*1024; m_cost < 4*1024*1024 + 1; m_cost *= 2) {
+  for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 2) {
     for (int mix = 0; mix < MIX__END; mix++) {
       for (int comb = 0; comb < COMB__END; comb ++) {
         opts.comp_opts.comb = comb;
@@ -166,7 +170,7 @@ bench_hash (void)
   opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
   opts.n_threads = 1;
 
-  for (unsigned m_cost = 4*1024; m_cost < 4*1024*1024 + 1; m_cost *= 2) {
+  for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 2) {
     for (int comp = 0; comp < COMP__END; comp++) {
       opts.m_cost = m_cost;
       opts.comp_opts.comp = comp;

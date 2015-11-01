@@ -22,10 +22,14 @@ matrix_generator_init (struct bitstream *b, size_t n_rows)
 
   // TODO: Make sure that the bias of this generator
   // doesn't invalidate the security proofs.
+
+  /*
   const double alpha = 4.0f;
   const double dn_rows = n_rows;
   const double n_over_alpha_plus_one = (dn_rows/alpha) + 1;
   const double p = (alpha / dn_rows) * log (n_over_alpha_plus_one); 
+  */
+  const double p = 20.0f / ((double) n_rows);
   m->binom = new (std::nothrow) std::binomial_distribution<>(n_rows, p);
   if (!m->binom)
     return NULL;

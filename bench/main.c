@@ -8,7 +8,7 @@
 #include "libbaghash/options.h"
 #include "libbaghash/timing.h"
 
-#define ITERS 32
+#define ITERS 1
 
 static bool use_papi = false;
 
@@ -63,19 +63,20 @@ run_once (struct baghash_options *opts)
     }
   }
 
-  printf ("%d\t%d\t%d\t%" PRIu64 "\t%" PRIu64 "\t%" PRIu8 "\t%lg\t%u\t%u\t%lg\t%lld\t%lld\n", 
-      opts->mix,
-      opts->comp_opts.comp,
-      opts->comp_opts.comb,
-      opts->m_cost,
-      opts->t_cost,
-      opts->n_neighbors,
-      wall_total,
-      bytes_total, 
-      clks_total,
-      cpb,
-      counters[0]/ITERS,
-      counters[1]/ITERS);
+  printf ("%d\t", opts->mix);
+  printf ("%d\t", opts->comp_opts.comp);
+  printf ("%d\t", opts->comp_opts.comb);
+  printf ("%" PRIu64 "\t", opts->m_cost);
+  printf ("%" PRIu64 "\t", opts->t_cost);
+  printf ("%" PRIu8 "\t", opts->n_neighbors);
+  printf ("%" PRIu16 "\t", opts->n_threads);
+  printf ("%lg\t", wall_total);
+  printf ("%u\t", bytes_total);
+  printf ("%u\t", clks_total);
+  printf ("%lg\t", cpb);
+  printf ("%lld\t", counters[0]/ITERS);
+  printf ("%lld\t", counters[1]/ITERS);
+  printf ("\n");
 }
 
 static void
@@ -89,6 +90,7 @@ bench_neighbors (void)
   struct baghash_options opts;
   opts.m_cost = 128 * 1024; 
   opts.t_cost = 5;
+  opts.n_threads = 1;
   opts.comp_opts = comp_opts;
   opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
 
@@ -107,6 +109,7 @@ bench_mix (void)
   struct baghash_options opts;
   opts.t_cost = 5;
   opts.comp_opts = comp_opts;
+  opts.n_threads = 1;
   for (unsigned m_cost = 4*1024; m_cost < 4*1024*1024 + 1; m_cost *= 2) {
     for (int mix = 0; mix < MIX__END; mix++) {
       for (int comb = 0; comb < COMB__END; comb ++) {
@@ -126,6 +129,31 @@ bench_mix (void)
 }
 
 static void
+bench_threads (void)
+{
+  struct comp_options comp_opts;
+  comp_opts.comp = COMP__KECCAK_1600;
+
+  struct baghash_options opts;
+  opts.t_cost = 5;
+  opts.comp_opts = comp_opts;
+  opts.m_cost = 4*1024*1024;
+  opts.mix = MIX__BAGHASH_DOUBLE_BUFFER_PAR;
+  for (unsigned threads = 1; threads < 32; threads++) {
+    for (int comb = 0; comb < COMB__END; comb ++) {
+      opts.comp_opts.comb = comb;
+      opts.n_threads = threads;
+      opts.n_neighbors = options_n_neighbors (&opts);
+
+      // Skip invalid combinations
+      if (options_validate (&opts))
+        continue;
+
+      run_once (&opts); 
+    }
+  }
+}
+static void
 bench_hash (void)
 {
   struct comp_options comp_opts;
@@ -136,6 +164,7 @@ bench_hash (void)
   opts.t_cost = 5;
   opts.comp_opts = comp_opts;
   opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
+  opts.n_threads = 1;
 
   for (unsigned m_cost = 4*1024; m_cost < 4*1024*1024 + 1; m_cost *= 2) {
     for (int comp = 0; comp < COMP__END; comp++) {
@@ -163,7 +192,7 @@ main (int argc, char *argv[])
 
   use_papi = argc > 2;
 
-  printf ("Mix\tComp\tComb\tMCost\tTCost\tNeighb\tWall\tBytesTotal\tCycles\tCpb\tL1miss\tL2miss\n");
+  printf ("Mix\tComp\tComb\tMCost\tTCost\tNeighb\tThreads\tWall\tBytesTotal\tCycles\tCpb\tL1miss\tL2miss\n");
 
   if (!strcmp (argv[1], "neighbors")) {
     bench_neighbors (); 
@@ -171,6 +200,8 @@ main (int argc, char *argv[])
     bench_mix ();
   } else if (!strcmp (argv[1], "hash")) {
     bench_hash ();
+  } else if (!strcmp (argv[1], "threads")) {
+    bench_threads ();
   } else {
     fprintf (stderr, "Unknown benchmark\n");
     return 1;

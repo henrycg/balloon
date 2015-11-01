@@ -109,10 +109,10 @@ options_n_neighbors (const struct baghash_options *opts)
 
   switch (opts->mix) {
     case MIX__BAGHASH_SINGLE_BUFFER:
-      return 15; // number_of_neighbors_single (opts);
+      return 20; // number_of_neighbors_single (opts);
     case MIX__BAGHASH_DOUBLE_BUFFER_PAR:
     case MIX__BAGHASH_DOUBLE_BUFFER:
-      return 15; // number_of_neighbors_double (opts);
+      return 20; // number_of_neighbors_double (opts);
     case MIX__ARGON2_UNIFORM:
       return 1;
     default: 

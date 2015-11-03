@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2015, Henry Corrigan-Gibbs
+ * 
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ */
+
 
 #include <assert.h>
 #include <pthread.h>
@@ -18,6 +34,7 @@ struct double_par_data {
   uint8_t *src;
   uint8_t *dst;
 
+  uint8_t *join_block;
   struct matrix_generator **matgens;
   struct bitstream *bstreams;
 };
@@ -54,6 +71,11 @@ hash_state_double_par_init (struct hash_state *s, UNUSED struct baghash_options 
   data->bstreams = malloc (sizeof (struct bitstream) * s->opts->n_threads);
   if (!data->bstreams)
     return ERROR_MALLOC;
+  data->join_block = malloc (s->block_size);
+  if (!data->join_block)
+    return ERROR_MALLOC;
+
+  memset (data->join_block, 0, s->block_size);
 
   int error;
   const int seedlen = 32;
@@ -84,7 +106,7 @@ hash_state_double_par_free (struct hash_state *s)
 
     matrix_generator_free (data->matgens[i]);
   }
-  
+  free (data->join_block);
   free (data->bstreams);
   free (data->matgens);
   free (s->extra_data);
@@ -106,6 +128,21 @@ rel_block_index (struct hash_state *s, uint8_t *buf, size_t idx)
   return buf + (s->block_size * idx);
 }
 
+static size_t 
+thread_start (uint16_t n_threads, uint16_t thread_idx, size_t blocks_per_buf)
+{
+  const size_t blocks_per_thread = blocks_per_buf / n_threads;
+  return (thread_idx * blocks_per_thread);
+}
+
+static size_t 
+thread_end (uint16_t n_threads, uint16_t thread_idx, size_t blocks_per_buf)
+{
+  const size_t blocks_per_thread = blocks_per_buf / n_threads;
+  const size_t start = thread_start (n_threads, thread_idx, blocks_per_buf);
+  return (thread_idx == (n_threads - 1)) ? blocks_per_buf : start + blocks_per_thread;
+}
+
 static void *
 mix_partial (void *in)
 {
@@ -113,17 +150,14 @@ mix_partial (void *in)
 
   struct thread_data *d = in; 
   struct hash_state *s = d->s;
-  const uint16_t thread_idx = d->thread_idx;
 
   struct double_par_data *data = (struct double_par_data *)s->extra_data;
   const bool distinct_neighbs = (s->opts->comp_opts.comb == COMB__XOR);
-  const size_t blocks_per_buf = s->n_blocks / 2; 
   size_t row_neighbors = s->opts->n_neighbors;
 
-  const uint16_t n_threads = s->opts->n_threads;
-  const size_t blocks_per_thread = blocks_per_buf / n_threads;
-  const size_t start = (thread_idx * blocks_per_thread);
-  const size_t end = (thread_idx == (n_threads - 1)) ? (blocks_per_buf - 1) : start + blocks_per_thread;
+  const size_t blocks_per_buf = s->n_blocks / 2; 
+  const size_t start = thread_start (s->opts->n_threads, d->thread_idx, blocks_per_buf);
+  const size_t end = thread_end (s->opts->n_threads, d->thread_idx, blocks_per_buf);
 
   if (d->mix) {
     //printf("[%d] Start: %d, End: %d\n", (int)thread_idx, (int)start, (int)end);
@@ -133,35 +167,41 @@ mix_partial (void *in)
       // Only use the fancy distribution if the user has not specified
       // a number of neighbors to use.
       if (s->opts->comp_opts.comb == COMB__XOR && !s->opts->n_neighbors) {
-        if ((error = matrix_generator_row_weight (data->matgens[thread_idx], &row_neighbors)))
+        if ((error = matrix_generator_row_weight (data->matgens[d->thread_idx], &row_neighbors)))
           return (void *)(uint64_t)error;
       }
 
-      const uint8_t *blocks[row_neighbors];
+      const size_t n_blocks = row_neighbors + 1;
+      const uint8_t *blocks[n_blocks];
+      
+      // If this is the first block of the segment, hash with the join block.
+      // Otherwise, hash with the previous block in the buffer.
+      blocks[0] = (i == start) ? data->join_block : rel_block_index (s, data->src, i - 1);
 
       // TODO: Check if sorting the neighbors before accessing them improves
       // the performance at all.
       uint64_t neighbors[row_neighbors];
 
-      if ((error = bitstream_rand_ints (&data->bstreams[thread_idx], neighbors, 
+      if ((error = bitstream_rand_ints (&data->bstreams[d->thread_idx], neighbors, 
             row_neighbors, blocks_per_buf, distinct_neighbs)))
         return (void *)(uint64_t)error;
 
       // For each block, pick random neighbors
       for (size_t n = 0; n < row_neighbors; n++) { 
         // Get next neighbor
-        blocks[n] = rel_block_index (s, data->src, neighbors[n]);
+        blocks[n + 1] = rel_block_index (s, data->src, neighbors[n]);
       }
 
       // Hash value of neighbors into temp buffer.
-      if ((error = compress (cur_block, blocks, row_neighbors, &s->opts->comp_opts)))
+      if ((error = compress (cur_block, blocks, n_blocks, &s->opts->comp_opts)))
         return (void *)(uint64_t)error;
     }
   } else {
     const size_t blen = (end - start) * s->block_size;
     uint8_t *bufp = rel_block_index (s, data->src, start);
-    if ((error = bitstream_fill_buffer (&d->pstream, bufp, blen)))
+    if ((error = bitstream_fill_buffer (&d->pstream, bufp, blen))) {
       return (void *)(uint64_t)error;
+    }
   }
 
   return (void *)ERROR_NONE;
@@ -228,8 +268,19 @@ hash_state_double_par_mix (struct hash_state *s)
 
   struct double_par_data *data = (struct double_par_data *)s->extra_data;
 
-  // Swap the role of the src and dst buffers.
-  // At the entry of the mix function, we are always copying from src to dst.
+  // Update the join block by hashing together the last blocks of each 
+  // thread's segment.
+  const size_t n_blocks = s->opts->n_threads + 1;
+  const uint8_t *blocks[n_blocks];
+  blocks[0] = data->join_block;
+  for (uint16_t t = 0; t < s->opts->n_threads; t++) {
+    const size_t end = thread_end (s->opts->n_threads, t, s->n_blocks / 2);
+    blocks[t + 1] = rel_block_index (s, data->dst, end - 1);
+  }
+
+  if ((error = compress (data->join_block, blocks, n_blocks, &s->opts->comp_opts)))
+    return error;
+  
   uint8_t *tmp = data->src;
   data->src = data->dst;
   data->dst = tmp; 
@@ -237,4 +288,11 @@ hash_state_double_par_mix (struct hash_state *s)
   return ERROR_NONE;
 }
 
+
+int 
+hash_state_double_par_extract (struct hash_state *s, void *out, size_t outlen)
+{
+  struct double_par_data *data = (struct double_par_data *)s->extra_data;
+  return fill_bytes_from_strings (s, out, outlen, data->join_block, s->block_size, NULL, 0);
+}
 

@@ -27,6 +27,7 @@
 #include "errors.h"
 #include "hash_state.h"
 #include "hash_state_double.h"
+#include "xor.h"
 
 struct double_data {
   uint8_t *src;
@@ -149,6 +150,21 @@ hash_state_double_extract (struct hash_state *s, void *out, size_t outlen)
   // TODO: Check for multiplication overflow here.
   const size_t last_index = (s->n_blocks / 2) - 1;
   const uint8_t *last_block = s->buffer + (last_index * s->block_size);
-  return fill_bytes_from_strings (s, out, outlen, last_block, s->block_size, NULL, 0);
+  const uint8_t *bufp = last_block;
+  struct double_data *data = (struct double_data *)s->extra_data;
+
+  if (s->opts->comp_opts.comb == COMB__XOR) {
+    // If we are using one of the XOR combining method, XOR the contents
+    // of the last buffer together and output that.
+    uint8_t tmp[s->block_size];
+    memset (tmp, 0, s->block_size);
+    for (size_t i = 0; i < s->n_blocks / 2; i++) {
+      xor_block (tmp, tmp, rel_block_index (s, data->src, i), s->block_size);
+    }
+    bufp = tmp;
+  } 
+
+  return fill_bytes_from_strings (s, out, outlen, bufp, s->block_size, NULL, 0);
 }
+
 

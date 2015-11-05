@@ -24,7 +24,7 @@
 #include "libbaghash/options.h"
 #include "libbaghash/timing.h"
 
-#define ITERS 1
+#define ITERS 32
 #define MEM_MAX (32 * 1024 * 1024)
 
 static bool use_papi = false;
@@ -155,11 +155,11 @@ bench_threads (void)
   comp_opts.comp = COMP__KECCAK_1600;
 
   struct baghash_options opts;
-  opts.t_cost = 5;
+  opts.t_cost = 3;
   opts.comp_opts = comp_opts;
-  opts.m_cost = 4*1024*1024;
+  opts.m_cost = 1*1024*1024;
   opts.mix = MIX__BAGHASH_DOUBLE_BUFFER_PAR;
-  for (unsigned threads = 1; threads < 32; threads++) {
+  for (unsigned threads = 1; threads < 9; threads++) {
     for (int comb = 0; comb < COMB__END; comb ++) {
       opts.comp_opts.comb = comb;
       opts.n_threads = threads;

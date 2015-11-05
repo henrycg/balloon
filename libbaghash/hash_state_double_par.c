@@ -21,8 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "matgen/matrix_gen.h"
-
 #include "bitstream.h"
 #include "constants.h"
 #include "compress.h"
@@ -36,7 +34,6 @@ struct double_par_data {
   uint8_t *dst;
 
   uint8_t *join_block;
-  struct matrix_generator **matgens;
   struct bitstream *bstreams;
 };
 
@@ -60,15 +57,6 @@ hash_state_double_par_init (struct hash_state *s, UNUSED struct baghash_options 
 
   data->src = block_index (s, 0);
   data->dst = block_index (s, s->n_blocks / 2);
-  if (s->opts->comp_opts.comb == COMB__XOR) {
-    if (s->opts->n_neighbors) {
-      fprintf(stderr, "Warning: Using non-standard n_neighbors\n"); 
-    } 
-  }
-
-  data->matgens = malloc (sizeof (struct matrix_generator *) * s->opts->n_threads);
-  if (!data->matgens)
-    return ERROR_MALLOC;
   data->bstreams = malloc (sizeof (struct bitstream) * s->opts->n_threads);
   if (!data->bstreams)
     return ERROR_MALLOC;
@@ -87,8 +75,6 @@ hash_state_double_par_init (struct hash_state *s, UNUSED struct baghash_options 
 
     if ((error = bitstream_init_with_seed (&data->bstreams[i], seed, seedlen)))
       return error;
-
-    data->matgens[i] = matrix_generator_init (&data->bstreams[i], s->n_blocks / 2);
   }
  
   s->extra_data = data;
@@ -104,12 +90,9 @@ hash_state_double_par_free (struct hash_state *s)
   for (int i = 0; i < s->opts->n_threads; i++) {
     if ((error = bitstream_free (&data->bstreams[i])))
       return error;
-
-    matrix_generator_free (data->matgens[i]);
   }
   free (data->join_block);
   free (data->bstreams);
-  free (data->matgens);
   free (s->extra_data);
   return ERROR_NONE;
 }
@@ -153,48 +136,40 @@ mix_partial (void *in)
   struct hash_state *s = d->s;
 
   struct double_par_data *data = (struct double_par_data *)s->extra_data;
-  const bool distinct_neighbs = (s->opts->comp_opts.comb == COMB__XOR);
-  size_t row_neighbors = s->opts->n_neighbors;
-
   const size_t blocks_per_buf = s->n_blocks / 2; 
   const size_t start = thread_start (s->opts->n_threads, d->thread_idx, blocks_per_buf);
   const size_t end = thread_end (s->opts->n_threads, d->thread_idx, blocks_per_buf);
+  const bool is_xor = s->opts->comp_opts.comb == COMB__XOR;
 
   if (d->mix) {
     //printf("[%d] Start: %d, End: %d\n", (int)thread_idx, (int)start, (int)end);
     for (size_t i = start; i < end; i++) {
       void *cur_block = rel_block_index (s, data->dst, i);
 
-      // Only use the fancy distribution if the user has not specified
-      // a number of neighbors to use.
-      if (s->opts->comp_opts.comb == COMB__XOR && !s->opts->n_neighbors) {
-        if ((error = matrix_generator_row_weight (data->matgens[d->thread_idx], &row_neighbors)))
-          return (void *)(uint64_t)error;
-      }
+      size_t n_neighbors = s->opts->n_neighbors;
+      // TODO: Check if sorting the neighbors before accessing them improves
+      // the performance at all.
+      uint64_t neighbors[n_neighbors];
+      if ((error = bitstream_rand_ints_nodup (&data->bstreams[d->thread_idx], neighbors, 
+            &n_neighbors, n_neighbors, blocks_per_buf)))
+        return (void *)(uint64_t)error;
 
-      const size_t n_blocks = row_neighbors + 1;
-      const uint8_t *blocks[n_blocks];
+      const size_t n_blocks_to_hash = is_xor ? n_neighbors : n_neighbors + 1;
+      const uint8_t *blocks[n_blocks_to_hash];
       
       // If this is the first block of the segment, hash with the join block.
       // Otherwise, hash with the previous block in the buffer.
-      blocks[0] = (i == start) ? data->join_block : rel_block_index (s, data->src, i - 1);
-
-      // TODO: Check if sorting the neighbors before accessing them improves
-      // the performance at all.
-      uint64_t neighbors[row_neighbors];
-
-      if ((error = bitstream_rand_ints (&data->bstreams[d->thread_idx], neighbors, 
-            row_neighbors, blocks_per_buf, distinct_neighbs)))
-        return (void *)(uint64_t)error;
+      if (!is_xor)
+        blocks[n_neighbors] = (i == start) ? data->join_block : rel_block_index (s, data->src, i - 1);
 
       // For each block, pick random neighbors
-      for (size_t n = 0; n < row_neighbors; n++) { 
+      for (size_t n = 0; n < n_neighbors; n++) { 
         // Get next neighbor
-        blocks[n + 1] = rel_block_index (s, data->src, neighbors[n]);
+        blocks[n] = rel_block_index (s, data->src, neighbors[n]);
       }
 
       // Hash value of neighbors into temp buffer.
-      if ((error = compress (cur_block, blocks, n_blocks, &s->opts->comp_opts)))
+      if ((error = compress (cur_block, blocks, n_blocks_to_hash, &s->opts->comp_opts)))
         return (void *)(uint64_t)error;
     }
   } else {

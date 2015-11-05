@@ -62,8 +62,13 @@ int bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen);
  */
 int bitstream_rand_int (struct bitstream *b, uint64_t *out, uint64_t max);
 
-int bitstream_rand_ints (struct bitstream *b, uint64_t *outs, size_t outlen, 
-  uint64_t max, bool distinct);
+/**
+ * Sample outlen random integers [0, max) with replacement and
+ * only return the distinct values. Stores the number of distinct 
+ * elements returned in n_found.
+ */
+int bitstream_rand_ints_nodup (struct bitstream *b, uint64_t *outs, size_t *n_found, 
+  size_t outlen, uint64_t max);
 
 /**
  * Get a single char.

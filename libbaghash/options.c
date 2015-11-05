@@ -121,7 +121,7 @@ options_n_neighbors (const struct baghash_options *opts)
   // fix these values to relatively conservative ones. In practice,
   // we would reduce the degree for large block sizes.
   if (opts->comp_opts.comb == COMB__XOR)
-    return 0;
+    return 10;
 
   switch (opts->mix) {
     case MIX__BAGHASH_SINGLE_BUFFER:

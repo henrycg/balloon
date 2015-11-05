@@ -131,21 +131,19 @@ env.Append(LIBS = ["baghash"], \
   LIBPATH = ['#build/libbaghash', 
             '#build/echo',
             '#build/keccak', 
-            '#build/matgen',
             '#build/blake2b'])
 
 # Add header files
 env.Append(CPPPATH = ["#include", "#."])
 
 env.Append(CPPFLAGS = ['-pthread'])
-env.Append(LIBS = ["crypto", "pthread", "m", "stdc++"])
+env.Append(LIBS = ["crypto", "pthread", "m"])
 
 
 # libbaghash
 SConscript('libbaghash/SConscript', variant_dir='build/libbaghash')
 SConscript('keccak/SConscript', variant_dir='build/keccak')
 SConscript('blake2b/SConscript', variant_dir='build/blake2b')
-SConscript('matgen/SConscript', variant_dir='build/matgen')
 SConscript('echo/SConscript', variant_dir='build/echo')
 
 # Utilities

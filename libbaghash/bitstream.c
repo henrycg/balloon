@@ -29,7 +29,7 @@ static uint8_t bytes_required (uint64_t val);
 static uint8_t bits_in_int (uint64_t val);
 static uint64_t bytes_to_int (const uint8_t *bytes, size_t n_bytes);
 static int generate_few_bytes (struct bitstream *b, uint8_t *out, size_t outlen);
-static bool is_duplicate (uint64_t *outs, size_t idx);
+static bool is_in_list (uint64_t *outs, size_t outlen, uint64_t r);
 
 int
 bitstream_init (struct bitstream *b)
@@ -181,6 +181,9 @@ bitstream_rand_int (struct bitstream *b, uint64_t *out, uint64_t max)
   uint8_t buf[n_bytes];
   uint64_t retval;
 
+  if (!max)
+    return ERROR_BITSTREAM_MAX_TOO_SMALL;
+
   do {
     if ((error = generate_few_bytes (b, buf, n_bytes)))
       return error;
@@ -194,29 +197,32 @@ bitstream_rand_int (struct bitstream *b, uint64_t *out, uint64_t max)
 }
 
 static bool 
-is_duplicate (uint64_t *outs, size_t idx)
+is_in_list (uint64_t *outs, size_t outlen, uint64_t r)
 {
   // TODO: Use a sorted list here to speed up the search.
-  for (size_t i = 0; i < idx; i++) {
-    if (outs[i] == outs[idx]) return true;
+  for (size_t i = 0; i < outlen; i++) {
+    if (outs[i] == r) return true;
   }
 
   return false;
 }
 
 int 
-bitstream_rand_ints (struct bitstream *b, uint64_t *outs, size_t outlen, 
-  uint64_t max, bool distinct)
+bitstream_rand_ints_nodup (struct bitstream *b, uint64_t *outs, size_t *n_found, 
+  size_t outlen, uint64_t max)
 {
-  if (distinct && max < outlen)
-    return ERROR_BITSTREAM_MAX_TOO_SMALL;
-
   int error;
-  for (size_t i = 0; i < outlen; i++) {
-    do {
-    if ((error =  bitstream_rand_int (b, &outs[i], max)))
+  uint64_t r;
+  *n_found = 0;
+
+  for (size_t try = 0; try < outlen; try++) {
+    if ((error = bitstream_rand_int (b, &r, max)))
       return error;
-    } while (distinct && is_duplicate (outs, i));
+
+    if (!is_in_list (outs, *n_found, r)) {
+      outs[*n_found] = r;
+      *n_found = *n_found + 1;
+    }
   }
 
   return ERROR_NONE;

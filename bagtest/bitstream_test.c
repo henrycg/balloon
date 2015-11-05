@@ -262,35 +262,26 @@ mu_test_bitstream__rand_ints (void)
   mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
   mu_ensure (!bitstream_seed_finalize (&b));
 
-  uint64_t outs[15];
+  uint64_t outs[50];
+  const uint64_t magic = 231203981414132ull;
+  for (int i=0; i<50; i++) {
+    outs[i] = magic;
+  }
   uint64_t max = 15ull;
-  mu_ensure (!bitstream_rand_ints (&b, outs, 15, max, true));
-  for (int i=0; i<15; i++) {
-    bool found = false;
-    for (uint64_t j=0; j<15; j++) {
-      if (outs[i] == j) found = true;
+  size_t got;
+  mu_ensure (!bitstream_rand_ints_nodup (&b, outs, &got, 50, max));
+  for (size_t i=0; i<got; i++) {
+    for (size_t j=0; j<got; j++) {
+      if (i != j)
+        mu_check (outs[i] != outs[j]);
     }
-    mu_check (found);
+  }
+
+  for (size_t i=got; i<50; i++) {
+    mu_check (outs[i] == magic);
   }
 
   mu_ensure (!bitstream_free (&b));
 }
 
-void 
-mu_test_bitstream__rand_ints_small (void) 
-{
-  struct bitstream b;
-  mu_ensure (!bitstream_init (&b));
-
-  const unsigned char seed[] = "abcd";
-  mu_ensure (!bitstream_seed_add (&b, seed, sizeof (seed)));
-  mu_ensure (!bitstream_seed_finalize (&b));
-
-  uint64_t outs[15];
-  uint64_t max = 3ull;
-  mu_ensure (bitstream_rand_ints (&b, outs, 15, max, true) == ERROR_BITSTREAM_MAX_TOO_SMALL);
-  mu_ensure (!bitstream_rand_ints (&b, outs, 15, 16, true));
-
-  mu_ensure (!bitstream_free (&b));
-}
 

@@ -1,6 +1,25 @@
+
+ _    _                  _             _ 
+| |  | |                (_)           | |
+| |  | | __ _ _ __ _ __  _ _ __   __ _| |
+| |/\| |/ _` | '__| '_ \| | '_ \ / _` | |
+\  /\  / (_| | |  | | | | | | | | (_| |_|
+ \/  \/ \__,_|_|  |_| |_|_|_| |_|\__, (_)
+                                  __/ |  
+                                 |___/  
+
+Please DO NOT use this code in production!
+
+This is an early research prototype built exclusively for benchmarking purposes
+and it may be riddled with obvious security vulnerabilities. In the future, if
+this code gets the level of scrutiny that security-critical production code
+deserves, I will remove this warning. Until then, here be dragons. 
+
+----------------------------------------
+
 This is a protoype of a new space-hard hash function construction.
 
 Henry Corrigan-Gibbs
 henrycg@cs.stanford.edu
-23 September 2015
+7 November 2015
 

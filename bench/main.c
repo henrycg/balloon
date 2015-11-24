@@ -218,6 +218,8 @@ main (int argc, char *argv[])
 {
   if (argc < 2 || (argc == 3 && strcmp (argv[2], "-p"))) {
     fprintf (stderr, "Usage: %s [test name] -p\n", argv[0]);
+    fprintf (stderr, "    Available tests: neighbors, mix, hash, threads\n");
+    fprintf (stderr, "    When invoked with -p will try to gather cache statistics using PAPI\n");
     return -1;
   }
 

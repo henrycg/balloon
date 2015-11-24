@@ -24,7 +24,42 @@
 #include "libballoon/options.h"
 #include "libballoon/timing.h"
 
-int main (int argc, char *argv[]){
+static void 
+usage (const char *name)
+{
+  fprintf (stderr, "Usage: %s password salt\n", name);
+  fprintf (stderr, "A test utility for the Balloon family of hash functions.\n\n");
+  fprintf (stderr, "  -c, --comp=TYPE       Compression function to use. Options are:\n");
+  fprintf (stderr, "                            Default = keccak\n");
+  fprintf (stderr, "                            argon    -- Argon2's version of Blake2b\n");
+  fprintf (stderr, "                            blake2b  -- standard Blake2b\n");
+  fprintf (stderr, "                            echo     -- ECHO 512-bit double-pipe\n");
+  fprintf (stderr, "                            keccak   -- SHA-3\n");
+  fprintf (stderr, "                            sha512\n");
+  fprintf (stderr, "  -h, --help            Print this help message.\n");
+  fprintf (stderr, "  -i, --iterations=NUM  Number of hashes to compute (for perf testing).\n");
+  fprintf (stderr, "                            Default = 1\n");
+  fprintf (stderr, "  -m, --mix=TYPE        Mixing method. Options are:\n");
+  fprintf (stderr, "                            Default = single\n");
+  fprintf (stderr, "                            single   -- Single buffer\n");
+  fprintf (stderr, "                            double   -- Double buffer\n");
+  fprintf (stderr, "                            double-par -- with parallelism\n");
+  fprintf (stderr, "                            argon2   -- Argon2-style mixing\n");
+  fprintf (stderr, "  -n, --neighbors=NUM   Number of neighboring block hashed at each step.\n");
+  fprintf (stderr, "                            Default = [depends on parameter choices]\n");
+  fprintf (stderr, "  -r, --rounds=NUM      Number of mixing rounds.\n");
+  fprintf (stderr, "                            Default = 8\n");
+  fprintf (stderr, "  -s, --space=NUM       Space usage (in bytes).\n");
+  fprintf (stderr, "                            Default = 1024 KB\n");
+  fprintf (stderr, "  -t, --threads=NUM     Number of threads to use.\n");
+  fprintf (stderr, "                            Default = 1\n");
+  fprintf (stderr, "  -x, --xor             Use linear/XOR-based construction.\n");
+  fprintf (stderr, "                            Default = 0\n");
+}
+
+int 
+main (int argc, char *argv[]) 
+{
   struct comp_options comp_opts;
   comp_opts.comp = 0;
   comp_opts.comb = 0;
@@ -35,6 +70,7 @@ int main (int argc, char *argv[]){
   int16_t n_neighbors = 0;
   int32_t n_iters = 1;
   int16_t n_threads = 1;
+  int help = false;
   enum mix_method mix = 0;
 
   while (1)
@@ -43,7 +79,7 @@ int main (int argc, char *argv[]){
         {
           /* These options don’t set a flag.
              We distinguish them by their indices. */
-          {"xor-then-hash", no_argument, &xor_then_hash, 1},
+          {"xor", no_argument, &xor_then_hash, 1},
           {"comp",  required_argument, 0, 'c'},
           {"mix",  required_argument, 0, 'm'},
           {"space",  required_argument, 0, 's'},
@@ -51,12 +87,13 @@ int main (int argc, char *argv[]){
           {"neighbors",  required_argument, 0, 'n'},
           {"iterations",  required_argument, 0, 'i'},
           {"threads",  required_argument, 0, 't'},
+          {"help", no_argument, &help, 1},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      char c = getopt_long (argc, argv, "xc:m:s:r:n:i:t:",
+      char c = getopt_long (argc, argv, "xc:m:s:r:n:i:t:h?",
                        long_options, &option_index);
       char *end;
 
@@ -158,9 +195,9 @@ int main (int argc, char *argv[]){
           break;
           
 
+        case 'h':
         case '?':
-          printf ("help\n");
-          /* getopt_long already printed an error message. */
+          help = true;
           break;
 
         default:
@@ -168,15 +205,20 @@ int main (int argc, char *argv[]){
         }
     }
 
-  if (optind + 2 < argc) {
-      fprintf (stderr, "Too many arguments\n");
-      return -1;
-    }
-  if (optind + 2 > argc)
-    {
-      fprintf (stderr, "Input and salt not passed in\n");
-      return -1;
-    }
+  if (help) {
+    usage (argv[0]);
+    return 0;
+  } else {
+    if (optind + 2 < argc) {
+        fprintf (stderr, "Too many arguments\n");
+        return -1;
+      }
+    if (optind + 2 > argc)
+      {
+        fprintf (stderr, "Input and salt not passed in\n");
+        return -1;
+      }
+  }
 
   char *in = argv[optind];
   char *salt = argv[optind+1];
@@ -209,11 +251,12 @@ int main (int argc, char *argv[]){
   printf ("Input          = %s\n", in);
   printf ("Salt           = %s\n", salt);
 
-  unsigned char out[32];
+  const int outlen = 32;
+  unsigned char out[outlen];
   int error;
   const double wall_start = wall_sec ();
   for (int32_t i = 0; i < n_iters; i++) {
-    if ((error = BalloonHash (out, 32, in, strlen (in), salt, strlen (salt), &opts))) {
+    if ((error = BalloonHash (out, outlen, in, strlen (in), salt, strlen (salt), &opts))) {
       fprintf (stderr, "BalloonHash failed with error: %d\n", error);
       return -1;
     }
@@ -222,6 +265,11 @@ int main (int argc, char *argv[]){
   const double wall_diff = wall_end - wall_start;
   printf("Time total      : %lg\n", wall_diff);
   printf("Hashes per sec  : %lg\n", ((double) n_iters) / wall_diff);
+  printf("Output          : ");
+  for (int i = 0; i < outlen; i++) {
+    printf("%x", out[i]);
+  }
+  printf("\n");
   return 0;
 }
 

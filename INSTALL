@@ -1,0 +1,57 @@
+===================================
+=== REQUIREMENTS
+
+* A 64-bit machine (ideally with AES-NI support)
+* SCons (v2.3.2)
+* OpenSSL (0.9.8zg)
+
+If you want to get cache hit statistics:
+* PAPI library (v5.4)
+
+
+===================================
+=== INSTALLATION
+
+Once you have installed OpenSSL and SCons, compilation should be pretty easy.
+
+To compile the code, run:
+$ scons
+
+To run the test suite, execute:
+$ build/btest/btest -v
+
+To print debug messages while compiling:
+$ scons VERBOSE=1
+
+To compile with profiling, run:
+$ scons WITH_GPROF=1
+
+To clean up the object and binary files, run:
+$ scons -c
+
+
+===================================
+=== This code compiles on... 
+
+We have tested the code on a few platforms, but this is no guarantee that the
+code will compile correctly for you.
+
+Linux Machine
+  - Ubuntu 14.04
+  - Intel Xeon E5620
+  - OpenSSL 1.0.1f
+  - PAPI v5.4
+  - Compiled with gcc 4.9.2
+
+Mac OS X Machine
+  - OS X 10.10.5 (Yosemite) / Darwin 14.5.0
+  - Intel Core i7-4578U
+  - OpenSSL 0.9.8zg
+  - Compiled with Apple LLVM version 7.0.0
+
+FreeBSD Machine
+  - FreeBSD 10.2-RELEASE
+  - Intel Core i7-6700
+  - OpenSSL 1.0.1p-freebsd
+  - Clang 3.4.1
+

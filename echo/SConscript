@@ -9,6 +9,7 @@ src = []
 # headaches, so we will just use the C code on Mac.
 if sys.platform == 'darwin':
   src.append("echo64.c")
+  env.Append(CFLAGS = ["-DIS_DARWIN"])
 else:
   src.append("echo64.s")
 

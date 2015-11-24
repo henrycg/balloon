@@ -2,7 +2,7 @@ import sys
 
 Import('env')
 
-ballon_env = env.Clone()
+balloon_env = env.Clone()
 
 src = [
     "main.c",
@@ -14,9 +14,9 @@ libs = [
 
 conf = Configure(env)
 if conf.CheckCHeader('papi.h'):
-    conf.env.Append('-DHAS_PAPI_H')
+    balloon_env.Append(CFLAGS = '-DHAS_PAPI_H')
     libs.append("papi")
 
-ballon_env.Append(LIBS = libs)
-ballon_env.Program("bench", src)
+balloon_env.Append(LIBS = libs)
+balloon_env.Program("bench", src)
 

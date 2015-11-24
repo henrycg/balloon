@@ -22,7 +22,7 @@
 
 #include "blake2b/argon2-core.h"
 #include "blake2b/blake2.h"
-// This both Blake2b and Keccak use this macro
+// Both Blake2b and Keccak use this macro
 #undef ALIGN
 #include "echo/echo.h"
 #include "keccak/KeccakSponge.h"

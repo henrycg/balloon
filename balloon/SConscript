@@ -1,0 +1,17 @@
+import sys
+
+Import('env')
+
+ballon_env = env.Clone()
+
+src = [
+    "main.c",
+]
+
+libs = [
+  "balloon",
+]
+
+ballon_env.Append(LIBS = libs)
+ballon_env.Program("ballon", src)
+

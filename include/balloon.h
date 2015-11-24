@@ -15,8 +15,8 @@
  */
 
 
-#ifndef __BAGHASH_H__
-#define __BAGHASH_H__
+#ifndef __BALLOON_H__
+#define __BALLOON_H__
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -44,18 +44,17 @@ struct comp_options {
   enum comb_method comb;
 };
 
-// TODO: Add parallel two-buffer mixing method
 enum mix_method {
-  MIX__BAGHASH_SINGLE_BUFFER,
-  MIX__BAGHASH_DOUBLE_BUFFER,
-  MIX__BAGHASH_DOUBLE_BUFFER_PAR,
+  MIX__BALLOON_SINGLE_BUFFER,
+  MIX__BALLOON_DOUBLE_BUFFER,
+  MIX__BALLOON_DOUBLE_BUFFER_PAR,
 
   MIX__ARGON2_UNIFORM,
 
   MIX__END
 };
 
-struct baghash_options {
+struct balloon_options {
   uint64_t m_cost;
   uint64_t t_cost;
 
@@ -71,10 +70,10 @@ struct baghash_options {
   enum mix_method mix;
 };
 
-int BagHash (void *out, size_t outlen, 
+int BalloonHash (void *out, size_t outlen, 
     const void *in, size_t inlen, 
     const void *salt, size_t saltlen, 
-    struct baghash_options *opts);
+    struct balloon_options *opts);
 
-#endif /* __BAGHASH_H__ */
+#endif /* __BALLOON_H__ */
 

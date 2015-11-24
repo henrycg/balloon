@@ -14,26 +14,35 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __HASH_STATE_DOUBLE_H__
-#define __HASH_STATE_DOUBLE_H__
 
-#include <stddef.h>
+#include <balloon.h>
+#include <string.h>
 
-#include "bitstream.h"
-#include "options.h"
+#include "mutest.h"
+
+#include "libballoon/compress.h"
+#include "libballoon/options.h"
 
 
-int hash_state_double_init (struct hash_state *s, struct baghash_options *opts);
+void 
+mu_test_compress () 
+{
+  for (int j=0; j<COMB__END; j++) {
+    for (int i=0; i<COMP__END; i++) {
+      struct comp_options comp;
+      comp.comp = i;
+      comp.comb = j;
+      size_t block_size = compress_block_size (i);
+      unsigned char out[block_size];
+      unsigned char bufA[block_size];
+      unsigned char bufB[block_size];
+      memset (out, 0, block_size);
 
-int hash_state_double_free (struct hash_state *s);
-
-int hash_state_double_fill (struct hash_state *s, 
-    const void *in, size_t inlen,
-    const void *salt, size_t saltlen);
-
-int hash_state_double_mix (struct hash_state *s);
-
-int hash_state_double_extract (struct hash_state *s, void *out, size_t outlen);
-
-#endif
+      unsigned const char *blocks[2];
+      blocks[0] = bufA;
+      blocks[1] = bufB;
+      mu_ensure (!compress (out, blocks, 2, &comp));
+    } 
+  }
+}
 

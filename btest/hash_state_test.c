@@ -18,13 +18,13 @@
 #include <stdio.h>
 #include "mutest.h"
 
-#include <baghash.h>
-#include "libbaghash/constants.h"
-#include "libbaghash/errors.h"
-#include "libbaghash/hash_state.h"
+#include <balloon.h>
+#include "libballoon/constants.h"
+#include "libballoon/errors.h"
+#include "libballoon/hash_state.h"
 
 static void
-init_options (struct baghash_options *opts, enum mix_method mix)
+init_options (struct balloon_options *opts, enum mix_method mix)
 {
   opts->m_cost = 1024 * 128;
   opts->t_cost = 3;
@@ -39,7 +39,7 @@ void
 test_hash_state_init_free (enum mix_method mix) 
 {
   struct hash_state s;
-  struct baghash_options opts;
+  struct balloon_options opts;
  
   init_options (&opts, mix);
   mu_ensure ( !options_validate (&opts) );
@@ -60,7 +60,7 @@ void
 test_hash_state_fill (enum mix_method mix) 
 {
   struct hash_state s;
-  struct baghash_options opts;
+  struct balloon_options opts;
   init_options (&opts, mix);
   mu_ensure ( !options_validate (&opts) );
   const unsigned char salt[] = "abcdefghijkl";
@@ -69,7 +69,7 @@ test_hash_state_fill (enum mix_method mix)
   mu_ensure ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
 
   size_t blocks = s.n_blocks;
-  if (mix == MIX__BAGHASH_DOUBLE_BUFFER || mix == MIX__BAGHASH_DOUBLE_BUFFER_PAR)
+  if (mix == MIX__BALLOON_DOUBLE_BUFFER || mix == MIX__BALLOON_DOUBLE_BUFFER_PAR)
     blocks /= 2;
  
   if (mix != MIX__ARGON2_UNIFORM) {
@@ -94,7 +94,7 @@ mu_test_hash_state_fill (void)
 void 
 test_hash_state_fill2 (enum mix_method mix) 
 {
-  struct baghash_options opts;
+  struct balloon_options opts;
   init_options (&opts, mix);
 
   struct hash_state s1;
@@ -141,7 +141,7 @@ mu_test_hash_state_fill2 (void)
 void 
 test_hash_state_mix (enum mix_method mix) 
 {
-  struct baghash_options opts;
+  struct balloon_options opts;
   init_options (&opts, mix);
   struct hash_state s;
   const unsigned char salt[] = "abcdefghijkl";
@@ -168,8 +168,8 @@ mu_test_hash_state_mix (void)
 void 
 test_hash_state_mix_threads (void)
 {
-  struct baghash_options opts;
-  init_options (&opts, MIX__BAGHASH_DOUBLE_BUFFER_PAR);
+  struct balloon_options opts;
+  init_options (&opts, MIX__BALLOON_DOUBLE_BUFFER_PAR);
   opts.n_threads = 7;
 
   mu_ensure ( !options_validate (&opts) );
@@ -192,7 +192,7 @@ test_hash_state_mix_threads (void)
 void 
 test_hash_state_bad_extract (enum mix_method mix) 
 {
-  struct baghash_options opts;
+  struct balloon_options opts;
   init_options (&opts, mix);
   struct hash_state s;
   const unsigned char salt[] = "abcdefghijkl";

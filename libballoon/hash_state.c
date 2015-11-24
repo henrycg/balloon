@@ -47,7 +47,7 @@ static int
 init_func_pointers (struct hash_state *s)
 {
   switch (s->opts->mix) {
-    case MIX__BAGHASH_SINGLE_BUFFER:
+    case MIX__BALLOON_SINGLE_BUFFER:
       s->f_init = hash_state_single_init;
       s->f_free = hash_state_single_free;
       s->f_fill = hash_state_single_fill;
@@ -55,7 +55,7 @@ init_func_pointers (struct hash_state *s)
       s->f_extract = hash_state_single_extract;
       break;
 
-    case MIX__BAGHASH_DOUBLE_BUFFER:
+    case MIX__BALLOON_DOUBLE_BUFFER:
       s->f_init = hash_state_double_init;
       s->f_free = hash_state_double_free;
       s->f_fill = hash_state_double_fill;
@@ -63,7 +63,7 @@ init_func_pointers (struct hash_state *s)
       s->f_extract = hash_state_double_extract;
       break;
 
-    case MIX__BAGHASH_DOUBLE_BUFFER_PAR:
+    case MIX__BALLOON_DOUBLE_BUFFER_PAR:
       s->f_init = hash_state_double_par_init;
       s->f_free = hash_state_double_par_free;
       s->f_fill = hash_state_double_par_fill;
@@ -87,7 +87,7 @@ init_func_pointers (struct hash_state *s)
 }
 
 int 
-hash_state_init (struct hash_state *s, struct baghash_options *opts,
+hash_state_init (struct hash_state *s, struct balloon_options *opts,
     const void *salt, size_t saltlen)
 {
   s->n_blocks = options_n_blocks (opts);

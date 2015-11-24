@@ -15,7 +15,7 @@
  */
 
 
-#include <baghash.h>
+#include <balloon.h>
 
 #include "blake2b/argon2-core.h"
 #include "compress.h"
@@ -24,7 +24,7 @@
 #include "options.h"
 
 int 
-options_validate (struct baghash_options *opts)
+options_validate (struct balloon_options *opts)
 {
   // TODO: Make sure choice of compression function, mix function,
   // and other parameters is sane.
@@ -44,7 +44,7 @@ options_validate (struct baghash_options *opts)
   if (opts->n_threads > THREADS_MAX)
     return ERROR_NTHREADS_TOO_BIG;
 
-  if (opts->mix != MIX__BAGHASH_DOUBLE_BUFFER_PAR && opts->n_threads > 1) {
+  if (opts->mix != MIX__BALLOON_DOUBLE_BUFFER_PAR && opts->n_threads > 1) {
     return ERROR_INCOMPATIBLE_OPTIONS;
   }
 
@@ -54,8 +54,8 @@ options_validate (struct baghash_options *opts)
     return ERROR_MCOST_TOO_BIG;
 
   if (opts->comp_opts.comb == COMB__XOR) {
-    if (opts->mix != MIX__BAGHASH_DOUBLE_BUFFER && 
-        opts->mix != MIX__BAGHASH_DOUBLE_BUFFER_PAR)
+    if (opts->mix != MIX__BALLOON_DOUBLE_BUFFER && 
+        opts->mix != MIX__BALLOON_DOUBLE_BUFFER_PAR)
       return ERROR_INCOMPATIBLE_OPTIONS;
   }
 
@@ -64,7 +64,7 @@ options_validate (struct baghash_options *opts)
 
 #if 0
 static uint8_t
-number_of_neighbors_single (const struct baghash_options *opts) 
+number_of_neighbors_single (const struct balloon_options *opts) 
 {
   // We need sets of size N/4 to expand to sets of size 5N/8.
   uint8_t ret; 
@@ -87,7 +87,7 @@ number_of_neighbors_single (const struct baghash_options *opts)
 }
 
 static unsigned int
-number_of_neighbors_double (const struct baghash_options *opts) 
+number_of_neighbors_double (const struct balloon_options *opts) 
 {
   // If N is the total number of blocks in the buffer, each 
   // of the two buffers has size n = N/2.
@@ -115,7 +115,7 @@ number_of_neighbors_double (const struct baghash_options *opts)
 #endif
 
 uint8_t
-options_n_neighbors (const struct baghash_options *opts)
+options_n_neighbors (const struct balloon_options *opts)
 {
   // Note: to keep performance evaluation statistics consistent,
   // fix these values to relatively conservative ones. In practice,
@@ -124,10 +124,10 @@ options_n_neighbors (const struct baghash_options *opts)
     return 10;
 
   switch (opts->mix) {
-    case MIX__BAGHASH_SINGLE_BUFFER:
+    case MIX__BALLOON_SINGLE_BUFFER:
       return 20; // number_of_neighbors_single (opts);
-    case MIX__BAGHASH_DOUBLE_BUFFER_PAR:
-    case MIX__BAGHASH_DOUBLE_BUFFER:
+    case MIX__BALLOON_DOUBLE_BUFFER_PAR:
+    case MIX__BALLOON_DOUBLE_BUFFER:
       return 20; // number_of_neighbors_double (opts);
     case MIX__ARGON2_UNIFORM:
       return 1;
@@ -137,7 +137,7 @@ options_n_neighbors (const struct baghash_options *opts)
 }
 
 uint64_t
-options_n_blocks (const struct baghash_options *opts)
+options_n_blocks (const struct balloon_options *opts)
 {
   const uint16_t bsize = compress_block_size (opts->comp_opts.comp);
   uint64_t ret = opts->m_cost / bsize;

@@ -49,7 +49,7 @@ static int run_threads (struct hash_state *s, bool mix,
     const void *in, size_t inlen, const void *salt, size_t saltlen);
 
 int 
-hash_state_double_par_init (struct hash_state *s, UNUSED struct baghash_options *opts)
+hash_state_double_par_init (struct hash_state *s, UNUSED struct balloon_options *opts)
 {
   struct double_par_data *data = malloc (sizeof (*data));
   if (!data)

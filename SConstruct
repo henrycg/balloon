@@ -127,8 +127,8 @@ conf.Finish()
 Export('env')
 
 # Set compile options for binaries
-env.Append(LIBS = ["baghash"], \
-  LIBPATH = ['#build/libbaghash', 
+env.Append(LIBS = ["balloon"], \
+  LIBPATH = ['#build/libballoon', 
             '#build/echo',
             '#build/keccak', 
             '#build/blake2b'])
@@ -140,15 +140,15 @@ env.Append(CPPFLAGS = ['-pthread'])
 env.Append(LIBS = ["crypto", "pthread", "m"])
 
 
-# libbaghash
-SConscript('libbaghash/SConscript', variant_dir='build/libbaghash')
+# libballoon
+SConscript('libballoon/SConscript', variant_dir='build/libballoon')
 SConscript('keccak/SConscript', variant_dir='build/keccak')
 SConscript('blake2b/SConscript', variant_dir='build/blake2b')
 SConscript('echo/SConscript', variant_dir='build/echo')
 
 # Utilities
 if env["BUILD_BINARIES"]:
-    SConscript('baghash/SConscript', variant_dir='build/baghash')
-    SConscript('bagtest/SConscript', variant_dir='build/bagtest')
+    SConscript('balloon/SConscript', variant_dir='build/balloon')
+    SConscript('btest/SConscript', variant_dir='build/btest')
     SConscript('bench/SConscript', variant_dir='build/bench')
 

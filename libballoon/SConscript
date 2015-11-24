@@ -3,7 +3,7 @@ import os
 Import('env')
 
 src = [
-    "baghash.c",
+    "balloon.c",
     "bitstream.c",
     "compress.c",
     "hash_state.c",
@@ -22,5 +22,5 @@ libs = [
 ]
 
 env.Append(LIBS = libs)
-env.StaticLibrary("baghash", src)
+env.StaticLibrary("balloon", src)
 

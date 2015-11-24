@@ -30,7 +30,7 @@ struct argon2_data {
 };
 
 int 
-hash_state_argon2_init (struct hash_state *s, UNUSED struct baghash_options *opts)
+hash_state_argon2_init (struct hash_state *s, UNUSED struct balloon_options *opts)
 {
   struct argon2_data *data = malloc (sizeof (*data));
   if (!data)

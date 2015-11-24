@@ -14,11 +14,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-// TODO: Add license text to every file
-
 #include <assert.h>
-#include <baghash.h>
+#include <balloon.h>
 
 #include "constants.h"
 #include "errors.h"
@@ -28,10 +25,10 @@
 static int validate_parameters (size_t outlen, size_t inlen, size_t saltlen);
 
 int 
-BagHash (void *out, size_t outlen, 
+BalloonHash (void *out, size_t outlen, 
     const void *in, size_t inlen, 
     const void *salt, size_t saltlen, 
-    struct baghash_options *opts)
+    struct balloon_options *opts)
 {
   int error;
 

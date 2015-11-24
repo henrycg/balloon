@@ -15,14 +15,16 @@
  */
 
 
-#include <baghash.h>
+#include <balloon.h>
 #include <errno.h>
+#ifdef HAS_PAPI_H
 #include <papi.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 
-#include "libbaghash/options.h"
-#include "libbaghash/timing.h"
+#include "libballoon/options.h"
+#include "libballoon/timing.h"
 
 #define ITERS 32
 #define MEM_MAX (32 * 1024 * 1024)
@@ -30,21 +32,28 @@
 static bool use_papi = false;
 
 static void
-run_once (struct baghash_options *opts)
+run_once (struct balloon_options *opts)
 {
   const int n_events = 2;
+#ifdef HAS_PAPI_H
   int events[n_events];
   events[0] = PAPI_L1_DCM;
   events[1] = PAPI_L2_DCM;
   //events[2] = PAPI_BR_PRC;
+#endif
   
   int error;
   if (use_papi) {
+#ifdef HAS_PAPI_H
     if ((error = PAPI_start_counters (events, n_events)) != PAPI_OK) {
       const char *e = PAPI_strerror (error);
       fprintf (stderr, "PAPI start failed with error: %s\n", e ? e : "");
       return;
     }
+#else 
+    fprintf (stderr, "Not compiled with PAPI support.\n");
+    return;
+#endif
   }
 
   const char in[] = "test input";
@@ -59,8 +68,8 @@ run_once (struct baghash_options *opts)
 
   unsigned char out[32];
   for (int i = 0; i < ITERS; i++) {
-    if ((error = BagHash (out, 32, in, strlen (in), salt, strlen (salt), opts))) {
-      fprintf (stderr, "BagHash failed with error: %d\n", error);
+    if ((error = BalloonHash (out, 32, in, strlen (in), salt, strlen (salt), opts))) {
+      fprintf (stderr, "BalloonHash failed with error: %d\n", error);
       return;
     }
   }
@@ -72,6 +81,7 @@ run_once (struct baghash_options *opts)
   const double cpb = (double)clks_total/(double)bytes_total;
   const double wall_total = (wall_end - wall_start)/((double)ITERS);
 
+#ifdef HAS_PAPI_H
   if (use_papi) {
     if ((error = PAPI_stop_counters (counters, n_events)) != PAPI_OK) {
       const char *e = PAPI_strerror (error);
@@ -79,6 +89,7 @@ run_once (struct baghash_options *opts)
       return;
     }
   }
+#endif
 
   printf ("%d\t", opts->mix);
   printf ("%d\t", opts->comp_opts.comp);
@@ -103,12 +114,12 @@ bench_neighbors (void)
   struct comp_options comp_opts;
   comp_opts.comp = COMP__KECCAK_1600;
 
-  struct baghash_options opts;
+  struct balloon_options opts;
   opts.m_cost = 128 * 1024; 
   opts.t_cost = 5;
   opts.n_threads = 1;
   opts.comp_opts = comp_opts;
-  opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
+  opts.mix = MIX__BALLOON_DOUBLE_BUFFER;
 
   for (int comb = 0; comb < COMB__END; comb++) {
     comp_opts.comb = comb;
@@ -126,7 +137,7 @@ bench_mix (void)
   struct comp_options comp_opts;
   comp_opts.comp = COMP__KECCAK_1600;
 
-  struct baghash_options opts;
+  struct balloon_options opts;
   opts.t_cost = 5;
   opts.comp_opts = comp_opts;
   opts.n_threads = 1;
@@ -154,11 +165,11 @@ bench_threads (void)
   struct comp_options comp_opts;
   comp_opts.comp = COMP__KECCAK_1600;
 
-  struct baghash_options opts;
+  struct balloon_options opts;
   opts.t_cost = 3;
   opts.comp_opts = comp_opts;
   opts.m_cost = 1*1024*1024;
-  opts.mix = MIX__BAGHASH_DOUBLE_BUFFER_PAR;
+  opts.mix = MIX__BALLOON_DOUBLE_BUFFER_PAR;
   for (unsigned threads = 1; threads < 9; threads++) {
     for (int comb = 0; comb < COMB__END; comb ++) {
       opts.comp_opts.comb = comb;
@@ -179,11 +190,11 @@ bench_hash (void)
   struct comp_options comp_opts;
   comp_opts.comb = COMB__XOR;
 
-  struct baghash_options opts;
+  struct balloon_options opts;
   opts.m_cost = 128 * 1024;
   opts.t_cost = 5;
   opts.comp_opts = comp_opts;
-  opts.mix = MIX__BAGHASH_DOUBLE_BUFFER;
+  opts.mix = MIX__BALLOON_DOUBLE_BUFFER;
   opts.n_threads = 1;
 
   for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 2) {

@@ -22,7 +22,7 @@
 #include "bitstream.h"
 #include "options.h"
 
-int hash_state_double_par_init (struct hash_state *s, struct baghash_options *opts);
+int hash_state_double_par_init (struct hash_state *s, struct balloon_options *opts);
 
 int hash_state_double_par_free (struct hash_state *s);
 

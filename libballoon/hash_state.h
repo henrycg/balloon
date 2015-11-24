@@ -26,7 +26,7 @@
 
 struct hash_state;
 
-typedef int func_hash_state_init (struct hash_state *s, struct baghash_options *opts);
+typedef int func_hash_state_init (struct hash_state *s, struct balloon_options *opts);
 typedef int func_hash_state_free (struct hash_state *s);
 typedef int func_hash_state_fill (struct hash_state *s, const void *in, size_t inlen,
     const void *salt, size_t saltlen);
@@ -39,7 +39,7 @@ struct hash_state {
   bool has_mixed;
   uint8_t *buffer;
   struct bitstream bstream;
-  struct baghash_options *opts;
+  struct balloon_options *opts;
 
   func_hash_state_init *f_init;
   func_hash_state_free *f_free;
@@ -51,7 +51,7 @@ struct hash_state {
 };
 
 
-int hash_state_init (struct hash_state *s, struct baghash_options *opts,
+int hash_state_init (struct hash_state *s, struct balloon_options *opts,
     const void *salt, size_t saltlen);
 
 int hash_state_free (struct hash_state *s);

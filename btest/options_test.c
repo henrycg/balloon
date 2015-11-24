@@ -15,14 +15,14 @@
  */
 
 
-#include <baghash.h>
+#include <balloon.h>
 
 #include "mutest.h"
 
-#include "libbaghash/baghash.c"
-#include "libbaghash/constants.h"
-#include "libbaghash/errors.h"
-#include "libbaghash/options.h"
+#include "libballoon/balloon.c"
+#include "libballoon/constants.h"
+#include "libballoon/errors.h"
+#include "libballoon/options.h"
 
 void 
 mu_test_validate_parameters__outlen () 
@@ -102,7 +102,7 @@ mu_test_validate_parameters__saltlen ()
 void 
 mu_test_options () 
 {
-  struct baghash_options opts;
+  struct balloon_options opts;
   opts.m_cost = 0;
   opts.t_cost = 10000llu;
   opts.n_neighbors = 1;
@@ -125,7 +125,7 @@ mu_test_options ()
 void 
 mu_test_options__blocks () 
 {
-  struct baghash_options opts;
+  struct balloon_options opts;
   opts.t_cost = 10000llu;
   opts.m_cost = 1024*1024;
   opts.n_neighbors = 1;

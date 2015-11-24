@@ -2,17 +2,21 @@ import sys
 
 Import('env')
 
-baghash_env = env.Clone()
+ballon_env = env.Clone()
 
 src = [
     "main.c",
 ]
 
 libs = [
-  "baghash",
-  "papi",
+  "balloon",
 ]
 
-baghash_env.Append(LIBS = libs)
-baghash_env.Program("bench", src)
+conf = Configure(env)
+if conf.CheckCHeader('papi.h'):
+    conf.env.Append('-DHAS_PAPI_H')
+    libs.append("papi")
+
+ballon_env.Append(LIBS = libs)
+ballon_env.Program("bench", src)
 

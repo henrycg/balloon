@@ -18,11 +18,11 @@
 //#include <stdio.h>
 #include "mutest.h"
 
-#include "libbaghash/constants.h"
-#include "libbaghash/errors.h"
+#include "libballoon/constants.h"
+#include "libballoon/errors.h"
 
 // For testing static methods
-#include "libbaghash/bitstream.c"
+#include "libballoon/bitstream.c"
 
 void 
 mu_test_bitstream__bits_in_int (void) 

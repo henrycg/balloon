@@ -14,17 +14,24 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __OPTIONS_H__
-#define __OPTIONS_H__
+#ifndef __HASH_STATE_SINGLE_H__
+#define __HASH_STATE_SINGLE_H__
 
-#include <baghash.h>
+#include <stddef.h>
 
-int options_validate (struct baghash_options *opt);
+#include "bitstream.h"
+#include "options.h"
 
-uint64_t options_n_blocks (const struct baghash_options *opts);
+int hash_state_single_init (struct hash_state *s, struct balloon_options *opts);
 
-uint16_t options_block_size (const struct baghash_options *opts);
+int hash_state_single_free (struct hash_state *s);
 
-uint8_t options_n_neighbors (const struct baghash_options *opts);
+int hash_state_single_fill (struct hash_state *s, 
+    const void *in, size_t inlen,
+    const void *salt, size_t saltlen);
+
+int hash_state_single_mix (struct hash_state *s);
+
+int hash_state_single_extract (struct hash_state *s, void *out, size_t outlen);
 
 #endif

@@ -28,7 +28,7 @@
 #define MIN(a, b) ((a < b) ? (a) : (b))
 
 int 
-hash_state_single_init (UNUSED struct hash_state *s, UNUSED struct baghash_options *opts)
+hash_state_single_init (UNUSED struct hash_state *s, UNUSED struct balloon_options *opts)
 {
   return ERROR_NONE; 
 }

@@ -14,15 +14,15 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <baghash.h>
+#include <balloon.h>
 #include <errno.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "libbaghash/options.h"
-#include "libbaghash/timing.h"
+#include "libballoon/options.h"
+#include "libballoon/timing.h"
 
 int main (int argc, char *argv[]){
   struct comp_options comp_opts;
@@ -98,11 +98,11 @@ int main (int argc, char *argv[]){
 
         case 'm':
           if (!strcmp (optarg, "single"))
-            mix = MIX__BAGHASH_SINGLE_BUFFER;
+            mix = MIX__BALLOON_SINGLE_BUFFER;
           else if (!strcmp (optarg, "double"))
-            mix = MIX__BAGHASH_DOUBLE_BUFFER;
+            mix = MIX__BALLOON_DOUBLE_BUFFER;
           else if (!strcmp (optarg, "double-par"))
-            mix = MIX__BAGHASH_DOUBLE_BUFFER_PAR;
+            mix = MIX__BALLOON_DOUBLE_BUFFER_PAR;
           else if (!strcmp (optarg, "argon2"))
             mix = MIX__ARGON2_UNIFORM;
           else {
@@ -183,7 +183,7 @@ int main (int argc, char *argv[]){
 
 
   comp_opts.comb = xor_then_hash ? COMB__XOR : COMB__HASH;
-  struct baghash_options opts;
+  struct balloon_options opts;
   opts.m_cost = n_space;
   opts.t_cost = n_rounds;
   opts.n_neighbors = n_neighbors;
@@ -213,8 +213,8 @@ int main (int argc, char *argv[]){
   int error;
   const double wall_start = wall_sec ();
   for (int32_t i = 0; i < n_iters; i++) {
-    if ((error = BagHash (out, 32, in, strlen (in), salt, strlen (salt), &opts))) {
-      fprintf (stderr, "BagHash failed with error: %d\n", error);
+    if ((error = BalloonHash (out, 32, in, strlen (in), salt, strlen (salt), &opts))) {
+      fprintf (stderr, "BalloonHash failed with error: %d\n", error);
       return -1;
     }
   }

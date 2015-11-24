@@ -14,17 +14,17 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __COMPRESS_H__
-#define __COMPRESS_H__
+#ifndef __OPTIONS_H__
+#define __OPTIONS_H__
 
-#include <baghash.h>
-#include <stdint.h>
-#include "constants.h"
-#include "hash_state.h"
+#include <balloon.h>
 
-int compress (uint8_t *out, const uint8_t *blocks[], 
-    size_t blocks_to_comp, struct comp_options *opts);
+int options_validate (struct balloon_options *opt);
 
-uint16_t compress_block_size (enum comp_method comp);
+uint64_t options_n_blocks (const struct balloon_options *opts);
+
+uint16_t options_block_size (const struct balloon_options *opts);
+
+uint8_t options_n_neighbors (const struct balloon_options *opts);
 
 #endif

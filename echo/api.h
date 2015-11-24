@@ -1,6 +1,6 @@
 /*------------------------------------------------------------------------------------ */
 /* Implementation of the double pipe ECHO hash function in its 512-bit outputs variant.*/
-/* Optimized for Intel AES-NI, 64-bit mode                                             */
+/* Optimized for ANSI C, 64-bit mode                                                   */
 /*                                                                                     */
 /* Date:     2010-07-19                                                                */
 /*                                                                                     */

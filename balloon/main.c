@@ -60,9 +60,10 @@ usage (const char *name)
 int 
 main (int argc, char *argv[]) 
 {
-  struct comp_options comp_opts;
-  comp_opts.comp = 0;
-  comp_opts.comb = 0;
+  struct comp_options comp_opts = {
+    .comp = 0,
+    .comb = 0
+  };
 
   int xor_then_hash = false;
   int32_t n_rounds = 8;
@@ -225,13 +226,14 @@ main (int argc, char *argv[])
 
 
   comp_opts.comb = xor_then_hash ? COMB__XOR : COMB__HASH;
-  struct balloon_options opts;
-  opts.m_cost = n_space;
-  opts.t_cost = n_rounds;
-  opts.n_neighbors = n_neighbors;
-  opts.n_threads = n_threads;
-  opts.comp_opts = comp_opts;
-  opts.mix = mix;
+  struct balloon_options opts = {
+    .m_cost = n_space,
+    .t_cost = n_rounds,
+    .n_neighbors = n_neighbors,
+    .n_threads = n_threads,
+    .comp_opts = comp_opts,
+    .mix = mix
+  };
 
   const unsigned int rec_neighbs = options_n_neighbors (&opts);
   if (n_neighbors && ((uint16_t) n_neighbors) != rec_neighbs) {

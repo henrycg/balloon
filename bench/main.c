@@ -111,15 +111,17 @@ static void
 bench_neighbors (void)
 {
   // Run number of neighbors
-  struct comp_options comp_opts;
-  comp_opts.comp = COMP__KECCAK_1600;
+  struct comp_options comp_opts = {
+    .comp = COMP__KECCAK_1600
+  };
 
-  struct balloon_options opts;
-  opts.m_cost = 128 * 1024; 
-  opts.t_cost = 5;
-  opts.n_threads = 1;
-  opts.comp_opts = comp_opts;
-  opts.mix = MIX__BALLOON_DOUBLE_BUFFER;
+  struct balloon_options opts = {
+    .m_cost = 128 * 1024,
+    .t_cost = 5,
+    .n_threads = 1,
+    .comp_opts = comp_opts,
+    .mix = MIX__BALLOON_DOUBLE_BUFFER
+  };
 
   for (int comb = 0; comb < COMB__END; comb++) {
     comp_opts.comb = comb;
@@ -134,13 +136,16 @@ bench_neighbors (void)
 static void
 bench_mix (void)
 {
-  struct comp_options comp_opts;
-  comp_opts.comp = COMP__KECCAK_1600;
+  struct comp_options comp_opts = {
+    .comp = COMP__KECCAK_1600
+  };
 
-  struct balloon_options opts;
-  opts.t_cost = 5;
-  opts.comp_opts = comp_opts;
-  opts.n_threads = 1;
+  struct balloon_options opts = {
+    .t_cost = 5,
+    .comp_opts = comp_opts,
+    .n_threads = 1
+  };
+
   for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 2) {
     for (int mix = 0; mix < MIX__END; mix++) {
       for (int comb = 0; comb < COMB__END; comb ++) {
@@ -162,14 +167,17 @@ bench_mix (void)
 static void
 bench_threads (void)
 {
-  struct comp_options comp_opts;
-  comp_opts.comp = COMP__KECCAK_1600;
+  struct comp_options comp_opts = {
+    .comp = COMP__KECCAK_1600
+  };
 
-  struct balloon_options opts;
-  opts.t_cost = 3;
-  opts.comp_opts = comp_opts;
-  opts.m_cost = 1*1024*1024;
-  opts.mix = MIX__BALLOON_DOUBLE_BUFFER_PAR;
+  struct balloon_options opts = {
+    .t_cost = 3,
+    .comp_opts = comp_opts,
+    .m_cost = 1*1024*1024,
+    .mix = MIX__BALLOON_DOUBLE_BUFFER_PAR
+  };
+
   for (unsigned threads = 1; threads < 9; threads++) {
     for (int comb = 0; comb < COMB__END; comb ++) {
       opts.comp_opts.comb = comb;
@@ -187,15 +195,17 @@ bench_threads (void)
 static void
 bench_hash (void)
 {
-  struct comp_options comp_opts;
-  comp_opts.comb = COMB__XOR;
+  struct comp_options comp_opts = {
+    .comb = COMB__XOR
+  };
 
-  struct balloon_options opts;
-  opts.m_cost = 128 * 1024;
-  opts.t_cost = 5;
-  opts.comp_opts = comp_opts;
-  opts.mix = MIX__BALLOON_DOUBLE_BUFFER;
-  opts.n_threads = 1;
+  struct balloon_options opts = {
+    .m_cost = 128 * 1024,
+    .t_cost = 5,
+    .comp_opts = comp_opts,
+    .mix = MIX__BALLOON_DOUBLE_BUFFER,
+    .n_threads = 1
+  };
 
   for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 2) {
     for (int comp = 0; comp < COMP__END; comp++) {

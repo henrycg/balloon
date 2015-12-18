@@ -51,6 +51,8 @@ enum mix_method {
 
   MIX__ARGON2_UNIFORM,
 
+  MIX__SCRYPT,
+
   MIX__END
 };
 

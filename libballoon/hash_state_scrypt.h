@@ -14,51 +14,24 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __ERRORS_H__
-#define __ERRORS_H__
+#ifndef __HASH_STATE_SCRYPT_H__
+#define __HASH_STATE_SCRYPT_H__
 
-enum error_codes {
-  ERROR_NONE,
+#include <stddef.h>
 
-  ERROR_INCOMPATIBLE_OPTIONS,
+#include "bitstream.h"
+#include "options.h"
 
-  ERROR_NULL_POINTER,
-  ERROR_MALLOC,
+int hash_state_scrypt_init (struct hash_state *s, struct balloon_options *opts);
 
-  ERROR_NO_NEIGHBORS,
+int hash_state_scrypt_free (struct hash_state *s);
 
-  ERROR_MCOST_TOO_BIG,
-  ERROR_TCOST_TOO_BIG,
+int hash_state_scrypt_fill (struct hash_state *s, 
+    const void *in, size_t inlen,
+    const void *salt, size_t saltlen);
 
-  ERROR_OUTLEN_TOO_SMALL,
-  ERROR_OUTLEN_TOO_BIG,
+int hash_state_scrypt_mix (struct hash_state *s);
 
-  ERROR_INLEN_TOO_SMALL, 
-  ERROR_INLEN_TOO_BIG,
-
-  ERROR_SALTLEN_TOO_SMALL, 
-  ERROR_SALTLEN_TOO_BIG,
-
-  ERROR_NTHREADS_TOO_BIG,
-
-  ERROR_INVALID_COMPRESSION_METHOD,
-  ERROR_INVALID_MIX_METHOD,
-
-  ERROR_CANNOT_EXTRACT_BEFORE_MIX,
-
-  ERROR_OPENSSL_HASH,
-  ERROR_OPENSSL_AES,
-
-  ERROR_BITSTREAM_UNINITIALIZED,
-  ERROR_BITSTREAM_FINALIZED,
-  ERROR_BITSTREAM_MAX_TOO_SMALL,
-
-  ERROR_KECCAK,
-  ERROR_BLAKE_2B,
-  ERROR_ECHO,
-
-  ERROR_PTHREAD
-
-};
+int hash_state_scrypt_extract (struct hash_state *s, void *out, size_t outlen);
 
 #endif

@@ -48,6 +48,11 @@ options_validate (struct balloon_options *opts)
     return ERROR_INCOMPATIBLE_OPTIONS;
   }
 
+  if (opts->mix == MIX__SCRYPT && opts->t_cost > 1)
+    return ERROR_TCOST_TOO_BIG;
+  if (opts->mix == MIX__SCRYPT && opts->n_threads > 1)
+    return ERROR_TCOST_TOO_BIG;
+
   const uint64_t n_blocks = options_n_blocks (opts);
   const uint16_t block_size = compress_block_size (opts->comp_opts.comp);
   if (n_blocks > UINT64_MAX / block_size)

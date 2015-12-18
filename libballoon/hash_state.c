@@ -27,6 +27,7 @@
 #include "hash_state_argon2.h"
 #include "hash_state_double.h"
 #include "hash_state_double_par.h"
+#include "hash_state_scrypt.h"
 #include "hash_state_single.h"
 
 #define MIN(a, b) ((a < b) ? (a) : (b))
@@ -77,6 +78,14 @@ init_func_pointers (struct hash_state *s)
       s->f_fill = hash_state_argon2_fill;
       s->f_mix = hash_state_argon2_mix;
       s->f_extract = hash_state_argon2_extract;
+      break;
+
+    case MIX__SCRYPT:
+      s->f_init = hash_state_scrypt_init;
+      s->f_free = hash_state_scrypt_free;
+      s->f_fill = hash_state_scrypt_fill;
+      s->f_mix = hash_state_scrypt_mix;
+      s->f_extract = hash_state_scrypt_extract;
       break;
 
     default:

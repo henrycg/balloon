@@ -27,11 +27,11 @@ static void
 init_options (struct balloon_options *opts, enum mix_method mix)
 {
   opts->m_cost = 1024 * 128;
-  opts->t_cost = 3;
   opts->n_neighbors = 20;
   opts->comp_opts.comp = COMP__KECCAK_1600;
   opts->comp_opts.comb = COMB__HASH;
   opts->mix = mix;
+  opts->t_cost = opts->mix == MIX__SCRYPT ? 1 : 3;
   opts->n_threads = 1;
 }
 

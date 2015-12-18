@@ -41,10 +41,11 @@ usage (const char *name)
   fprintf (stderr, "                            Default = 1\n");
   fprintf (stderr, "  -m, --mix=TYPE        Mixing method. Options are:\n");
   fprintf (stderr, "                            Default = single\n");
-  fprintf (stderr, "                            single   -- Single buffer\n");
-  fprintf (stderr, "                            double   -- Double buffer\n");
+  fprintf (stderr, "                            single     -- Single buffer\n");
+  fprintf (stderr, "                            double     -- Double buffer\n");
   fprintf (stderr, "                            double-par -- with parallelism\n");
-  fprintf (stderr, "                            argon2   -- Argon2-style mixing\n");
+  fprintf (stderr, "                            argon2     -- Argon2i-style mixing\n");
+  fprintf (stderr, "                            scrypt     -- Scrypt-style mixing\n");
   fprintf (stderr, "  -n, --neighbors=NUM   Number of neighboring block hashed at each step.\n");
   fprintf (stderr, "                            Default = [depends on parameter choices]\n");
   fprintf (stderr, "  -r, --rounds=NUM      Number of mixing rounds.\n");
@@ -143,6 +144,8 @@ main (int argc, char *argv[])
             mix = MIX__BALLOON_DOUBLE_BUFFER_PAR;
           else if (!strcmp (optarg, "argon2"))
             mix = MIX__ARGON2_UNIFORM;
+          else if (!strcmp (optarg, "scrypt"))
+            mix = MIX__SCRYPT;
           else {
             fprintf (stderr, "Invalid mix method\n");
             return -1;

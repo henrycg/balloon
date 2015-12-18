@@ -53,7 +53,7 @@ hash_state_argon2_fill (struct hash_state *s,
     const void *in, size_t inlen,
     const void *salt, size_t saltlen)
 {
-  // Fill first two blocks of buffer.
+  // Fill first block of buffer.
   return fill_bytes_from_strings (s, s->buffer, s->block_size, in, inlen, salt, saltlen);
 }
 
@@ -61,7 +61,6 @@ int
 hash_state_argon2_mix (struct hash_state *s)
 {
   int error;
-  uint8_t tmp_block[s->block_size];
   uint64_t neighbor;
   struct argon2_data *data = (struct argon2_data *)s->extra_data;
   
@@ -92,14 +91,10 @@ hash_state_argon2_mix (struct hash_state *s)
     printf("[%d] prev=%d, other=%d\n", i, (int)prev_idx, (int)neighbor);
 #endif
     
-    // Hash value of neighbors into temp buffer.
-    if ((error = compress (tmp_block, blocks, 2, &s->opts->comp_opts)))
-      return error;
-
-    // Copy output of compression function back into the 
-    // big memory buffer.
+    // Hash value of neighbors into current block
     uint8_t *cur_block = block_index (s, i);
-    memcpy (cur_block, tmp_block, s->block_size);
+    if ((error = compress (cur_block, blocks, 2, &s->opts->comp_opts)))
+      return error;
   }
 
   data->round_count++;

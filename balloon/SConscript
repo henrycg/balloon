@@ -13,5 +13,5 @@ libs = [
 ]
 
 ballon_env.Append(LIBS = libs)
-ballon_env.Program("ballon", src)
+ballon_env.Program("balloon", src)
 

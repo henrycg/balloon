@@ -73,9 +73,15 @@ compress_keccak (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_c
 static int 
 compress_argon (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
 {
-  Argon2FillBlock (out, blocks[0], (blocks_to_comp > 1 ? blocks[1] : out));
-  for (unsigned int i = 2; i < blocks_to_comp; i++) {
-    Argon2FillBlock (out, out, blocks[i]);
+  if (blocks_to_comp > 1) {
+    Argon2FillBlock (out, blocks[0], blocks[1]);
+    for (unsigned int i = 2; i < blocks_to_comp; i++) {
+      Argon2FillBlock (out, out, blocks[i]);
+    }
+  } else {
+    uint8_t zero[ARGON2_BLOCK_SIZE];
+    memset (zero, 0, ARGON2_BLOCK_SIZE);
+    Argon2FillBlock (out, blocks[0], zero);
   }
 
   return ERROR_NONE;

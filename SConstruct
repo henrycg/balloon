@@ -149,6 +149,7 @@ SConscript('echo/SConscript', variant_dir='build/echo')
 # Utilities
 if env["BUILD_BINARIES"]:
     SConscript('balloon/SConscript', variant_dir='build/balloon')
+    SConscript('compgraph/SConscript', variant_dir='build/compgraph')
     SConscript('btest/SConscript', variant_dir='build/btest')
     SConscript('bench/SConscript', variant_dir='build/bench')
 

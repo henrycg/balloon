@@ -44,4 +44,5 @@ config.log
 
 # Data files
 *.dat
-
+*.raw
+*.tiff

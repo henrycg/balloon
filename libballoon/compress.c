@@ -26,6 +26,7 @@
 #undef ALIGN
 #include "echo/echo.h"
 #include "keccak/KeccakSponge.h"
+#include "sempira/sempira.h"
 
 #include "compress.h"
 #include "errors.h"
@@ -106,6 +107,18 @@ compress_blake2b (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_
 }
 
 static int 
+compress_sempira_2048 (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
+{
+  if (blocks_to_comp != 1)
+    return ERROR_SEMPIRA;
+
+  memcpy (out, blocks[0], SEMPIRA_2048_BLOCK_SIZE);
+  sempira2048_pipe (out, NULL, NULL, NULL, 1);
+
+  return ERROR_NONE;
+}
+
+static int 
 compress_echo (uint8_t *out, const uint8_t *blocks[], unsigned int blocks_to_comp)
 {
   hashState s;
@@ -159,6 +172,8 @@ compress_hash (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
       return compress_sha512 (out, blocks, blocks_to_comp);
     case COMP__ECHO:
       return compress_echo (out, blocks, blocks_to_comp);
+    case COMP__SEMPIRA_2048:
+      return compress_sempira_2048 (out, blocks, blocks_to_comp);
     case COMP__END:
       break;
   }
@@ -176,7 +191,7 @@ compress_xor (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp,
   uint8_t buf[block_size];
   memset (buf, 0, sizeof (buf));
   for (unsigned int i = 1; i < blocks_to_comp; i++) {
-    xor_block (buf, buf, blocks[i], block_size);
+    xor_block_self (buf, blocks[i], block_size);
   }
 
   const uint8_t *to_hash[2] = { blocks[0], buf };
@@ -198,6 +213,8 @@ compress_block_size (enum comp_method comp)
       return SHA512_DIGEST_LENGTH;
     case COMP__ECHO:
       return ECHO_BLOCK_SIZE;
+    case COMP__SEMPIRA_2048:
+      return SEMPIRA_2048_BLOCK_SIZE;
     case COMP__END:
       break;
   }

@@ -48,6 +48,21 @@ options_validate (struct balloon_options *opts)
     return ERROR_INCOMPATIBLE_OPTIONS;
   }
 
+  if (opts->mix == MIX__BALLOON_DOUBLE_BUFFER_PIPE) {
+    if (opts->comp_opts.comp != COMP__SEMPIRA_2048 ||
+      opts->comp_opts.comb != COMB__XOR) {
+        fprintf (stderr, "Mix method double-pipe must use options -x and -c sempira2048\n");
+        return ERROR_INCOMPATIBLE_OPTIONS;
+    }
+  }
+
+  if (opts->mix != MIX__BALLOON_DOUBLE_BUFFER_PIPE &&
+        opts->comp_opts.comp == COMP__SEMPIRA_2048) {
+    fprintf (stderr, "-c sempira2048 only compatible with -m double-pipe\n");
+    return ERROR_INCOMPATIBLE_OPTIONS;
+  }
+  
+
   if (opts->mix == MIX__SCRYPT && opts->t_cost > 1)
     return ERROR_TCOST_TOO_BIG;
   if (opts->mix == MIX__SCRYPT && opts->n_threads > 1)
@@ -60,7 +75,8 @@ options_validate (struct balloon_options *opts)
 
   if (opts->comp_opts.comb == COMB__XOR) {
     if (opts->mix != MIX__BALLOON_DOUBLE_BUFFER && 
-        opts->mix != MIX__BALLOON_DOUBLE_BUFFER_PAR)
+        opts->mix != MIX__BALLOON_DOUBLE_BUFFER_PAR &&
+        opts->mix != MIX__BALLOON_DOUBLE_BUFFER_PIPE)
       return ERROR_INCOMPATIBLE_OPTIONS;
   }
 

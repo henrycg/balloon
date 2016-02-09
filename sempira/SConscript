@@ -1,0 +1,12 @@
+import os
+
+Import('env')
+
+env.Append(CFLAGS = ["-maes"])
+
+src = [
+    "sempira2048.c",
+]
+
+env.StaticLibrary("sempira", src)
+

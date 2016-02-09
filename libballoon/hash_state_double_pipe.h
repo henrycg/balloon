@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Henry Corrigan-Gibbs
+ * Copyright (c) 2015-6, Henry Corrigan-Gibbs
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,17 +14,12 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __XOR_H__
-#define __XOR_H__
+#ifndef __HASH_STATE_DOUBLE_PIPE_H__
+#define __HASH_STATE_DOUBLE_PIPE_H__
 
-#include <stdint.h>
-#include <stdlib.h>
+#include "hash_state.h"
 
-void xor_block (uint8_t *out, const uint8_t *blockA, const uint8_t *blockB,
-  size_t block_size);
-
-void xor_block_self (uint8_t *out, const uint8_t *block, size_t block_size);
-
-void xor_blocks (uint8_t *out, const uint8_t *in, size_t block_length, size_t n_blocks);
+int hash_state_double_pipe_mix (struct hash_state *s);
 
 #endif
+

@@ -41,7 +41,11 @@ mu_test_compress ()
       unsigned const char *blocks[2];
       blocks[0] = bufA;
       blocks[1] = bufB;
-      mu_ensure (!compress (out, blocks, 2, &comp));
+      if (i == COMP__SEMPIRA_2048) { 
+          if (j == COMB__HASH) 
+            mu_ensure (!compress (out, blocks, 1, &comp));
+      } else
+        mu_ensure (!compress (out, blocks, 2, &comp));
     } 
   }
 }

@@ -53,7 +53,8 @@ void
 mu_test_hash_state_init_free (void)
 {
   for (int i = 0; i < MIX__END; i++)
-    test_hash_state_init_free (i);
+    if (i != MIX__BALLOON_DOUBLE_BUFFER_PIPE)
+      test_hash_state_init_free (i);
 }
 
 void 
@@ -88,7 +89,8 @@ void
 mu_test_hash_state_fill (void)
 {
   for (int i = 0; i < MIX__END; i++)
-    test_hash_state_fill (i);
+    if (i != MIX__BALLOON_DOUBLE_BUFFER_PIPE)
+      test_hash_state_fill (i);
 }
 
 void 
@@ -135,7 +137,8 @@ void
 mu_test_hash_state_fill2 (void)
 {
   for (int i = 0; i < MIX__END; i++)
-    test_hash_state_fill2 (i);
+    if (i != MIX__BALLOON_DOUBLE_BUFFER_PIPE)
+      test_hash_state_fill2 (i);
 }
 
 void 
@@ -162,7 +165,8 @@ void
 mu_test_hash_state_mix (void)
 {
   for (int i = 0; i < MIX__END; i++)
-    test_hash_state_mix (i);
+    if (i != MIX__BALLOON_DOUBLE_BUFFER_PIPE)
+      test_hash_state_mix (i);
 }
 
 void 

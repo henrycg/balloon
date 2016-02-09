@@ -26,6 +26,14 @@ xor_block (uint8_t *out, const uint8_t *blockA, const uint8_t *blockB,
   }
 }
 
+void
+xor_block_self (uint8_t *out, const uint8_t *block, size_t block_size)
+{
+  for (size_t i = 0; i < block_size; i++) {
+    out[i] ^= block[i];
+  }
+}
+
 void 
 xor_blocks (uint8_t *out, const uint8_t *in, size_t block_length, size_t n_blocks)
 {

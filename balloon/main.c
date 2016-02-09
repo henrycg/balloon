@@ -35,17 +35,19 @@ usage (const char *name)
   fprintf (stderr, "                            blake2b  -- standard Blake2b\n");
   fprintf (stderr, "                            echo     -- ECHO 512-bit double-pipe\n");
   fprintf (stderr, "                            keccak   -- SHA-3\n");
+  fprintf (stderr, "                            sempira2048 -- Sempira (2048 bytes)\n");
   fprintf (stderr, "                            sha512\n");
   fprintf (stderr, "  -h, --help            Print this help message.\n");
   fprintf (stderr, "  -i, --iterations=NUM  Number of hashes to compute (for perf testing).\n");
   fprintf (stderr, "                            Default = 1\n");
   fprintf (stderr, "  -m, --mix=TYPE        Mixing method. Options are:\n");
   fprintf (stderr, "                            Default = single\n");
-  fprintf (stderr, "                            single     -- Single buffer\n");
-  fprintf (stderr, "                            double     -- Double buffer\n");
-  fprintf (stderr, "                            double-par -- with parallelism\n");
-  fprintf (stderr, "                            argon2     -- Argon2i-style mixing\n");
-  fprintf (stderr, "                            scrypt     -- Scrypt-style mixing\n");
+  fprintf (stderr, "                            single      -- Single buffer\n");
+  fprintf (stderr, "                            double      -- Double buffer\n");
+  fprintf (stderr, "                            double-par  -- with parallelism\n");
+  fprintf (stderr, "                            double-pipe -- with pipelining\n");
+  fprintf (stderr, "                            argon2      -- Argon2i-style mixing\n");
+  fprintf (stderr, "                            scrypt      -- Scrypt-style mixing\n");
   fprintf (stderr, "  -n, --neighbors=NUM   Number of neighboring block hashed at each step.\n");
   fprintf (stderr, "                            Default = [depends on parameter choices]\n");
   fprintf (stderr, "  -r, --rounds=NUM      Number of mixing rounds.\n");
@@ -127,6 +129,8 @@ main (int argc, char *argv[])
             comp_opts.comp = COMP__BLAKE_2B;
           else if (!strcmp (optarg, "sha512"))
             comp_opts.comp = COMP__SHA_512;
+          else if (!strcmp (optarg, "sempira2048"))
+            comp_opts.comp = COMP__SEMPIRA_2048;
           else if (!strcmp (optarg, "echo"))
             comp_opts.comp = COMP__ECHO;
           else {
@@ -142,6 +146,8 @@ main (int argc, char *argv[])
             mix = MIX__BALLOON_DOUBLE_BUFFER;
           else if (!strcmp (optarg, "double-par"))
             mix = MIX__BALLOON_DOUBLE_BUFFER_PAR;
+          else if (!strcmp (optarg, "double-pipe"))
+            mix = MIX__BALLOON_DOUBLE_BUFFER_PIPE;
           else if (!strcmp (optarg, "argon2"))
             mix = MIX__ARGON2_UNIFORM;
           else if (!strcmp (optarg, "scrypt"))

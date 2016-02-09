@@ -27,6 +27,7 @@
 #include "hash_state_argon2.h"
 #include "hash_state_double.h"
 #include "hash_state_double_par.h"
+#include "hash_state_double_pipe.h"
 #include "hash_state_scrypt.h"
 #include "hash_state_single.h"
 
@@ -70,6 +71,14 @@ init_func_pointers (struct hash_state *s)
       s->f_fill = hash_state_double_par_fill;
       s->f_mix = hash_state_double_par_mix;
       s->f_extract = hash_state_double_par_extract;
+      break;
+
+    case MIX__BALLOON_DOUBLE_BUFFER_PIPE:
+      s->f_init = hash_state_double_init;
+      s->f_free = hash_state_double_free;
+      s->f_fill = hash_state_double_fill;
+      s->f_mix = hash_state_double_pipe_mix;
+      s->f_extract = hash_state_double_extract;
       break;
 
     case MIX__ARGON2_UNIFORM:

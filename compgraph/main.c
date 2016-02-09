@@ -63,7 +63,7 @@ main (int argc, char *argv[])
 
   struct comp_options comp_opts = {
     .comp = 0,
-    .comb = COMB__XOR
+    .comb = COMB__HASH
   };
 
   if (!strcmp (argv[1], "keccak"))
@@ -76,6 +76,8 @@ main (int argc, char *argv[])
     comp_opts.comp = COMP__SHA_512;
   else if (!strcmp (argv[1], "echo"))
     comp_opts.comp = COMP__ECHO;
+  else if (!strcmp (argv[1], "sempira2048"))
+    comp_opts.comp = COMP__SEMPIRA_2048;
   else {
     fprintf (stderr, "Invalid compression method\n");
     return -1;

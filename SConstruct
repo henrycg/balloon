@@ -131,6 +131,7 @@ env.Append(LIBS = ["balloon"], \
   LIBPATH = ['#build/libballoon', 
             '#build/echo',
             '#build/keccak', 
+            '#build/sempira', 
             '#build/blake2b'])
 
 # Add header files
@@ -145,6 +146,7 @@ SConscript('libballoon/SConscript', variant_dir='build/libballoon')
 SConscript('keccak/SConscript', variant_dir='build/keccak')
 SConscript('blake2b/SConscript', variant_dir='build/blake2b')
 SConscript('echo/SConscript', variant_dir='build/echo')
+SConscript('sempira/SConscript', variant_dir='build/sempira')
 
 # Utilities
 if env["BUILD_BINARIES"]:

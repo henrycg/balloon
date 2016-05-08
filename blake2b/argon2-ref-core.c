@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "argon2-core.h"
 
@@ -29,7 +30,9 @@ Argon2FillBlock(unsigned char *out, const unsigned char* blockA, const unsigned 
     unsigned char tmp[ARGON2_BLOCK_SIZE];
     unsigned char blockR[ARGON2_BLOCK_SIZE];
     XorBlock (tmp, blockA, blockB);
+    //fprintf(stderr, "b %d\n", blockR[0]);
     memcpy (blockR, tmp, ARGON2_BLOCK_SIZE);
+    //fprintf(stderr, "t %d\n", blockR[0]);
 
     // Apply Blake2 on columns of 64-bit words: (0,1,...,15) , then (16,17,..31)... finally (112,113,...127)
     for (unsigned i = 0; i < 8; ++i) {
@@ -47,6 +50,8 @@ Argon2FillBlock(unsigned char *out, const unsigned char* blockA, const unsigned 
     }
 
     // out = F(A^B) ^ A ^ B
+    //fprintf(stderr, "f0 %d\n", blockR[0]);
     XorBlock (out, blockR, tmp);
+    //fprintf(stderr, "f1 %d\n", out[0]);
 }
 

@@ -48,16 +48,12 @@ hash_state_scrypt_fill (struct hash_state *s,
   if ((error = fill_bytes_from_strings (s, s->buffer, s->block_size, in, inlen, salt, saltlen)))
     return error;
 
-  uint8_t zeros[s->block_size];
-  memset (zeros, 0, s->block_size);
-
   // block i = Hash (block i-1)
   for (uint64_t i = 1; i < s->n_blocks; i++) {
-    const uint8_t *blocks[2];
+    const uint8_t *blocks[1];
     blocks[0] = block_index (s, i-1);
-    blocks[1] = zeros;
 
-    if ((error = compress (block_index (s, i), blocks, 2, &s->opts->comp_opts)))
+    if ((error = compress (block_index (s, i), blocks, 1, &s->opts->comp_opts)))
       return error;
   }
 

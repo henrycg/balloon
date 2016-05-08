@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Henry Corrigan-Gibbs
+ * Copyright (c) 2015-2016, Henry Corrigan-Gibbs
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,5 +26,13 @@ int compress (uint8_t *out, const uint8_t *blocks[],
     size_t blocks_to_comp, struct comp_options *opts);
 
 uint16_t compress_block_size (enum comp_method comp);
+
+/**
+ * The input buffer buf should have the first block filled.
+ * We fill the rest of the buffer with pseudo-random bytes
+ * derived from the bytes in the first block.
+ */
+int expand (uint8_t *buf, 
+    size_t blocks_in_buf, struct comp_options *opts);
 
 #endif

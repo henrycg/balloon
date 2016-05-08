@@ -222,3 +222,24 @@ compress_block_size (enum comp_method comp)
   return 0;
 }
 
+int 
+expand (uint8_t *buf, size_t blocks_in_buf, struct comp_options *opts)
+{
+  int error;
+  const uint16_t block_size = compress_block_size (opts->comp);
+
+  const uint8_t *blocks[1] = { buf };
+  uint8_t *cur = buf + block_size;
+  for (size_t i = 1; i < blocks_in_buf; i++) { 
+
+    // Block[i] = Hash(Block[i-1])
+    if ((error = compress (cur, blocks, 1, opts)))
+      return error;
+
+    blocks[0] += block_size;
+    cur += block_size;
+  }
+
+  return ERROR_NONE;
+}
+

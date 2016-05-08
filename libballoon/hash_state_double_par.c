@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Henry Corrigan-Gibbs
+ * Copyright (c) 2015-2016, Henry Corrigan-Gibbs
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -173,11 +173,13 @@ mix_partial (void *in)
         return (void *)(uint64_t)error;
     }
   } else {
-    const size_t blen = (end - start) * s->block_size;
     uint8_t *bufp = rel_block_index (s, data->src, start);
-    if ((error = bitstream_fill_buffer (&d->pstream, bufp, blen))) {
+    if ((error = bitstream_fill_buffer (&d->pstream, bufp, s->block_size)))
       return (void *)(uint64_t)error;
-    }
+
+    if ((error = expand (bufp, end-start, &s->opts->comp_opts)))
+      return (void *)(uint64_t)error;
+      
   }
 
   return (void *)ERROR_NONE;

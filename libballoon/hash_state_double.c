@@ -57,8 +57,17 @@ hash_state_double_fill (struct hash_state *s,
     const void *in, size_t inlen,
     const void *salt, size_t saltlen)
 {
-  // TODO: Make sure that the multiplication here doesn't overflow
-  return fill_bytes_from_strings (s, s->buffer, s->n_blocks * s->block_size / 2, in, inlen, salt, saltlen);
+  int error;
+
+  // Hash password and salt into 0-th block
+  if ((error = fill_bytes_from_strings (s, s->buffer, 
+      s->block_size, in, inlen, salt, saltlen)))
+    return error;
+
+  if ((error = expand (s->buffer, s->n_blocks / 2, &s->opts->comp_opts)))
+    return error;
+
+  return ERROR_NONE;
 }
 
 static uint8_t *

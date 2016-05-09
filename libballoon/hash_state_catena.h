@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Henry Corrigan-Gibbs
+ * Copyright (c) 2015-2016, Henry Corrigan-Gibbs
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,20 +14,23 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __HASH_STATE_SCRYPT_H__
-#define __HASH_STATE_SCRYPT_H__
+#ifndef __HASH_STATE_CATENA_H__
+#define __HASH_STATE_CATENA_H__
 
 #include <stddef.h>
 
 #include "bitstream.h"
 #include "options.h"
 
-int hash_state_scrypt_init (struct hash_state *s, struct balloon_options *opts);
+uint64_t nearest_power_of_two (uint64_t in, int *n_bits);
+uint64_t reverse_bits (uint64_t in, int n_bits);
 
-int hash_state_scrypt_free (struct hash_state *s);
+int hash_state_catena_init (struct hash_state *s, struct balloon_options *opts);
 
-int hash_state_scrypt_mix (struct hash_state *s);
+int hash_state_catena_free (struct hash_state *s);
 
-int hash_state_scrypt_extract (struct hash_state *s, void *out, size_t outlen);
+int hash_state_catena_brg_mix (struct hash_state *s);
+
+
 
 #endif

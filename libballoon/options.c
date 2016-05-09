@@ -146,12 +146,12 @@ options_n_neighbors (const struct balloon_options *opts)
 
   switch (opts->mix) {
     case MIX__BALLOON_SINGLE_BUFFER:
-      return 20; // number_of_neighbors_single (opts);
+      return 4; // number_of_neighbors_single (opts);
     case MIX__BALLOON_DOUBLE_BUFFER_PAR:
     case MIX__BALLOON_DOUBLE_BUFFER:
-      return 20; // number_of_neighbors_double (opts);
+      return 4; // number_of_neighbors_double (opts);
     case MIX__ARGON2_UNIFORM:
-      return 1;
+    case MIX__CATENA_BRG:
     case MIX__SCRYPT:
       return 1;
     default: 

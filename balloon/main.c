@@ -17,6 +17,8 @@
 #include <balloon.h>
 #include <errno.h>
 #include <getopt.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +49,7 @@ usage (const char *name)
   fprintf (stderr, "                            double-par  -- with parallelism\n");
   fprintf (stderr, "                            double-pipe -- with pipelining\n");
   fprintf (stderr, "                            argon2      -- Argon2i-style mixing\n");
+  fprintf (stderr, "                            catena-brg  -- Catena Bit-Reversal Graph mixing\n");
   fprintf (stderr, "                            scrypt      -- Scrypt-style mixing\n");
   fprintf (stderr, "  -n, --neighbors=NUM   Number of neighboring block hashed at each step.\n");
   fprintf (stderr, "                            Default = [depends on parameter choices]\n");
@@ -150,6 +153,8 @@ main (int argc, char *argv[])
             mix = MIX__BALLOON_DOUBLE_BUFFER_PIPE;
           else if (!strcmp (optarg, "argon2"))
             mix = MIX__ARGON2_UNIFORM;
+          else if (!strcmp (optarg, "catena-brg"))
+            mix = MIX__CATENA_BRG;
           else if (!strcmp (optarg, "scrypt"))
             mix = MIX__SCRYPT;
           else {
@@ -281,6 +286,13 @@ main (int argc, char *argv[])
     printf("%x", out[i]);
   }
   printf("\n");
+
+  // Clean up OpenSSL junk
+  FIPS_mode_set(0); 
+  EVP_cleanup();
+  CRYPTO_cleanup_all_ex_data();
+  ERR_remove_state(0);
+  ERR_free_strings();
   return 0;
 }
 

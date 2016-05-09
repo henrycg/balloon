@@ -22,6 +22,7 @@
 #include "libballoon/constants.h"
 #include "libballoon/errors.h"
 #include "libballoon/hash_state.h"
+#include "libballoon/hash_state_catena.h"
 
 static void
 init_options (struct balloon_options *opts, enum mix_method mix)
@@ -70,7 +71,7 @@ test_hash_state_fill (enum mix_method mix)
   mu_ensure ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
 
   size_t blocks = s.n_blocks;
-  if (mix == MIX__BALLOON_DOUBLE_BUFFER || mix == MIX__BALLOON_DOUBLE_BUFFER_PAR)
+  if (mix == MIX__BALLOON_DOUBLE_BUFFER || mix == MIX__BALLOON_DOUBLE_BUFFER_PAR || mix == MIX__CATENA_BRG)
     blocks /= 2;
  
   if (mix != MIX__ARGON2_UNIFORM) {
@@ -214,6 +215,27 @@ mu_test_hash_state_bad_extract (void)
 {
   for (int i = 0; i < MIX__END; i++)
     test_hash_state_bad_extract (i);
+}
+
+void
+mu_test_catena_config (void)
+{
+  int out;
+  mu_check (2 == nearest_power_of_two (2, &out));
+  mu_check (out == 1);
+  mu_check (2 == nearest_power_of_two (3, &out));
+  mu_check (out == 1);
+  mu_check (16 == nearest_power_of_two (17, &out));
+  mu_check (out == 4);
+
+  mu_check (reverse_bits(0, 1) == 0);
+  mu_check (reverse_bits(0, 32) == 0);
+  mu_check (reverse_bits(1, 1) == 1);
+  mu_check (reverse_bits(2, 2) == 1);
+  mu_check (reverse_bits(3, 4) == 12);
+  mu_check (reverse_bits(1, 4) == 8);
+  mu_check (reverse_bits(1, 5) == 16);
+  mu_check (reverse_bits(7, 4) == 14);
 }
 
 

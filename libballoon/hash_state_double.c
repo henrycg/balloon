@@ -42,7 +42,7 @@ hash_state_double_init (struct hash_state *s, UNUSED struct balloon_options *opt
   data->src = block_index (s, 0);
   data->dst = block_index (s, s->n_blocks / 2);
   s->extra_data = data;
-  return ERROR_NONE; 
+  return ERROR_NONE;
 }
 
 int

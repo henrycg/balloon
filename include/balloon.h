@@ -52,7 +52,7 @@ enum mix_method {
   MIX__BALLOON_DOUBLE_BUFFER_PIPE,
 
   MIX__ARGON2_UNIFORM,
-
+  MIX__CATENA_BRG,
   MIX__SCRYPT,
 
   MIX__END

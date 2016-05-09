@@ -39,28 +39,6 @@ hash_state_scrypt_free (UNUSED struct hash_state *s)
 }
 
 int 
-hash_state_scrypt_fill (struct hash_state *s, 
-    const void *in, size_t inlen,
-    const void *salt, size_t saltlen)
-{
-  int error;
-  // Fill first block of buffer.
-  if ((error = fill_bytes_from_strings (s, s->buffer, s->block_size, in, inlen, salt, saltlen)))
-    return error;
-
-  // block i = Hash (block i-1)
-  for (uint64_t i = 1; i < s->n_blocks; i++) {
-    const uint8_t *blocks[1];
-    blocks[0] = block_index (s, i-1);
-
-    if ((error = compress (block_index (s, i), blocks, 1, &s->opts->comp_opts)))
-      return error;
-  }
-
-  return ERROR_NONE;
-}
-
-int 
 hash_state_scrypt_mix (UNUSED struct hash_state *s)
 {
   // Scrypt doesn't have the notion of mixing 

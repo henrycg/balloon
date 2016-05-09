@@ -177,7 +177,7 @@ main (int argc, char *argv[])
 
         case 'n':
           errno = 0;
-          n_neighbors = strtoll (optarg, &end, 10);
+          n_neighbors = strtoll (optarg, &end, 4);
           if (errno > 0 || *end != '\0' || n_neighbors < 0) {
             fprintf (stderr, "Invalid argument to -n\n");
             return -1;

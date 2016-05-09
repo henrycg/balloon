@@ -155,6 +155,8 @@ main (int argc, char *argv[])
             mix = MIX__ARGON2_UNIFORM;
           else if (!strcmp (optarg, "catena-brg"))
             mix = MIX__CATENA_BRG;
+          else if (!strcmp (optarg, "catena-dbg"))
+            mix = MIX__CATENA_DBG;
           else if (!strcmp (optarg, "scrypt"))
             mix = MIX__SCRYPT;
           else {

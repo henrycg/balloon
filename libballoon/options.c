@@ -152,6 +152,7 @@ options_n_neighbors (const struct balloon_options *opts)
       return 4; // number_of_neighbors_double (opts);
     case MIX__ARGON2_UNIFORM:
     case MIX__CATENA_BRG:
+    case MIX__CATENA_DBG:
     case MIX__SCRYPT:
       return 1;
     default: 

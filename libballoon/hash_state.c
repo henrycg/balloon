@@ -93,9 +93,17 @@ init_func_pointers (struct hash_state *s)
     case MIX__CATENA_BRG:
       s->f_init = hash_state_catena_init;
       s->f_free = hash_state_catena_free;
+      s->f_fill = hash_state_single_fill;
+      s->f_mix = hash_state_scrypt_mix;
+      s->f_extract = hash_state_catena_brg_extract;
+      break;
+
+    case MIX__CATENA_DBG:
+      s->f_init = hash_state_catena_init;
+      s->f_free = hash_state_catena_free;
       s->f_fill = hash_state_double_fill;
-      s->f_mix = hash_state_catena_brg_mix;
-      s->f_extract = hash_state_single_extract;
+      s->f_mix = hash_state_catena_dbg_mix;
+      s->f_extract = hash_state_double_extract;
       break;
 
     case MIX__SCRYPT:

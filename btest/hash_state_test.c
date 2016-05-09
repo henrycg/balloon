@@ -71,7 +71,9 @@ test_hash_state_fill (enum mix_method mix)
   mu_ensure ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
 
   size_t blocks = s.n_blocks;
-  if (mix == MIX__BALLOON_DOUBLE_BUFFER || mix == MIX__BALLOON_DOUBLE_BUFFER_PAR || mix == MIX__CATENA_BRG)
+  if (mix == MIX__BALLOON_DOUBLE_BUFFER 
+        || mix == MIX__BALLOON_DOUBLE_BUFFER_PAR 
+        || mix == MIX__CATENA_DBG)
     blocks /= 2;
  
   if (mix != MIX__ARGON2_UNIFORM) {
@@ -165,9 +167,10 @@ test_hash_state_mix (enum mix_method mix)
 void 
 mu_test_hash_state_mix (void)
 {
-  for (int i = 0; i < MIX__END; i++)
+  for (int i = 0; i < MIX__END; i++) {
     if (i != MIX__BALLOON_DOUBLE_BUFFER_PIPE)
       test_hash_state_mix (i);
+  }
 }
 
 void 
@@ -221,21 +224,30 @@ void
 mu_test_catena_config (void)
 {
   int out;
-  mu_check (2 == nearest_power_of_two (2, &out));
+  mu_check (2 == catena_nearest_power_of_two (2, &out));
   mu_check (out == 1);
-  mu_check (2 == nearest_power_of_two (3, &out));
+  mu_check (2 == catena_nearest_power_of_two (3, &out));
   mu_check (out == 1);
-  mu_check (16 == nearest_power_of_two (17, &out));
+  mu_check (16 == catena_nearest_power_of_two (17, &out));
   mu_check (out == 4);
 
-  mu_check (reverse_bits(0, 1) == 0);
-  mu_check (reverse_bits(0, 32) == 0);
-  mu_check (reverse_bits(1, 1) == 1);
-  mu_check (reverse_bits(2, 2) == 1);
-  mu_check (reverse_bits(3, 4) == 12);
-  mu_check (reverse_bits(1, 4) == 8);
-  mu_check (reverse_bits(1, 5) == 16);
-  mu_check (reverse_bits(7, 4) == 14);
+  mu_check (catena_reverse_bits(0, 1) == 0);
+  mu_check (catena_reverse_bits(0, 32) == 0);
+  mu_check (catena_reverse_bits(1, 1) == 1);
+  mu_check (catena_reverse_bits(2, 2) == 1);
+  mu_check (catena_reverse_bits(3, 4) == 12);
+  mu_check (catena_reverse_bits(1, 4) == 8);
+  mu_check (catena_reverse_bits(1, 5) == 16);
+  mu_check (catena_reverse_bits(7, 4) == 14);
+
+  mu_check (catena_butterfly(0, 3, 0) == 4);
+  mu_check (catena_butterfly(1, 3, 0) == 5);
+  mu_check (catena_butterfly(2, 3, 0) == 6);
+  mu_check (catena_butterfly(3, 3, 0) == 7);
+  mu_check (catena_butterfly(4, 3, 0) == 0);
+  mu_check (catena_butterfly(5, 3, 0) == 1);
+  mu_check (catena_butterfly(0, 3, 1) == 2);
+  mu_check (catena_butterfly(0, 3, 3) == 2);
 }
 
 

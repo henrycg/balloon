@@ -14,8 +14,6 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +33,7 @@ struct catena_data {
 static uint8_t *rel_block_index (struct hash_state *s, uint8_t *buf, size_t idx);
 
 uint64_t
-nearest_power_of_two (uint64_t in, int *n_bits)
+catena_nearest_power_of_two (uint64_t in, int *n_bits)
 {
   uint64_t out = 1;
   *n_bits = 0;
@@ -49,7 +47,7 @@ nearest_power_of_two (uint64_t in, int *n_bits)
 }
 
 uint64_t
-reverse_bits (uint64_t in, int n_bits)
+catena_reverse_bits (uint64_t in, int n_bits)
 {
   uint64_t out = 0;
 
@@ -63,6 +61,17 @@ reverse_bits (uint64_t in, int n_bits)
   return out;
 }
 
+uint64_t 
+catena_butterfly (uint64_t in, int n_bits, int layer)
+{
+  const int shift = n_bits - 1;
+  if (layer < n_bits) {
+    return in ^ (1 << (shift - layer));
+  } else {
+    return in ^ (1 << (layer - shift));
+  }
+}
+
 int 
 hash_state_catena_init (UNUSED struct hash_state *s, UNUSED struct balloon_options *opts)
 {
@@ -70,12 +79,18 @@ hash_state_catena_init (UNUSED struct hash_state *s, UNUSED struct balloon_optio
   if (!data)
     return ERROR_MALLOC;
 
-  s->n_blocks = nearest_power_of_two (s->n_blocks, &data->n_bits);  
-  // We split the main buffer into two pieces, so we need one less
-  // bit to index into them.
-  data->n_bits--;
-  data->src = block_index (s, 0);
-  data->dst = block_index (s, s->n_blocks / 2);
+  s->n_blocks = catena_nearest_power_of_two (s->n_blocks, &data->n_bits);  
+
+  if (s->opts->mix == MIX__CATENA_BRG) {
+    data->src = NULL;
+    data->dst = NULL;
+  } else {
+    // We split the main buffer into two pieces, so we need one less
+    // bit to index into them.
+    data->n_bits--;
+    data->src = block_index (s, 0);
+    data->dst = block_index (s, s->n_blocks / 2);
+  }
 
   s->extra_data = data;
   return ERROR_NONE; 
@@ -88,35 +103,61 @@ hash_state_catena_free (UNUSED struct hash_state *s)
   return ERROR_NONE;
 }
 
+int 
+hash_state_catena_brg_extract (struct hash_state *s, void *out, size_t outlen)
+{
+  int error;
+  struct catena_data *data = (struct catena_data *)s->extra_data;
+
+  uint8_t accumulator[s->block_size];
+  memcpy (accumulator, block_index (s, s->n_blocks - 1), s->block_size);
+
+  const uint8_t *blocks[2];
+  for (uint64_t i = 0; i < s->n_blocks; i++) {
+    blocks[0] = accumulator;
+    blocks[1] = rel_block_index (s, s->buffer, catena_reverse_bits (i, data->n_bits));
+
+    if ((error = compress (accumulator, blocks, 2, &s->opts->comp_opts)))
+      return error;
+  }
+
+  // Return bytes derived from the last block of the buffer.
+  return fill_bytes_from_strings (s, out, outlen, accumulator, s->block_size, NULL, 0);
+}
 
 int 
-hash_state_catena_brg_mix (UNUSED struct hash_state *s)
+hash_state_catena_dbg_mix (struct hash_state *s)
 {
   int error;
   struct catena_data *data = (struct catena_data *)s->extra_data;
 
   const size_t blocks_per_buf = s->n_blocks / 2; 
-  for (size_t i = 0; i < blocks_per_buf; i++) {
-    void *cur_block = rel_block_index (s, data->dst, i);
+  for (int layer = 0; layer < 2*data->n_bits-2; layer++) {
+    for (size_t i = 0; i < blocks_per_buf; i++) {
+      void *cur_block = rel_block_index (s, data->dst, i);
 
-    // Hash in the previous block (or the last block if this is
-    // the first block of the buffer).
-    const uint8_t *prev_block = i ? cur_block - s->block_size : rel_block_index (s, data->src, blocks_per_buf - 1);
+      // Hash in the previous block (or the last block if this is
+      // the first block of the buffer).
+      const uint8_t *prev_block = i ? cur_block - s->block_size : 
+          rel_block_index (s, data->src, blocks_per_buf - 1);
 
-    const uint8_t *blocks[2];
-    blocks[0] = prev_block;
-    blocks[1] = rel_block_index (s, data->src, reverse_bits (i, data->n_bits));
+      const uint8_t *blocks[3];
+      blocks[0] = prev_block;
+      blocks[1] = cur_block;
+      blocks[2] = rel_block_index (s, data->src, 
+          catena_butterfly (i, data->n_bits, layer));
 
-    // Hash value of neighbors into temp buffer.
-    if ((error = compress (cur_block, blocks, 2, &s->opts->comp_opts)))
-      return error;
+      // Hash value of neighbors into temp buffer.
+      if ((error = compress (cur_block, blocks, 3, &s->opts->comp_opts)))
+        return error;
+    }
+
+    // Swap the role of the src and dst buffers.
+    // At the entry of the mix function, we are always copying from src to dst.
+    uint8_t *tmp = data->src;
+    data->src = data->dst;
+    data->dst = tmp; 
   }
-
-  // Swap the role of the src and dst buffers.
-  // At the entry of the mix function, we are always copying from src to dst.
-  uint8_t *tmp = data->src;
-  data->src = data->dst;
-  data->dst = tmp; 
 
   return ERROR_NONE;
 }

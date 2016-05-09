@@ -22,15 +22,16 @@
 #include "bitstream.h"
 #include "options.h"
 
-uint64_t nearest_power_of_two (uint64_t in, int *n_bits);
-uint64_t reverse_bits (uint64_t in, int n_bits);
+uint64_t catena_nearest_power_of_two (uint64_t in, int *n_bits);
+uint64_t catena_reverse_bits (uint64_t in, int n_bits);
+uint64_t catena_butterfly (uint64_t in, int n_bits, int layer);
 
 int hash_state_catena_init (struct hash_state *s, struct balloon_options *opts);
 
 int hash_state_catena_free (struct hash_state *s);
 
-int hash_state_catena_brg_mix (struct hash_state *s);
+int hash_state_catena_brg_extract (struct hash_state *s, void *out, size_t outlen);
 
-
+int hash_state_catena_dbg_mix (struct hash_state *s);
 
 #endif

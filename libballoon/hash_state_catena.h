@@ -22,6 +22,8 @@
 #include "bitstream.h"
 #include "options.h"
 
+struct hash_state;
+
 uint64_t catena_nearest_power_of_two (uint64_t in, int *n_bits);
 uint64_t catena_reverse_bits (uint64_t in, int n_bits);
 uint64_t catena_butterfly (uint64_t in, int n_bits, int layer);

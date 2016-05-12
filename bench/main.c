@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "libballoon/hash_state_catena.h"
 #include "libballoon/options.h"
 #include "libballoon/timing.h"
 
@@ -76,7 +77,13 @@ run_once (struct balloon_options *opts)
 
   const clock_t clk_end = rdtsc ();
   const double wall_end = wall_sec ();
-  const unsigned int bytes_total = opts->m_cost * opts->t_cost * ITERS;
+  uint64_t mem = opts->m_cost;
+  if (opts->mix == MIX__CATENA_BRG || opts->mix == MIX__CATENA_DBG)
+  {
+    mem = catena_nearest_power_of_two (opts->m_cost, NULL);
+  }
+
+  const unsigned int bytes_total = mem * opts->t_cost * ITERS;
   const unsigned int clks_total = (clk_end - clk_start);
   const double cpb = (double)clks_total/(double)bytes_total;
   const double wall_total = (wall_end - wall_start)/((double)ITERS);
@@ -94,7 +101,7 @@ run_once (struct balloon_options *opts)
   printf ("%d\t", opts->mix);
   printf ("%d\t", opts->comp_opts.comp);
   printf ("%d\t", opts->comp_opts.comb);
-  printf ("%" PRIu64 "\t", opts->m_cost);
+  printf ("%" PRIu64 "\t", mem);
   printf ("%" PRIu64 "\t", opts->t_cost);
   printf ("%" PRIu8 "\t", opts->n_neighbors);
   printf ("%" PRIu16 "\t", opts->n_threads);
@@ -112,21 +119,20 @@ bench_neighbors (void)
 {
   // Run number of neighbors
   struct comp_options comp_opts = {
-    .comp = COMP__KECCAK_1600
+    .comp = COMP__BLAKE_2B
   };
 
   struct balloon_options opts = {
     .m_cost = 128 * 1024,
-    .t_cost = 5,
+    .t_cost = 8,
     .n_threads = 1,
     .comp_opts = comp_opts,
-    .mix = MIX__BALLOON_DOUBLE_BUFFER
+    .mix = MIX__BALLOON_SINGLE_BUFFER
   };
 
-  for (int comb = 0; comb < COMB__END; comb++) {
-    comp_opts.comb = comb;
-    opts.comp_opts = comp_opts;
-    for (unsigned n_neighb = 1; n_neighb < 128; n_neighb += 2) {
+
+  for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 8) {
+    for (unsigned n_neighb = 1; n_neighb < 10; n_neighb += 1) {
       opts.n_neighbors = n_neighb;
       run_once (&opts); 
     }
@@ -136,30 +142,69 @@ bench_neighbors (void)
 static void
 bench_mix (void)
 {
+
   struct comp_options comp_opts = {
-    .comp = COMP__KECCAK_1600
+    .comp = COMP__BLAKE_2B,
+    .comb = COMB__HASH
   };
 
-  struct balloon_options opts = {
-    .t_cost = 5,
-    .comp_opts = comp_opts,
-    .n_threads = 1
+  struct balloon_options opt_arr[] = {
+    {
+      .mix = MIX__SCRYPT,
+      .t_cost = 1,
+      .comp_opts = comp_opts,
+      .n_threads = 1,
+      .n_neighbors = 1
+    },
+    {
+      .mix = MIX__CATENA_BRG,
+      .t_cost = 1,
+      .comp_opts = comp_opts,
+      .n_threads = 1,
+      .n_neighbors = 1
+    },
+    {
+      .mix = MIX__BALLOON_SINGLE_BUFFER,
+      .t_cost = 1,
+      .comp_opts = comp_opts,
+      .n_threads = 1,
+      .n_neighbors = 3
+    },
+    {
+      .mix = MIX__ARGON2_UNIFORM,
+      .t_cost = 1,
+      .comp_opts = comp_opts,
+      .n_threads = 1,
+      .n_neighbors = 1
+    },
+    {
+      .mix = MIX__ARGON2_UNIFORM,
+      .t_cost = 8,
+      .comp_opts = comp_opts,
+      .n_threads = 1,
+      .n_neighbors = 1
+    },
+    {
+      .mix = MIX__BALLOON_SINGLE_BUFFER,
+      .t_cost = 8,
+      .comp_opts = comp_opts,
+      .n_threads = 1,
+      .n_neighbors = 3
+    },
+    {
+      .mix = MIX__CATENA_DBG,
+      .t_cost = 8,
+      .comp_opts = comp_opts,
+      .n_threads = 1,
+      .n_neighbors = 1
+    },
   };
 
-  for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 2) {
-    for (int mix = 0; mix < MIX__END; mix++) {
-      for (int comb = 0; comb < COMB__END; comb ++) {
-        opts.comp_opts.comb = comb;
-        opts.mix = mix;
-        opts.m_cost = m_cost;
-        opts.n_neighbors = options_n_neighbors (&opts);
-
-        // Skip invalid combinations
-        if (options_validate (&opts))
-          continue;
-
-        run_once (&opts); 
-      }
+  for (size_t i = 0; i < sizeof(opt_arr); i++) {
+    struct balloon_options *opt = &opt_arr[i];
+    for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 2) {
+      opt->m_cost = m_cost;
+      run_once (opt); 
     }
   }
 }
@@ -196,14 +241,14 @@ static void
 bench_hash (void)
 {
   struct comp_options comp_opts = {
-    .comb = COMB__XOR
+    .comb = COMB__HASH
   };
 
   struct balloon_options opts = {
     .m_cost = 128 * 1024,
-    .t_cost = 5,
+    .t_cost = 3,
     .comp_opts = comp_opts,
-    .mix = MIX__BALLOON_DOUBLE_BUFFER,
+    .mix = MIX__BALLOON_SINGLE_BUFFER,
     .n_threads = 1
   };
 

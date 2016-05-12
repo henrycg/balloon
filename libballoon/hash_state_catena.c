@@ -35,14 +35,15 @@ static uint8_t *rel_block_index (struct hash_state *s, uint8_t *buf, size_t idx)
 uint64_t
 catena_nearest_power_of_two (uint64_t in, int *n_bits)
 {
+  const bool set = (n_bits != NULL);
   uint64_t out = 1;
-  *n_bits = 0;
+  if (set) *n_bits = 0;
   while (out <= in) {
     out <<= 1;
-    *n_bits = *n_bits + 1;
+    if (set) *n_bits = *n_bits + 1;
   }
 
-  *n_bits = *n_bits - 1;
+  if (set) *n_bits = *n_bits - 1;
   return (out >> 1);
 }
 

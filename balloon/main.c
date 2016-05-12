@@ -67,8 +67,8 @@ int
 main (int argc, char *argv[]) 
 {
   struct comp_options comp_opts = {
-    .comp = 0,
-    .comb = 0
+    .comp = COMP__BLAKE_2B,
+    .comb = COMB__HASH
   };
 
   int xor_then_hash = false;

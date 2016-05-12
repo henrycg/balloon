@@ -133,6 +133,7 @@ bench_neighbors (void)
 
   for (unsigned m_cost = 4*1024; m_cost < MEM_MAX + 1; m_cost *= 8) {
     for (unsigned n_neighb = 1; n_neighb < 10; n_neighb += 1) {
+      opts.m_cost = m_cost;
       opts.n_neighbors = n_neighb;
       run_once (&opts); 
     }
@@ -193,7 +194,7 @@ bench_mix (void)
     },
     {
       .mix = MIX__CATENA_DBG,
-      .t_cost = 8,
+      .t_cost = 3,
       .comp_opts = comp_opts,
       .n_threads = 1,
       .n_neighbors = 1

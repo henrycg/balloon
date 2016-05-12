@@ -59,7 +59,6 @@ int
 hash_state_single_mix (struct hash_state *s)
 {
   int error;
-  uint8_t tmp_block[s->block_size];
   uint64_t neighbor;
   
   // Simplest design: hash in place with one buffer
@@ -90,12 +89,9 @@ hash_state_single_mix (struct hash_state *s)
     assert (s->block_size == compress_block_size (s->opts->comp_opts.comp));
 
     // Hash value of neighbors into temp buffer.
-    if ((error = compress (tmp_block, blocks, n_blocks_to_hash, &s->opts->comp_opts)))
+    if ((error = compress (cur_block, blocks, n_blocks_to_hash, &s->opts->comp_opts)))
       return error;
 
-    // Copy output of compression function back into the 
-    // big memory buffer.
-    memcpy (cur_block, tmp_block, s->block_size);
     //printf("copy %p => %p\n", s->buffer + (s->block_size * i), tmp_block);
   }
 

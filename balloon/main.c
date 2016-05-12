@@ -290,7 +290,6 @@ main (int argc, char *argv[])
   printf("\n");
 
   // Clean up OpenSSL junk
-  FIPS_mode_set(0); 
   EVP_cleanup();
   CRYPTO_cleanup_all_ex_data();
   ERR_remove_state(0);

@@ -49,16 +49,16 @@ options_validate (struct balloon_options *opts)
   }
 
   if (opts->mix == MIX__BALLOON_DOUBLE_BUFFER_PIPE) {
-    if (opts->comp_opts.comp != COMP__SEMPIRA_2048 ||
+    if (opts->comp_opts.comp != COMP__SIMPIRA_2048 ||
       opts->comp_opts.comb != COMB__XOR) {
-        fprintf (stderr, "Mix method double-pipe must use options -x and -c sempira2048\n");
+        fprintf (stderr, "Mix method double-pipe must use options -x and -c simpira2048\n");
         return ERROR_INCOMPATIBLE_OPTIONS;
     }
   }
 
   if (opts->mix != MIX__BALLOON_DOUBLE_BUFFER_PIPE &&
-        opts->comp_opts.comp == COMP__SEMPIRA_2048) {
-    fprintf (stderr, "-c sempira2048 only compatible with -m double-pipe\n");
+        opts->comp_opts.comp == COMP__SIMPIRA_2048) {
+    fprintf (stderr, "-c simpira2048 only compatible with -m double-pipe\n");
     return ERROR_INCOMPATIBLE_OPTIONS;
   }
   

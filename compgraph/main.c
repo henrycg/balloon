@@ -76,8 +76,8 @@ main (int argc, char *argv[])
     comp_opts.comp = COMP__SHA_512;
   else if (!strcmp (argv[1], "echo"))
     comp_opts.comp = COMP__ECHO;
-  else if (!strcmp (argv[1], "sempira2048"))
-    comp_opts.comp = COMP__SEMPIRA_2048;
+  else if (!strcmp (argv[1], "simpira2048"))
+    comp_opts.comp = COMP__SIMPIRA_2048;
   else {
     fprintf (stderr, "Invalid compression method\n");
     return -1;

@@ -28,7 +28,7 @@ enum comp_method {
   COMP__BLAKE_2B,
   COMP__SHA_512,
   COMP__ECHO,
-  COMP__SEMPIRA_2048,
+  COMP__SIMPIRA_2048,
 
   COMP__END
 };

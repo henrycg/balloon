@@ -22,7 +22,7 @@ libs = [
   "blake2b",
   "echo",
   "keccak",
-  "sempira",
+  "simpira",
 ]
 
 env.Append(LIBS = libs)

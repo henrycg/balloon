@@ -37,7 +37,7 @@ usage (const char *name)
   fprintf (stderr, "                            blake2b  -- standard Blake2b\n");
   fprintf (stderr, "                            echo     -- ECHO 512-bit double-pipe\n");
   fprintf (stderr, "                            keccak   -- SHA-3\n");
-  fprintf (stderr, "                            sempira2048 -- Sempira (2048 bytes)\n");
+  fprintf (stderr, "                            simpira2048 -- Simpira (2048 bytes)\n");
   fprintf (stderr, "                            sha512\n");
   fprintf (stderr, "  -h, --help            Print this help message.\n");
   fprintf (stderr, "  -i, --iterations=NUM  Number of hashes to compute (for perf testing).\n");
@@ -132,8 +132,8 @@ main (int argc, char *argv[])
             comp_opts.comp = COMP__BLAKE_2B;
           else if (!strcmp (optarg, "sha512"))
             comp_opts.comp = COMP__SHA_512;
-          else if (!strcmp (optarg, "sempira2048"))
-            comp_opts.comp = COMP__SEMPIRA_2048;
+          else if (!strcmp (optarg, "simpira2048"))
+            comp_opts.comp = COMP__SIMPIRA_2048;
           else if (!strcmp (optarg, "echo"))
             comp_opts.comp = COMP__ECHO;
           else {

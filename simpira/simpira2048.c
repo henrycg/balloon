@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "libballoon/xor.h"
-#include "sempira.h"
+#include "simpira.h"
 
 #define B 128 /* >= 4 */
 #define BYTES 2048
@@ -4855,7 +4855,7 @@ output3[127] = a3[127];
 
 
 void 
-sempira2048_pipe (uint8_t *in0, uint8_t *in1, uint8_t *in2, uint8_t *in3,
+simpira2048_pipe (uint8_t *in0, uint8_t *in1, uint8_t *in2, uint8_t *in3,
   size_t n_inputs)
 {
   __m128i b0[B], b1[B], b2[B], b3[B];

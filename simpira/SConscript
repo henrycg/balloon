@@ -5,8 +5,8 @@ Import('env')
 env.Append(CFLAGS = ["-maes"])
 
 src = [
-    "sempira2048.c",
+    "simpira2048.c",
 ]
 
-env.StaticLibrary("sempira", src)
+env.StaticLibrary("simpira", src)
 

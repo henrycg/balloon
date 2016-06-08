@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sempira/sempira.h"
+#include "simpira/simpira.h"
 
 #include "constants.h"
 #include "errors.h"
@@ -74,7 +74,7 @@ hash_state_double_pipe_mix (struct hash_state *s)
     if (i % pipe_size == 0) { 
       const size_t to_hash = MIN(blocks_per_buf - i, pipe_size);
       //printf("%d %d %d\n", (int)i, (int)to_hash, (int)blocks_per_buf);
-      sempira2048_pipe (rel_block_index (s, data->dst, i),
+      simpira2048_pipe (rel_block_index (s, data->dst, i),
         rel_block_index (s, data->dst, i + 1),
         rel_block_index (s, data->dst, i + 2),
         rel_block_index (s, data->dst, i + 3),

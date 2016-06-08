@@ -54,7 +54,7 @@
 
 #define ECHO_BLOCK_SIZE (64)
 
-#define SEMPIRA_2048_BLOCK_SIZE (2048)
+#define SIMPIRA_2048_BLOCK_SIZE (2048)
 
 #endif
 

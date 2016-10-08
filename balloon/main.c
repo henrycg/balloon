@@ -41,7 +41,7 @@ usage (const char *name)
   fprintf (stderr, "                            Default = 1\n");
   fprintf (stderr, "  -r, --rounds=NUM      Number of mixing rounds.\n");
   fprintf (stderr, "                            Default = 8\n");
-  fprintf (stderr, "  -s, --space=NUM       Space usage (in bytes).\n");
+  fprintf (stderr, "  -s, --space=NUM       Space usage (in KB).\n");
   fprintf (stderr, "                            Default = 1024 KB\n");
   fprintf (stderr, "  -t, --threads=NUM     Number of threads to use.\n");
   fprintf (stderr, "                            Default = 1\n");
@@ -123,6 +123,7 @@ main (int argc, char *argv[])
             fprintf (stderr, "Invalid argument to -s\n");
             return -1;
           }
+          n_space *= 1024;  // Convert from KB to bytes
 
           break;
 

@@ -136,6 +136,7 @@ hash_state_mix (struct hash_state *s)
 
     //printf("copy %p => %p\n", s->buffer + (s->block_size * i), tmp_block);
   }
+  s->has_mixed = true;
 
   s->has_mixed = true;
   return ERROR_NONE;

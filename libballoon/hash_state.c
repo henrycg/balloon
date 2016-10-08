@@ -89,6 +89,11 @@ hash_state_fill (struct hash_state *s,
   if ((error = expand (s->buffer, s->n_blocks, s->opts->comp)))
     return error;
 
+  for (int i=0; i<s->block_size;i++) {
+    printf("%02x", s->buffer[i]);
+  }
+  printf("\n");
+
   return ERROR_NONE;
 }
 
@@ -132,6 +137,7 @@ hash_state_mix (struct hash_state *s)
     //printf("copy %p => %p\n", s->buffer + (s->block_size * i), tmp_block);
   }
 
+  s->has_mixed = true;
   return ERROR_NONE;
 }
 
@@ -156,9 +162,9 @@ fill_bytes_from_strings (__attribute__  ((unused)) struct hash_state *s,
   struct bitstream bits;
   if ((error = bitstream_init (&bits)))
     return error;
-  if ((error = bitstream_seed_add (&bits, in, inlen)))
-    return error;
   if ((error = bitstream_seed_add (&bits, salt, saltlen)))
+    return error;
+  if ((error = bitstream_seed_add (&bits, in, inlen)))
     return error;
   if ((error = bitstream_seed_finalize (&bits)))
     return error;

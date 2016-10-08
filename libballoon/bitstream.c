@@ -34,7 +34,7 @@ static bool is_in_list (uint64_t *outs, size_t outlen, uint64_t r);
 int
 bitstream_init (struct bitstream *b)
 {
-  if (!SHA256_Init(&b->c))
+  if (!SHA512_Init(&b->c))
     return ERROR_OPENSSL_HASH;
   b->initialized = false;
 
@@ -90,7 +90,7 @@ bitstream_seed_add (struct bitstream *b, const void *seed, size_t seedlen)
   if (b->initialized)
     return ERROR_BITSTREAM_FINALIZED;
 
-  if (!SHA256_Update(&b->c, seed, seedlen))
+  if (!SHA512_Update(&b->c, seed, seedlen))
     return ERROR_OPENSSL_HASH;
   return ERROR_NONE;
 }
@@ -99,19 +99,18 @@ int
 bitstream_seed_finalize (struct bitstream *b)
 {
   // Hash in and salt into a 256-bit AES key
-  uint8_t key_bytes[SHA256_DIGEST_LENGTH];
+  uint8_t key_bytes[SHA512_DIGEST_LENGTH];
 
-  if (!SHA256_Final(key_bytes, &b->c))
+  if (!SHA512_Final(key_bytes, &b->c))
     return ERROR_OPENSSL_HASH;
 
-  // TODO: Make the IV depend on the salt?
   uint8_t iv[AES_BLOCK_SIZE];
   memset (iv, 0, AES_BLOCK_SIZE);
 
-  if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 0))
+  if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 1))
     return ERROR_OPENSSL_AES;
 
-  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_cbc (), key_bytes, iv))
+  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_ctr (), key_bytes, iv))
     return ERROR_OPENSSL_AES;
 
   b->initialized = true;
@@ -123,30 +122,10 @@ encrypt_partial (struct bitstream *b, void *outp, int to_encrypt)
 {
   // TODO: Make sure encrypt the right block size
   int encl;
-  if (to_encrypt % AES_BLOCK_SIZE == 0) {
-    // Encrypt directly into the output buffer
-    if (!EVP_EncryptUpdate (&b->ctx, outp, &encl, b->zeros, to_encrypt))
-      return ERROR_OPENSSL_AES;
-    assert (encl == to_encrypt);
-  } else {
-    // Round up to nearest block size
-    const int aligned_buf = ((to_encrypt / AES_BLOCK_SIZE) + 1) * AES_BLOCK_SIZE;
-
-    assert (to_encrypt < BITSTREAM_BUF_SIZE);
-    assert (aligned_buf < BITSTREAM_BUF_SIZE);
-    assert (aligned_buf >= to_encrypt);
-    assert (aligned_buf % AES_BLOCK_SIZE == 0);
-
-    // Encrypt to a temp buffer and copy the result over
-    uint8_t *buf = malloc (aligned_buf * sizeof (uint8_t));
-    if (!buf)
-      return ERROR_MALLOC;
-    if (!EVP_EncryptUpdate (&b->ctx, buf, &encl, b->zeros, aligned_buf))
-      return ERROR_OPENSSL_AES;
-    assert (encl > to_encrypt);
-    memcpy (outp, buf, to_encrypt);
-    free (buf);
-  }
+  // Encrypt directly into the output buffer
+  printf("Enc!\n");
+  if (!EVP_EncryptUpdate (&b->ctx, outp, &encl, b->zeros, to_encrypt))
+    return ERROR_OPENSSL_AES;
 
   return ERROR_NONE;
 }

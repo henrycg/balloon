@@ -33,8 +33,9 @@ usage (const char *name)
   fprintf (stderr, "A test utility for the Balloon family of hash functions.\n\n");
   fprintf (stderr, "  -c, --comp=TYPE       Compression function to use. Options are:\n");
   fprintf (stderr, "                            Default = keccak\n");
-  fprintf (stderr, "                            argon    -- Argon2's version of Blake2b\n");
-  fprintf (stderr, "                            keccak   -- SHA-3\n");
+  //fprintf (stderr, "                            argon    -- Argon2's version of Blake2b\n");
+  //fprintf (stderr, "                            keccak   -- SHA3\n");
+  fprintf (stderr, "                            sha512 -- SHA2/512\n");
   fprintf (stderr, "  -h, --help            Print this help message.\n");
   fprintf (stderr, "  -i, --iterations=NUM  Number of hashes to compute (for perf testing).\n");
   fprintf (stderr, "                            Default = 1\n");
@@ -51,7 +52,7 @@ usage (const char *name)
 int 
 main (int argc, char *argv[]) 
 {
-  enum comp_method comp = COMP__KECCAK_1600;
+  enum comp_method comp = COMP__SHA_512;
 
   int xor_then_hash = false;
   int32_t n_rounds = 8;

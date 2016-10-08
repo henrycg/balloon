@@ -41,15 +41,30 @@ BalloonHash (void *out, size_t outlen,
   if ((error = options_validate (opts)))
     return error;
 
+  // Hash salt down to 128 bits using SHA-512
+  SHA512_CTX ctx;
+  if (!SHA512_Init (&ctx))
+    return ERROR_OPENSSL_HASH;
+  
+  if (!SHA512_Update (&ctx, salt, saltlen))
+    return ERROR_OPENSSL_HASH;
+
+  unsigned char shortsalt[SHA512_DIGEST_LENGTH];
+  if (!SHA512_Final (shortsalt, &ctx))
+    return ERROR_OPENSSL_HASH;
+
+  for (int i=0; i<SHA512_DIGEST_LENGTH; i++) 
+    printf("%d,", shortsalt[i]);
+  puts("");
+
   struct hash_state state;
-  if ((error = hash_state_init (&state, opts, salt, saltlen)))
+  if ((error = hash_state_init (&state, opts, shortsalt, SHA512_DIGEST_LENGTH)))
     return error;
 
   // Fill buffer of m_cost blocks with pseudo-random stuff derived
   // from the password and salt.
   if ((error = hash_state_fill (&state, in, inlen, salt, saltlen)))
     return error;
-
 
   // Mix the buffer t_cost times
   for (unsigned int i = 0; i < opts->t_cost; i++) {
@@ -74,13 +89,9 @@ validate_parameters (size_t outlen, size_t inlen, size_t saltlen)
   if (outlen >= OUTLEN_MAX)
     return ERROR_OUTLEN_TOO_BIG;
 
-  if (inlen < INLEN_MIN)
-    return ERROR_INLEN_TOO_SMALL;
   if (inlen >= INLEN_MAX)
     return ERROR_INLEN_TOO_BIG;
 
-  if (saltlen < SALTLEN_MIN)
-    return ERROR_SALTLEN_TOO_SMALL;
   if (saltlen >= SALTLEN_MAX)
     return ERROR_SALTLEN_TOO_BIG;
 

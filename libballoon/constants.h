@@ -20,10 +20,7 @@
 #define OUTLEN_MIN 16ull
 #define OUTLEN_MAX 128ull
 
-#define INLEN_MIN 4ull
 #define INLEN_MAX (1ull<<20)
-
-#define SALTLEN_MIN 4ull
 #define SALTLEN_MAX (1ull<<20)
 
 // Key length (in bits) for the AES-CTR cipher used

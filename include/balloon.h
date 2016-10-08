@@ -24,39 +24,10 @@
 
 enum comp_method {
   COMP__KECCAK_1600,
-  COMP__ARGON,
-  COMP__BLAKE_2B,
   COMP__SHA_512,
-  COMP__ECHO,
-  COMP__SIMPIRA_2048,
+  COMP__ARGON,
 
   COMP__END
-};
-
-enum comb_method {
-  COMB__HASH,
-  COMB__XOR,
-
-  COMB__END
-};
-
-struct comp_options {
-  enum comp_method comp;
-  enum comb_method comb;
-};
-
-enum mix_method {
-  MIX__BALLOON_SINGLE_BUFFER,
-  MIX__BALLOON_DOUBLE_BUFFER,
-  MIX__BALLOON_DOUBLE_BUFFER_PAR,
-  MIX__BALLOON_DOUBLE_BUFFER_PIPE,
-
-  MIX__ARGON2_UNIFORM,
-  MIX__CATENA_BRG,
-  MIX__CATENA_DBG,
-  MIX__SCRYPT,
-
-  MIX__END
 };
 
 struct balloon_options {
@@ -71,8 +42,7 @@ struct balloon_options {
   // TODO: Set n_neighbors automatically and give warning
   //       when user overrides the default.
   uint8_t n_neighbors;
-  struct comp_options comp_opts;
-  enum mix_method mix;
+  enum comp_method comp;
 };
 
 int BalloonHash (void *out, size_t outlen, 

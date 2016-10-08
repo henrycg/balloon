@@ -24,7 +24,7 @@
 #include <string.h>
 
 #include "libballoon/options.h"
-#include "libballoon/timing.h"
+#include "timing.h"
 
 static void 
 usage (const char *name)
@@ -34,25 +34,10 @@ usage (const char *name)
   fprintf (stderr, "  -c, --comp=TYPE       Compression function to use. Options are:\n");
   fprintf (stderr, "                            Default = keccak\n");
   fprintf (stderr, "                            argon    -- Argon2's version of Blake2b\n");
-  fprintf (stderr, "                            blake2b  -- standard Blake2b\n");
-  fprintf (stderr, "                            echo     -- ECHO 512-bit double-pipe\n");
   fprintf (stderr, "                            keccak   -- SHA-3\n");
-  fprintf (stderr, "                            simpira2048 -- Simpira (2048 bytes)\n");
-  fprintf (stderr, "                            sha512\n");
   fprintf (stderr, "  -h, --help            Print this help message.\n");
   fprintf (stderr, "  -i, --iterations=NUM  Number of hashes to compute (for perf testing).\n");
   fprintf (stderr, "                            Default = 1\n");
-  fprintf (stderr, "  -m, --mix=TYPE        Mixing method. Options are:\n");
-  fprintf (stderr, "                            Default = single\n");
-  fprintf (stderr, "                            single      -- Single buffer\n");
-  fprintf (stderr, "                            double      -- Double buffer\n");
-  fprintf (stderr, "                            double-par  -- with parallelism\n");
-  fprintf (stderr, "                            double-pipe -- with pipelining\n");
-  fprintf (stderr, "                            argon2      -- Argon2i-style mixing\n");
-  fprintf (stderr, "                            catena-brg  -- Catena Bit-Reversal Graph mixing\n");
-  fprintf (stderr, "                            scrypt      -- Scrypt-style mixing\n");
-  fprintf (stderr, "  -n, --neighbors=NUM   Number of neighboring block hashed at each step.\n");
-  fprintf (stderr, "                            Default = [depends on parameter choices]\n");
   fprintf (stderr, "  -r, --rounds=NUM      Number of mixing rounds.\n");
   fprintf (stderr, "                            Default = 8\n");
   fprintf (stderr, "  -s, --space=NUM       Space usage (in bytes).\n");
@@ -66,10 +51,7 @@ usage (const char *name)
 int 
 main (int argc, char *argv[]) 
 {
-  struct comp_options comp_opts = {
-    .comp = COMP__BLAKE_2B,
-    .comb = COMB__HASH
-  };
+  enum comp_method comp = COMP__KECCAK_1600;
 
   int xor_then_hash = false;
   int32_t n_rounds = 8;
@@ -78,7 +60,6 @@ main (int argc, char *argv[])
   int32_t n_iters = 1;
   int16_t n_threads = 1;
   int help = false;
-  enum mix_method mix = 0;
 
   while (1)
     {
@@ -125,42 +106,11 @@ main (int argc, char *argv[])
           break; 
         case 'c':
           if (!strcmp (optarg, "keccak"))
-            comp_opts.comp = COMP__KECCAK_1600;
+            comp = COMP__KECCAK_1600;
           else if (!strcmp (optarg, "argon"))
-            comp_opts.comp = COMP__ARGON;
-          else if (!strcmp (optarg, "blake2b"))
-            comp_opts.comp = COMP__BLAKE_2B;
-          else if (!strcmp (optarg, "sha512"))
-            comp_opts.comp = COMP__SHA_512;
-          else if (!strcmp (optarg, "simpira2048"))
-            comp_opts.comp = COMP__SIMPIRA_2048;
-          else if (!strcmp (optarg, "echo"))
-            comp_opts.comp = COMP__ECHO;
+            comp = COMP__ARGON;
           else {
             fprintf (stderr, "Invalid compression method\n");
-            return -1;
-          }
-          break;
-
-        case 'm':
-          if (!strcmp (optarg, "single"))
-            mix = MIX__BALLOON_SINGLE_BUFFER;
-          else if (!strcmp (optarg, "double"))
-            mix = MIX__BALLOON_DOUBLE_BUFFER;
-          else if (!strcmp (optarg, "double-par"))
-            mix = MIX__BALLOON_DOUBLE_BUFFER_PAR;
-          else if (!strcmp (optarg, "double-pipe"))
-            mix = MIX__BALLOON_DOUBLE_BUFFER_PIPE;
-          else if (!strcmp (optarg, "argon2"))
-            mix = MIX__ARGON2_UNIFORM;
-          else if (!strcmp (optarg, "catena-brg"))
-            mix = MIX__CATENA_BRG;
-          else if (!strcmp (optarg, "catena-dbg"))
-            mix = MIX__CATENA_DBG;
-          else if (!strcmp (optarg, "scrypt"))
-            mix = MIX__SCRYPT;
-          else {
-            fprintf (stderr, "Invalid mix method\n");
             return -1;
           }
           break;
@@ -241,14 +191,12 @@ main (int argc, char *argv[])
   char *salt = argv[optind+1];
 
 
-  comp_opts.comb = xor_then_hash ? COMB__XOR : COMB__HASH;
   struct balloon_options opts = {
     .m_cost = n_space,
     .t_cost = n_rounds,
     .n_neighbors = n_neighbors,
     .n_threads = n_threads,
-    .comp_opts = comp_opts,
-    .mix = mix
+    .comp = comp
   };
 
   const unsigned int rec_neighbs = options_n_neighbors (&opts);
@@ -263,9 +211,7 @@ main (int argc, char *argv[])
   printf ("Neighbs        = %lld\n", (long long int)opts.n_neighbors);
   printf ("Niters         = %lld\n", (long long int)n_iters);
   printf ("Nthreads       = %d\n", (int)n_threads);
-  printf ("Mix            = %d\n", opts.mix);
-  printf ("Compression    = %d\n", opts.comp_opts.comp);
-  printf ("XOR-then-hash  = %d\n", opts.comp_opts.comb);
+  printf ("Compression    = %d\n", opts.comp);
   printf ("Input          = %s\n", in);
   printf ("Salt           = %s\n", salt);
 

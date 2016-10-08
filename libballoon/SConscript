@@ -7,22 +7,12 @@ src = [
     "bitstream.c",
     "compress.c",
     "hash_state.c",
-    "hash_state_argon2.c",
-    "hash_state_catena.c",
-    "hash_state_double.c",
-    "hash_state_double_par.c",
-    "hash_state_double_pipe.c",
-    "hash_state_scrypt.c",
-    "hash_state_single.c",
     "options.c",
     "xor.c"
 ]
 
 libs = [
-  "blake2b",
-  "echo",
   "keccak",
-  "simpira",
 ]
 
 env.Append(LIBS = libs)

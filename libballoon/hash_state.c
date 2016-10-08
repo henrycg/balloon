@@ -24,13 +24,6 @@
 #include "compress.h"
 #include "errors.h"
 #include "hash_state.h"
-#include "hash_state_argon2.h"
-#include "hash_state_catena.h"
-#include "hash_state_double.h"
-#include "hash_state_double_par.h"
-#include "hash_state_double_pipe.h"
-#include "hash_state_scrypt.h"
-#include "hash_state_single.h"
 
 #define MIN(a, b) ((a < b) ? (a) : (b))
 
@@ -46,80 +39,6 @@ block_last (const struct hash_state *s)
   return block_index (s, s->n_blocks - 1);
 }
 
-static int
-init_func_pointers (struct hash_state *s)
-{
-  switch (s->opts->mix) {
-    case MIX__BALLOON_SINGLE_BUFFER:
-      s->f_init = hash_state_single_init;
-      s->f_free = hash_state_single_free;
-      s->f_fill = hash_state_single_fill;
-      s->f_mix = hash_state_single_mix;
-      s->f_extract = hash_state_single_extract;
-      break;
-
-    case MIX__BALLOON_DOUBLE_BUFFER:
-      s->f_init = hash_state_double_init;
-      s->f_free = hash_state_double_free;
-      s->f_fill = hash_state_double_fill;
-      s->f_mix = hash_state_double_mix;
-      s->f_extract = hash_state_double_extract;
-      break;
-
-    case MIX__BALLOON_DOUBLE_BUFFER_PAR:
-      s->f_init = hash_state_double_par_init;
-      s->f_free = hash_state_double_par_free;
-      s->f_fill = hash_state_double_par_fill;
-      s->f_mix = hash_state_double_par_mix;
-      s->f_extract = hash_state_double_par_extract;
-      break;
-
-    case MIX__BALLOON_DOUBLE_BUFFER_PIPE:
-      s->f_init = hash_state_double_init;
-      s->f_free = hash_state_double_free;
-      s->f_fill = hash_state_double_fill;
-      s->f_mix = hash_state_double_pipe_mix;
-      s->f_extract = hash_state_double_extract;
-      break;
-
-    case MIX__ARGON2_UNIFORM:
-      s->f_init = hash_state_argon2_init;
-      s->f_free = hash_state_argon2_free;
-      s->f_fill = hash_state_argon2_fill;
-      s->f_mix = hash_state_argon2_mix;
-      s->f_extract = hash_state_argon2_extract;
-      break;
-
-    case MIX__CATENA_BRG:
-      s->f_init = hash_state_catena_init;
-      s->f_free = hash_state_catena_free;
-      s->f_fill = hash_state_single_fill;
-      s->f_mix = hash_state_scrypt_mix;
-      s->f_extract = hash_state_catena_brg_extract;
-      break;
-
-    case MIX__CATENA_DBG:
-      s->f_init = hash_state_catena_init;
-      s->f_free = hash_state_catena_free;
-      s->f_fill = hash_state_double_fill;
-      s->f_mix = hash_state_catena_dbg_mix;
-      s->f_extract = hash_state_double_extract;
-      break;
-
-    case MIX__SCRYPT:
-      s->f_init = hash_state_scrypt_init;
-      s->f_free = hash_state_scrypt_free;
-      s->f_fill = hash_state_single_fill;
-      s->f_mix = hash_state_scrypt_mix;
-      s->f_extract = hash_state_scrypt_extract;
-      break;
-
-    default:
-      return ERROR_INVALID_MIX_METHOD;
-  } 
-
-  return ERROR_NONE;
-}
 
 int 
 hash_state_init (struct hash_state *s, struct balloon_options *opts,
@@ -131,7 +50,7 @@ hash_state_init (struct hash_state *s, struct balloon_options *opts,
   if (s->n_blocks % 2 != 0) s->n_blocks++;
 
   s->has_mixed = false;
-  s->block_size = compress_block_size (opts->comp_opts.comp);
+  s->block_size = compress_block_size (opts->comp);
   s->opts = opts;
 
   // TODO: Make sure this multiplication doesn't overflow (or use 
@@ -139,11 +58,7 @@ hash_state_init (struct hash_state *s, struct balloon_options *opts,
   s->buffer = malloc (s->n_blocks * s->block_size);
 
   int error;
-  if ((error = init_func_pointers (s)))
-    return error;
   if ((error = bitstream_init_with_seed (&s->bstream, salt, saltlen)))
-    return error;
-  if ((error = s->f_init (s, opts)))
     return error;
 
   return (s->buffer) ? ERROR_NONE : ERROR_MALLOC;
@@ -155,8 +70,6 @@ hash_state_free (struct hash_state *s)
   int error;
   if ((error = bitstream_free (&s->bstream)))
     return error;
-  if ((error = s->f_free (s)))
-    return error;
   free (s->buffer);
   return ERROR_NONE;
 }
@@ -166,14 +79,60 @@ hash_state_fill (struct hash_state *s,
     const void *in, size_t inlen,
     const void *salt, size_t saltlen)
 {
-  return s->f_fill (s, in, inlen, salt, saltlen);
+  int error;
+
+  // Hash password and salt into 0-th block
+  if ((error = fill_bytes_from_strings (s, s->buffer, 
+      s->block_size, in, inlen, salt, saltlen)))
+    return error;
+
+  if ((error = expand (s->buffer, s->n_blocks, s->opts->comp)))
+    return error;
+
+  return ERROR_NONE;
 }
 
 int 
 hash_state_mix (struct hash_state *s)
 {
-  s->has_mixed = true;
-  return s->f_mix (s);
+  int error;
+  uint64_t neighbor;
+  
+  // Simplest design: hash in place with one buffer
+  for (size_t i = 0; i < s->n_blocks; i++) {
+    void *cur_block = block_index (s, i);
+
+    const size_t n_blocks_to_hash = s->opts->n_neighbors + 2;
+    const uint8_t *blocks[n_blocks_to_hash];
+
+    // Hash in the previous block (or the last block if this is
+    // the first block of the buffer).
+    const uint8_t *prev_block = i ? cur_block - s->block_size : block_last (s);
+
+    blocks[0] = prev_block;
+    blocks[1] = cur_block;
+    
+    // TODO: Check if sorting the neighbors before accessing them improves
+    // the performance at all.
+
+    // For each block, pick random neighbors
+    for (size_t n = 2; n < n_blocks_to_hash; n++) { 
+      // Get next neighbor
+      if ((error = bitstream_rand_int (&s->bstream, &neighbor, s->n_blocks)))
+        return error;
+      blocks[n] = block_index (s, neighbor);
+    }
+
+    assert (s->block_size == compress_block_size (s->opts->comp));
+
+    // Hash value of neighbors into temp buffer.
+    if ((error = compress (cur_block, blocks, n_blocks_to_hash, s->opts->comp)))
+      return error;
+
+    //printf("copy %p => %p\n", s->buffer + (s->block_size * i), tmp_block);
+  }
+
+  return ERROR_NONE;
 }
 
 int 
@@ -181,7 +140,10 @@ hash_state_extract (struct hash_state *s, void *out, size_t outlen)
 {
   if (!s->has_mixed)
     return ERROR_CANNOT_EXTRACT_BEFORE_MIX;
-  return s->f_extract (s, out, outlen);
+
+  // For one-buffer design, just return bytes derived from
+  // the last block of the buffer.
+  return fill_bytes_from_strings (s, out, outlen, block_last (s), s->block_size, NULL, 0);
 }
 
 int 

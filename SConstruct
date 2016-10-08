@@ -129,10 +129,7 @@ Export('env')
 # Set compile options for binaries
 env.Append(LIBS = ["balloon"], \
   LIBPATH = ['#build/libballoon', 
-            '#build/echo',
-            '#build/keccak', 
-            '#build/simpira', 
-            '#build/blake2b'])
+            '#build/keccak' ])
 
 # Add header files
 env.Append(CPPPATH = ["#include", "#."])
@@ -144,14 +141,9 @@ env.Append(LIBS = ["crypto", "pthread", "m"])
 # libballoon
 SConscript('libballoon/SConscript', variant_dir='build/libballoon')
 SConscript('keccak/SConscript', variant_dir='build/keccak')
-SConscript('blake2b/SConscript', variant_dir='build/blake2b')
-SConscript('echo/SConscript', variant_dir='build/echo')
-SConscript('simpira/SConscript', variant_dir='build/simpira')
 
 # Utilities
 if env["BUILD_BINARIES"]:
     SConscript('balloon/SConscript', variant_dir='build/balloon')
-    SConscript('compgraph/SConscript', variant_dir='build/compgraph')
     SConscript('btest/SConscript', variant_dir='build/btest')
-    SConscript('bench/SConscript', variant_dir='build/bench')
 

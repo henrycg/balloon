@@ -23,7 +23,7 @@
 #include "hash_state.h"
 
 int compress (uint8_t *out, const uint8_t *blocks[], 
-    size_t blocks_to_comp, struct comp_options *opts);
+    size_t blocks_to_comp, enum comp_method comp);
 
 uint16_t compress_block_size (enum comp_method comp);
 
@@ -33,6 +33,6 @@ uint16_t compress_block_size (enum comp_method comp);
  * derived from the bytes in the first block.
  */
 int expand (uint8_t *buf, 
-    size_t blocks_in_buf, struct comp_options *opts);
+    size_t blocks_in_buf, enum comp_method comp);
 
 #endif

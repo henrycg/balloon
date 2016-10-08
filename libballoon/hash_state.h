@@ -26,13 +26,6 @@
 
 struct hash_state;
 
-typedef int func_hash_state_init (struct hash_state *s, struct balloon_options *opts);
-typedef int func_hash_state_free (struct hash_state *s);
-typedef int func_hash_state_fill (struct hash_state *s, const void *in, size_t inlen,
-    const void *salt, size_t saltlen);
-typedef int func_hash_state_mix (struct hash_state *s);
-typedef int func_hash_state_extract (struct hash_state *s, void *out, size_t outlen);
-
 struct hash_state {
   uint64_t n_blocks;
   uint16_t block_size;
@@ -40,14 +33,6 @@ struct hash_state {
   uint8_t *buffer;
   struct bitstream bstream;
   struct balloon_options *opts;
-
-  func_hash_state_init *f_init;
-  func_hash_state_free *f_free;
-  func_hash_state_fill *f_fill;
-  func_hash_state_mix *f_mix;
-  func_hash_state_extract *f_extract;
-
-  void *extra_data;
 };
 
 

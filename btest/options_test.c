@@ -106,9 +106,7 @@ mu_test_options ()
   opts.m_cost = 0;
   opts.t_cost = 10000llu;
   opts.n_neighbors = 1;
-  opts.comp_opts.comp = 0;
-  opts.comp_opts.comb = 0;
-  opts.mix = 0; 
+  opts.comp = 0;
   opts.n_threads = 1;
 
   opts.m_cost = 1024;
@@ -129,9 +127,7 @@ mu_test_options__blocks ()
   opts.t_cost = 10000llu;
   opts.m_cost = 1024*1024;
   opts.n_neighbors = 1;
-  opts.comp_opts.comp = 0;
-  opts.comp_opts.comb = 0;
-  opts.mix = 0;
+  opts.comp = 0;
   opts.n_threads = 1;
 
   mu_check ( !options_validate (&opts) );

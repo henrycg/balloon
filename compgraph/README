@@ -1,3 +1,0 @@
-# Convert the output of this function into a color TIFF
-# image using the following command:
-raw2tiff -w 64 -p rgb -b 3 argon.raw argon.tiff

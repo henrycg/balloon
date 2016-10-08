@@ -20,7 +20,6 @@
 #include "constants.h"
 #include "errors.h"
 #include "hash_state.h"
-#include "options.h"
 
 static int validate_parameters (size_t outlen, size_t inlen, size_t saltlen);
 

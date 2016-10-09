@@ -41,24 +41,8 @@ BalloonHash (void *out, size_t outlen,
   if ((error = options_validate (opts)))
     return error;
 
-  // Hash salt down to 128 bits using SHA-512
-  SHA512_CTX ctx;
-  if (!SHA512_Init (&ctx))
-    return ERROR_OPENSSL_HASH;
-  
-  if (!SHA512_Update (&ctx, salt, saltlen))
-    return ERROR_OPENSSL_HASH;
-
-  unsigned char shortsalt[SHA512_DIGEST_LENGTH];
-  if (!SHA512_Final (shortsalt, &ctx))
-    return ERROR_OPENSSL_HASH;
-
-  for (int i=0; i<SHA512_DIGEST_LENGTH; i++) 
-    printf("%d,", shortsalt[i]);
-  puts("");
-
   struct hash_state state;
-  if ((error = hash_state_init (&state, opts, shortsalt, SHA512_DIGEST_LENGTH)))
+  if ((error = hash_state_init (&state, opts, salt, saltlen)))
     return error;
 
   // Fill buffer of m_cost blocks with pseudo-random stuff derived

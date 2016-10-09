@@ -25,6 +25,4 @@ uint64_t options_n_blocks (const struct balloon_options *opts);
 
 uint16_t options_block_size (const struct balloon_options *opts);
 
-uint8_t options_n_neighbors (const struct balloon_options *opts);
-
 #endif

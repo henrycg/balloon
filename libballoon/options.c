@@ -55,9 +55,4 @@ options_n_blocks (const struct balloon_options *opts)
   return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
 }
 
-uint8_t 
-options_n_neighbors (const struct balloon_options *opts)
-{
-  return (opts->t_cost == 1) ? 1 : 3;
-}
 

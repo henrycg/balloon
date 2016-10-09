@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "libballoon/options.h"
+#include "libballoon/constants.h"
 #include "timing.h"
 
 static void 
@@ -201,7 +202,7 @@ main (int argc, char *argv[])
     .comp = comp
   };
 
-  const unsigned int rec_neighbs = options_n_neighbors (&opts);
+  const unsigned int rec_neighbs = N_NEIGHBORS;
   if (n_neighbors && ((uint16_t) n_neighbors) != rec_neighbs) {
     fprintf (stderr, "Warning: using unrecommended n_neighbors param!\n");
   }

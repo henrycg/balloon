@@ -24,12 +24,7 @@
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-static int refresh_state (struct bitstream *b);
-static uint8_t bytes_required (uint64_t val);
-static uint8_t bits_in_int (uint64_t val);
 static uint64_t bytes_to_int (const uint8_t *bytes, size_t n_bytes);
-static int generate_few_bytes (struct bitstream *b, uint8_t *out, size_t outlen);
-static bool is_in_list (uint64_t *outs, size_t outlen, uint64_t r);
 
 int
 bitstream_init (struct bitstream *b)
@@ -42,13 +37,7 @@ bitstream_init (struct bitstream *b)
 
   if (!(b->zeros = malloc (BITSTREAM_BUF_SIZE * sizeof (uint8_t))))
     return ERROR_MALLOC;
-  if (!(b->generated = malloc (BITSTREAM_BUF_SIZE * sizeof (uint8_t))))
-    return ERROR_MALLOC;
-
   memset (b->zeros, 0, BITSTREAM_BUF_SIZE);
-
-  b->genp = NULL;
-  b->n_refreshes = 0;
 
   return ERROR_NONE;
 }
@@ -65,7 +54,6 @@ bitstream_free (struct bitstream *b)
     return ERROR_OPENSSL_AES;
 
   free (b->zeros);
-  free (b->generated);
 
   return ERROR_NONE;
 }
@@ -107,6 +95,11 @@ bitstream_seed_finalize (struct bitstream *b)
   uint8_t iv[AES_BLOCK_SIZE];
   memset (iv, 0, AES_BLOCK_SIZE);
 
+  printf("Key: ");
+  for(int i=0; i<32; i++) 
+    printf("%02x,", key_bytes[i]);
+  puts("");
+
   if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 1))
     return ERROR_OPENSSL_AES;
 
@@ -120,10 +113,8 @@ bitstream_seed_finalize (struct bitstream *b)
 static int 
 encrypt_partial (struct bitstream *b, void *outp, int to_encrypt)
 {
-  // TODO: Make sure encrypt the right block size
   int encl;
   // Encrypt directly into the output buffer
-  printf("Enc!\n");
   if (!EVP_EncryptUpdate (&b->ctx, outp, &encl, b->zeros, to_encrypt))
     return ERROR_OPENSSL_AES;
 
@@ -152,119 +143,19 @@ bitstream_fill_buffer (struct bitstream *b, void *out, size_t outlen)
 
 
 int
-bitstream_rand_int (struct bitstream *b, uint64_t *out, uint64_t max)
+bitstream_rand_uint64 (struct bitstream *b, uint64_t *out)
 {
   int error; 
-  const int n_bytes = bytes_required (max);
-  const uint8_t bits = bits_in_int (max);
+  const int n_bytes = 8;
   uint8_t buf[n_bytes];
-  uint64_t retval;
 
-  if (!max)
-    return ERROR_BITSTREAM_MAX_TOO_SMALL;
+  if ((error = bitstream_fill_buffer (b, buf, n_bytes)))
+    return error;
 
-  do {
-    if ((error = generate_few_bytes (b, buf, n_bytes)))
-      return error;
-
-    retval = bytes_to_int (buf, n_bytes);
-    retval %= (1 << bits);
-  } while (retval >= max);
-
-  *out = retval;
+  *out = bytes_to_int (buf, n_bytes);
   return ERROR_NONE;
 }
 
-static bool 
-is_in_list (uint64_t *outs, size_t outlen, uint64_t r)
-{
-  // TODO: Use a sorted list here to speed up the search.
-  for (size_t i = 0; i < outlen; i++) {
-    if (outs[i] == r) return true;
-  }
-
-  return false;
-}
-
-int 
-bitstream_rand_ints_nodup (struct bitstream *b, uint64_t *outs, size_t *n_found, 
-  size_t outlen, uint64_t max)
-{
-  int error;
-  uint64_t r;
-  *n_found = 0;
-
-  for (size_t try = 0; try < outlen; try++) {
-    if ((error = bitstream_rand_int (b, &r, max)))
-      return error;
-
-    if (!is_in_list (outs, *n_found, r)) {
-      outs[*n_found] = r;
-      *n_found = *n_found + 1;
-    }
-  }
-
-  return ERROR_NONE;
-}
-
-int
-bitstream_rand_byte (struct bitstream *b, uint8_t *out)
-{
-  if (!b->initialized)
-    return ERROR_BITSTREAM_UNINITIALIZED;
-
-  if (!b->genp || (b->genp + sizeof (size_t)) >= (b->generated + BITSTREAM_BUF_SIZE)) 
-  {
-    int error;
-    if ((error = refresh_state (b)))
-      return error;
-  }
-
-  *out = *(b->genp);
-  b->genp++;
-  return ERROR_NONE;
-}
-
-static int
-generate_few_bytes (struct bitstream *b, uint8_t *out, size_t outlen)
-{
-  int error;
-  for (size_t i = 0; i < outlen; i++) {
-    if ((error = bitstream_rand_byte (b, &out[i])))
-      return error;
-  }
-
-  return ERROR_NONE;
-}
-
-static int
-refresh_state (struct bitstream *b)
-{
-  //printf("refresh\n");
-  b->genp = b->generated;
-  b->n_refreshes++;
-  return bitstream_fill_buffer (b, b->generated, BITSTREAM_BUF_SIZE);
-}
-
-
-/**
- * The number of random bytes required to generate a random number
- * in the range [0, max). This should be zero for when max == 0 or
- * max == 1. 
- */
-static uint8_t
-bytes_required (uint64_t val)
-{
-  if (val < 2) return 0;
-
-  uint8_t bytes_reqd;
-  uint64_t one = 1;
-  for (bytes_reqd = 0; bytes_reqd < 8; bytes_reqd++) {
-    if (val < (one << (8*bytes_reqd))) break;
-  }
-
-  return bytes_reqd;
-}
 
 static uint64_t
 bytes_to_int (const uint8_t *bytes, size_t n_bytes)
@@ -276,17 +167,4 @@ bytes_to_int (const uint8_t *bytes, size_t n_bytes)
   }
 
   return out;
-}
-
-static uint8_t
-bits_in_int (uint64_t val)
-{
-    uint8_t ret = 0;
-
-    while (val) {
-      val >>= 1;
-      ret++;
-    }
-
-    return ret;
 }

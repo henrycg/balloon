@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Henry Corrigan-Gibbs
+ * Copyright (c) 2015-2016, Henry Corrigan-Gibbs
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -117,15 +117,13 @@ hash_state_mix (struct hash_state *s)
     blocks[0] = prev_block;
     blocks[1] = cur_block;
     
-    // TODO: Check if sorting the neighbors before accessing them improves
-    // the performance at all.
-
     // For each block, pick random neighbors
     for (size_t n = 2; n < n_blocks_to_hash; n++) { 
       // Get next neighbor
-      if ((error = bitstream_rand_int (&s->bstream, &neighbor, s->n_blocks)))
+      if ((error = bitstream_rand_uint64 (&s->bstream, &neighbor)))
         return error;
-      blocks[n] = block_index (s, neighbor);
+      printf("Next[%lu]: %lu\n", i, neighbor % s->n_blocks);
+      blocks[n] = block_index (s, neighbor % s->n_blocks);
     }
 
     assert (s->block_size == compress_block_size (s->opts->comp));
@@ -134,7 +132,8 @@ hash_state_mix (struct hash_state *s)
     if ((error = compress (cur_block, blocks, n_blocks_to_hash, s->opts->comp)))
       return error;
 
-    //printf("copy %p => %p\n", s->buffer + (s->block_size * i), tmp_block);
+    uint8_t *this_block = cur_block;
+    printf("\t\tBlock[%lu]: %u %u\n", i, this_block[0], this_block[1]);
   }
   s->has_mixed = true;
 
@@ -148,8 +147,13 @@ hash_state_extract (struct hash_state *s, void *out, size_t outlen)
   if (!s->has_mixed)
     return ERROR_CANNOT_EXTRACT_BEFORE_MIX;
 
-  // For one-buffer design, just return bytes derived from
-  // the last block of the buffer.
+  // Return bytes derived from the last block of the buffer.
+  unsigned char *b = block_last (s);
+  printf("Last: ");
+  for (int i=0; i < s->block_size; i++) {
+    printf("%x", b[i]);
+  }
+  puts("");
   return fill_bytes_from_strings (s, out, outlen, block_last (s), s->block_size, NULL, 0);
 }
 

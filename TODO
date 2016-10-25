@@ -1,0 +1,6 @@
+- Parallelism parameter
+- Hash params with the salt
+- API format (default for different deployment scenarios)
+- Use SHA-512 instead of Blake2b
+
+

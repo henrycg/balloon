@@ -39,18 +39,13 @@ options_validate (struct balloon_options *opts)
     return ERROR_INCOMPATIBLE_OPTIONS;
   }
 
-  const uint64_t n_blocks = options_n_blocks (opts);
-  const uint16_t block_size = compress_block_size (opts->comp);
-  if (n_blocks > UINT64_MAX / block_size)
-    return ERROR_MCOST_TOO_BIG;
-
   return ERROR_NONE;
 }
 
 uint64_t
 options_n_blocks (const struct balloon_options *opts)
 {
-  const uint16_t bsize = compress_block_size (opts->comp);
+  const uint16_t bsize = BLOCK_SIZE;
   uint64_t ret = opts->m_cost / bsize;
   return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
 }

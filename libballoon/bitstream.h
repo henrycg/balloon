@@ -29,7 +29,7 @@
 struct bitstream {
   // All of the below are directly passed to OpenSSL
   bool initialized;
-  SHA512_CTX c;
+  SHA256_CTX c;
   EVP_CIPHER_CTX ctx;
 
   uint8_t *zeros;

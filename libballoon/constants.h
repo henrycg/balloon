@@ -17,6 +17,8 @@
 #ifndef __CONSTANTS_H__
 #define __CONSTANTS_H__
 
+#include <limits.h>
+
 #define OUTLEN_MIN 16ull
 #define OUTLEN_MAX 128ull
 
@@ -33,21 +35,14 @@
 #define TCOST_MIN 1ull
 // Memory cost (roughly in number of bytes)
 #define MCOST_MIN (1024ull)
+#define MCOST_MAX (UINT32_MAX)
 // Minimum number of blocks to use
 #define BLOCKS_MIN (32ull)
 
 // Maximum number of threads
 #define THREADS_MAX 255
 
-// The product of these two values must be less
-// than 2^64 to avoid integer overflow in size_t.
-#define MCOST_MAX (1ull << 48)
-#define KECCAK_1600_BLOCK_SIZE (168)
-
-// These are parameters of the Keccak hash function.
-// The sum of these two must be equal to 1600. 
-#define KECCAK_RATE (8 * KECCAK_1600_BLOCK_SIZE)
-#define KECCAK_CAPACITY (1600 - KECCAK_RATE)
+#define BLOCK_SIZE (16)
 
 #endif
 

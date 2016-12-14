@@ -22,27 +22,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-enum comp_method {
-  COMP__KECCAK_1600,
-  COMP__SHA_512,
-  COMP__ARGON,
-
-  COMP__END
-};
-
 struct balloon_options {
-  uint64_t m_cost;
-  uint64_t t_cost;
-
-  uint16_t n_threads;
-
-  // Degree of expander graph used in the construction.
-  // TODO: Make sure that this number is big enough to 
-  //       get the expansion we need.
-  // TODO: Set n_neighbors automatically and give warning
-  //       when user overrides the default.
-  uint8_t n_neighbors;
-  enum comp_method comp;
+  uint32_t m_cost;
+  uint32_t t_cost;
+  uint32_t n_threads;
 };
 
 int BalloonHash (void *out, size_t outlen, 

@@ -28,7 +28,6 @@ struct hash_state;
 
 struct hash_state {
   uint64_t n_blocks;
-  uint16_t block_size;
   bool has_mixed;
   uint8_t *buffer;
   struct bitstream bstream;

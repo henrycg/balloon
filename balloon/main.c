@@ -32,11 +32,6 @@ usage (const char *name)
 {
   fprintf (stderr, "Usage: %s password salt\n", name);
   fprintf (stderr, "A test utility for the Balloon family of hash functions.\n\n");
-  fprintf (stderr, "  -c, --comp=TYPE       Compression function to use. Options are:\n");
-  fprintf (stderr, "                            Default = keccak\n");
-  //fprintf (stderr, "                            argon    -- Argon2's version of Blake2b\n");
-  //fprintf (stderr, "                            keccak   -- SHA3\n");
-  fprintf (stderr, "                            sha512 -- SHA2/512\n");
   fprintf (stderr, "  -h, --help            Print this help message.\n");
   fprintf (stderr, "  -i, --iterations=NUM  Number of hashes to compute (for perf testing).\n");
   fprintf (stderr, "                            Default = 1\n");
@@ -53,8 +48,6 @@ usage (const char *name)
 int 
 main (int argc, char *argv[]) 
 {
-  enum comp_method comp = COMP__SHA_512;
-
   int xor_then_hash = false;
   int32_t n_rounds = 8;
   int64_t n_space = (1024*1024);
@@ -106,16 +99,6 @@ main (int argc, char *argv[])
         case 'x':
           xor_then_hash = true;
           break; 
-        case 'c':
-          if (!strcmp (optarg, "keccak"))
-            comp = COMP__KECCAK_1600;
-          else if (!strcmp (optarg, "argon"))
-            comp = COMP__ARGON;
-          else {
-            fprintf (stderr, "Invalid compression method\n");
-            return -1;
-          }
-          break;
 
         case 's':
           errno = 0;
@@ -197,24 +180,18 @@ main (int argc, char *argv[])
   struct balloon_options opts = {
     .m_cost = n_space,
     .t_cost = n_rounds,
-    .n_neighbors = n_neighbors,
-    .n_threads = n_threads,
-    .comp = comp
+    .n_threads = n_threads
   };
 
   const unsigned int rec_neighbs = N_NEIGHBORS;
   if (n_neighbors && ((uint16_t) n_neighbors) != rec_neighbs) {
     fprintf (stderr, "Warning: using unrecommended n_neighbors param!\n");
   }
-  if (!n_neighbors)
-    opts.n_neighbors = rec_neighbs;
 
   printf ("NRounds        = %lld\n", (long long int)opts.t_cost);
   printf ("NSpace         = %lld\n", (long long int)opts.m_cost);
-  printf ("Neighbs        = %lld\n", (long long int)opts.n_neighbors);
   printf ("Niters         = %lld\n", (long long int)n_iters);
   printf ("Nthreads       = %d\n", (int)n_threads);
-  printf ("Compression    = %d\n", opts.comp);
   printf ("Input          = %s\n", in);
   printf ("Salt           = %s\n", salt);
 

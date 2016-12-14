@@ -8,11 +8,9 @@ src = [
     "compress.c",
     "hash_state.c",
     "options.c",
-    "xor.c"
 ]
 
 libs = [
-  "keccak",
 ]
 
 env.Append(LIBS = libs)

@@ -29,7 +29,7 @@ static uint64_t bytes_to_int (const uint8_t *bytes, size_t n_bytes);
 int
 bitstream_init (struct bitstream *b)
 {
-  if (!SHA512_Init(&b->c))
+  if (!SHA256_Init(&b->c))
     return ERROR_OPENSSL_HASH;
   b->initialized = false;
 
@@ -78,7 +78,7 @@ bitstream_seed_add (struct bitstream *b, const void *seed, size_t seedlen)
   if (b->initialized)
     return ERROR_BITSTREAM_FINALIZED;
 
-  if (!SHA512_Update(&b->c, seed, seedlen))
+  if (!SHA256_Update(&b->c, seed, seedlen))
     return ERROR_OPENSSL_HASH;
   return ERROR_NONE;
 }
@@ -86,24 +86,24 @@ bitstream_seed_add (struct bitstream *b, const void *seed, size_t seedlen)
 int 
 bitstream_seed_finalize (struct bitstream *b)
 {
-  // Hash in and salt into a 256-bit AES key
-  uint8_t key_bytes[SHA512_DIGEST_LENGTH];
+  // Hash in and salt into a 128-bit AES key
+  uint8_t key_bytes[SHA256_DIGEST_LENGTH];
 
-  if (!SHA512_Final(key_bytes, &b->c))
+  if (!SHA256_Final(key_bytes, &b->c))
     return ERROR_OPENSSL_HASH;
 
   uint8_t iv[AES_BLOCK_SIZE];
   memset (iv, 0, AES_BLOCK_SIZE);
 
   printf("Key: ");
-  for(int i=0; i<32; i++) 
+  for(int i=0; i<16; i++) 
     printf("%02x,", key_bytes[i]);
   puts("");
 
   if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 1))
     return ERROR_OPENSSL_AES;
 
-  if (!EVP_EncryptInit (&b->ctx, EVP_aes_256_ctr (), key_bytes, iv))
+  if (!EVP_EncryptInit (&b->ctx, EVP_aes_128_ctr (), key_bytes, iv))
     return ERROR_OPENSSL_AES;
 
   b->initialized = true;

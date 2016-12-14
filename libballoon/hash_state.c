@@ -30,7 +30,7 @@
 void *
 block_index (const struct hash_state *s, size_t i)
 {
-  return s->buffer + (s->block_size * i);
+  return s->buffer + (BLOCK_SIZE * i);
 }
 
 void *
@@ -50,12 +50,11 @@ hash_state_init (struct hash_state *s, struct balloon_options *opts,
   if (s->n_blocks % 2 != 0) s->n_blocks++;
 
   s->has_mixed = false;
-  s->block_size = compress_block_size (opts->comp);
   s->opts = opts;
 
   // TODO: Make sure this multiplication doesn't overflow (or use 
   // calloc or realloc)
-  s->buffer = malloc (s->n_blocks * s->block_size);
+  s->buffer = malloc (s->n_blocks * BLOCK_SIZE);
 
   int error;
   if ((error = bitstream_init_with_seed (&s->bstream, salt, saltlen)))
@@ -83,13 +82,13 @@ hash_state_fill (struct hash_state *s,
 
   // Hash password and salt into 0-th block
   if ((error = fill_bytes_from_strings (s, s->buffer, 
-      s->block_size, in, inlen, salt, saltlen)))
+      BLOCK_SIZE, in, inlen, salt, saltlen)))
     return error;
 
-  if ((error = expand (s->buffer, s->n_blocks, s->opts->comp)))
+  if ((error = expand (s->buffer, s->n_blocks)))
     return error;
 
-  for (int i=0; i<s->block_size;i++) {
+  for (int i=0; i<BLOCK_SIZE;i++) {
     printf("%02x", s->buffer[i]);
   }
   printf("\n");
@@ -107,12 +106,12 @@ hash_state_mix (struct hash_state *s)
   for (size_t i = 0; i < s->n_blocks; i++) {
     void *cur_block = block_index (s, i);
 
-    const size_t n_blocks_to_hash = s->opts->n_neighbors + 2;
+    const size_t n_blocks_to_hash = 3;
     const uint8_t *blocks[n_blocks_to_hash];
 
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
-    const uint8_t *prev_block = i ? cur_block - s->block_size : block_last (s);
+    const uint8_t *prev_block = i ? cur_block - BLOCK_SIZE : block_last (s);
 
     blocks[0] = prev_block;
     blocks[1] = cur_block;
@@ -122,18 +121,17 @@ hash_state_mix (struct hash_state *s)
       // Get next neighbor
       if ((error = bitstream_rand_uint64 (&s->bstream, &neighbor)))
         return error;
-      printf("Next[%lu]: %lu\n", i, neighbor % s->n_blocks);
+      //printf("Next[%lu]: %lu\n", i, neighbor % s->n_blocks);
       blocks[n] = block_index (s, neighbor % s->n_blocks);
     }
 
-    assert (s->block_size == compress_block_size (s->opts->comp));
 
     // Hash value of neighbors into temp buffer.
-    if ((error = compress (cur_block, blocks, n_blocks_to_hash, s->opts->comp)))
+    if ((error = compress (cur_block, blocks, n_blocks_to_hash)))
       return error;
 
-    uint8_t *this_block = cur_block;
-    printf("\t\tBlock[%lu]: %u %u\n", i, this_block[0], this_block[1]);
+    //uint8_t *this_block = cur_block;
+    //printf("\t\tBlock[%lu]: %u %u\n", i, this_block[0], this_block[1]);
   }
   s->has_mixed = true;
 
@@ -150,11 +148,11 @@ hash_state_extract (struct hash_state *s, void *out, size_t outlen)
   // Return bytes derived from the last block of the buffer.
   unsigned char *b = block_last (s);
   printf("Last: ");
-  for (int i=0; i < s->block_size; i++) {
+  for (int i=0; i < BLOCK_SIZE; i++) {
     printf("%x", b[i]);
   }
   puts("");
-  return fill_bytes_from_strings (s, out, outlen, block_last (s), s->block_size, NULL, 0);
+  return fill_bytes_from_strings (s, out, outlen, block_last (s), BLOCK_SIZE, NULL, 0);
 }
 
 int 

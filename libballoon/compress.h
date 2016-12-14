@@ -22,17 +22,13 @@
 #include "constants.h"
 #include "hash_state.h"
 
-int compress (uint8_t *out, const uint8_t *blocks[], 
-    size_t blocks_to_comp, enum comp_method comp);
-
-uint16_t compress_block_size (enum comp_method comp);
+int compress (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp);
 
 /**
  * The input buffer buf should have the first block filled.
  * We fill the rest of the buffer with pseudo-random bytes
  * derived from the bytes in the first block.
  */
-int expand (uint8_t *buf, 
-    size_t blocks_in_buf, enum comp_method comp);
+int expand (uint8_t *buf, size_t blocks_in_buf);
 
 #endif

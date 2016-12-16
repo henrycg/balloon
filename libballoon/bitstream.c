@@ -20,11 +20,10 @@
 
 #include "bitstream.h"
 #include "constants.h"
+#include "encode.h"
 #include "errors.h"
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
-static uint64_t bytes_to_int (const uint8_t *bytes, size_t n_bytes);
 
 int
 bitstream_init (struct bitstream *b)
@@ -152,19 +151,7 @@ bitstream_rand_uint64 (struct bitstream *b, uint64_t *out)
   if ((error = bitstream_fill_buffer (b, buf, n_bytes)))
     return error;
 
-  *out = bytes_to_int (buf, n_bytes);
+  *out = bytes_to_littleend_uint64 (buf, n_bytes);
   return ERROR_NONE;
 }
 
-
-static uint64_t
-bytes_to_int (const uint8_t *bytes, size_t n_bytes)
-{
-  uint64_t out = 0;
-  for (size_t i = 0; i < n_bytes; i++) {
-    out <<= 8;
-    out |= bytes[i];
-  }
-
-  return out;
-}

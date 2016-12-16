@@ -31,29 +31,22 @@ static void
 usage (const char *name)
 {
   fprintf (stderr, "Usage: %s password salt\n", name);
-  fprintf (stderr, "A test utility for the Balloon family of hash functions.\n\n");
+  fprintf (stderr, "A test utility for the Balloon password-hashing function.\n\n");
   fprintf (stderr, "  -h, --help            Print this help message.\n");
-  fprintf (stderr, "  -i, --iterations=NUM  Number of hashes to compute (for perf testing).\n");
-  fprintf (stderr, "                            Default = 1\n");
-  fprintf (stderr, "  -r, --rounds=NUM      Number of mixing rounds.\n");
+  fprintf (stderr, "  -t, --time=NUM          Number of mixing rounds.\n");
   fprintf (stderr, "                            Default = 8\n");
-  fprintf (stderr, "  -s, --space=NUM       Space usage (in KB).\n");
+  fprintf (stderr, "  -s, --space=NUM         Space usage (in KB).\n");
   fprintf (stderr, "                            Default = 1024 KB\n");
-  fprintf (stderr, "  -t, --threads=NUM     Number of threads to use.\n");
+  fprintf (stderr, "  -p, --parllelism=NUM    Number of threads to use.\n");
   fprintf (stderr, "                            Default = 1\n");
-  fprintf (stderr, "  -x, --xor             Use linear/XOR-based construction.\n");
-  fprintf (stderr, "                            Default = 0\n");
 }
 
 int 
 main (int argc, char *argv[]) 
 {
-  int xor_then_hash = false;
-  int32_t n_rounds = 8;
-  int64_t n_space = (1024*1024);
-  int16_t n_neighbors = 0;
-  int32_t n_iters = 1;
-  int16_t n_threads = 1;
+  int32_t t_cost = 1;
+  int64_t s_cost = (1024*1024);
+  int16_t p_cost = 1;
   int help = false;
 
   while (1)
@@ -62,21 +55,16 @@ main (int argc, char *argv[])
         {
           /* These options don’t set a flag.
              We distinguish them by their indices. */
-          {"xor", no_argument, &xor_then_hash, 1},
-          {"comp",  required_argument, 0, 'c'},
-          {"mix",  required_argument, 0, 'm'},
+          {"time",  required_argument, 0, 't'},
           {"space",  required_argument, 0, 's'},
-          {"rounds",  required_argument, 0, 'r'},
-          {"neighbors",  required_argument, 0, 'n'},
-          {"iterations",  required_argument, 0, 'i'},
-          {"threads",  required_argument, 0, 't'},
+          {"parallelism",  required_argument, 0, 'p'},
           {"help", no_argument, &help, 1},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      char c = getopt_long (argc, argv, "xc:m:s:r:n:i:t:h?",
+      char c = getopt_long (argc, argv, "t:s:p:h?",
                        long_options, &option_index);
       char *end;
 
@@ -86,67 +74,34 @@ main (int argc, char *argv[])
 
       switch (c)
         {
-        case 0:
-          /* If this option set a flag, do nothing else now. */
-          if (long_options[option_index].flag != 0)
-            break;
-            printf ("option %s", long_options[option_index].name);
-            if (optarg)
-              printf (" with arg %s", optarg);
-          printf ("\n");
-          break;
-
-        case 'x':
-          xor_then_hash = true;
-          break; 
-
         case 's':
           errno = 0;
-          n_space = strtoll (optarg, &end, 10);
-          if (errno > 0 || *end != '\0' || n_space < 0) {
+          s_cost = strtoll (optarg, &end, 10);
+          if (errno > 0 || *end != '\0' || s_cost < 0) {
             fprintf (stderr, "Invalid argument to -s\n");
             return -1;
           }
-          n_space *= 1024;  // Convert from KB to bytes
+          s_cost *= 1024;  // Convert from KB to bytes
 
           break;
 
-        case 'n':
+        case 'p':
           errno = 0;
-          n_neighbors = strtoll (optarg, &end, 4);
-          if (errno > 0 || *end != '\0' || n_neighbors < 0) {
-            fprintf (stderr, "Invalid argument to -n\n");
+          p_cost = strtoll (optarg, &end, 10);
+          if (errno > 0 || *end != '\0' || p_cost <= 0) {
+            fprintf (stderr, "Invalid argument to -p\n");
             return -1;
           }
           break;
 
         case 't':
           errno = 0;
-          n_threads = strtoll (optarg, &end, 10);
-          if (errno > 0 || *end != '\0' || n_threads <= 0) {
+          t_cost = strtoll (optarg, &end, 10);
+          if (errno > 0 || *end != '\0' || t_cost < 0) {
             fprintf (stderr, "Invalid argument to -t\n");
             return -1;
           }
           break;
-
-        case 'r':
-          errno = 0;
-          n_rounds = strtoll (optarg, &end, 10);
-          if (errno > 0 || *end != '\0' || n_rounds < 0) {
-            fprintf (stderr, "Invalid argument to -r\n");
-            return -1;
-          }
-          break;
-
-        case 'i':
-          errno = 0;
-          n_iters = strtoll (optarg, &end, 10);
-          if (errno > 0 || *end != '\0' || n_iters < 0) {
-            fprintf (stderr, "Invalid argument to -i\n");
-            return -1;
-          }
-          break;
-          
 
         case 'h':
         case '?':
@@ -162,58 +117,44 @@ main (int argc, char *argv[])
     usage (argv[0]);
     return 0;
   } else {
-    if (optind + 2 < argc) {
+    if (optind + 1 < argc) {
         fprintf (stderr, "Too many arguments\n");
         return -1;
       }
-    if (optind + 2 > argc)
+    if (optind + 1 > argc)
       {
-        fprintf (stderr, "Input and salt not passed in\n");
+        fprintf (stderr, "Password not passed in\n");
         return -1;
       }
   }
 
   char *in = argv[optind];
-  char *salt = argv[optind+1];
-
 
   struct balloon_options opts = {
-    .m_cost = n_space,
-    .t_cost = n_rounds,
-    .n_threads = n_threads
+    .s_cost = s_cost,
+    .t_cost = t_cost,
+    .n_threads = p_cost
   };
 
-  const unsigned int rec_neighbs = N_NEIGHBORS;
-  if (n_neighbors && ((uint16_t) n_neighbors) != rec_neighbs) {
-    fprintf (stderr, "Warning: using unrecommended n_neighbors param!\n");
-  }
+  printf ("t_cost         = %u\n", opts.t_cost);
+  printf ("s_cost         = %u\n", opts.s_cost);
+  printf ("n_threads      = %u\n", opts.n_threads);
+  printf ("passwd         = %s\n", in);
+  
 
-  printf ("NRounds        = %lld\n", (long long int)opts.t_cost);
-  printf ("NSpace         = %lld\n", (long long int)opts.m_cost);
-  printf ("Niters         = %lld\n", (long long int)n_iters);
-  printf ("Nthreads       = %d\n", (int)n_threads);
-  printf ("Input          = %s\n", in);
-  printf ("Salt           = %s\n", salt);
-
-  const int outlen = 32;
-  unsigned char out[outlen];
   int error;
   const double wall_start = wall_sec ();
-  for (int32_t i = 0; i < n_iters; i++) {
-    if ((error = BalloonHash (out, outlen, in, strlen (in), salt, strlen (salt), &opts))) {
-      fprintf (stderr, "BalloonHash failed with error: %d\n", error);
-      return -1;
-    }
+  uint8_t blob[BLOB_LEN];
+  if ((error = Balloon_Hash (blob, &opts, (uint8_t *)in, strlen (in)))) {
+    fprintf (stderr, "BalloonHash failed with error: %d\n", error);
+    return -1;
   }
   const double wall_end = wall_sec ();
   const double wall_diff = wall_end - wall_start;
   printf("Time total      : %lg\n", wall_diff);
-  printf("Hashes per sec  : %lg\n", ((double) n_iters) / wall_diff);
-  printf("Output          : ");
-  for (int i = 0; i < outlen; i++) {
-    printf("%x", out[i]);
-  }
-  printf("\n");
+  printf("Hashes per sec  : %lg\n", (1.0f / wall_diff));
+  printf("Output          : %s\n", blob);
+  //write_hash (stdout, out, outlen, salt, saltlen, opts.m_cost, opts.t_cost);
 
   // Clean up OpenSSL junk
   EVP_cleanup();

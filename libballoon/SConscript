@@ -3,14 +3,19 @@ import os
 Import('env')
 
 src = [
+    "api.c",
     "balloon.c",
+    "base64.c",
     "bitstream.c",
     "compress.c",
+    "encode.c",
     "hash_state.c",
     "options.c",
+    "parse.c",
 ]
 
 libs = [
+  "-lpthread"
 ]
 
 env.Append(LIBS = libs)

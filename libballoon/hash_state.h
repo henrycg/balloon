@@ -31,27 +31,27 @@ struct hash_state {
   bool has_mixed;
   uint8_t *buffer;
   struct bitstream bstream;
-  struct balloon_options *opts;
+  const struct balloon_options *opts;
 };
 
 
-int hash_state_init (struct hash_state *s, struct balloon_options *opts,
+int hash_state_init (struct hash_state *s, const struct balloon_options *opts,
     const void *salt, size_t saltlen);
 
 int hash_state_free (struct hash_state *s);
 
-int hash_state_fill (struct hash_state *s, const void *in, size_t inlen,
-    const void *salt, size_t saltlen);
+int hash_state_fill (struct hash_state *s, const uint8_t *in, size_t inlen,
+    const uint8_t *salt, size_t saltlen);
 
 int hash_state_mix (struct hash_state *s);
 
-int hash_state_extract (struct hash_state *s, void *out, size_t outlen);
+int hash_state_extract (const struct hash_state *s, uint8_t *out, size_t outlen);
 
 
-int fill_bytes_from_strings (struct hash_state *s, 
+int fill_bytes_from_strings (const struct hash_state *s, 
     uint8_t *block_start, size_t bytes_to_fill,
-    const void *in, size_t inlen,
-    const void *salt, size_t saltlen);
+    const uint8_t *in, size_t inlen,
+    const uint8_t *salt, size_t saltlen);
 
 void *
 block_index (const struct hash_state *s, size_t i);

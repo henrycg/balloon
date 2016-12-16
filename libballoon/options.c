@@ -26,18 +26,14 @@ int
 options_validate (struct balloon_options *opts)
 {
   if (opts->t_cost < TCOST_MIN)
-    opts->t_cost = TCOST_MIN;
-  if (opts->m_cost < MCOST_MIN)
-    opts->m_cost = MCOST_MIN;
-  if (opts->m_cost >= MCOST_MAX)
+    return ERROR_TCOST_TOO_SMALL;
+  if (opts->s_cost < MCOST_MIN)
+    return ERROR_MCOST_TOO_SMALL;
+  if (opts->s_cost >= MCOST_MAX)
     return ERROR_MCOST_TOO_BIG;
 
   if (opts->n_threads > THREADS_MAX)
     return ERROR_NTHREADS_TOO_BIG;
-
-  if (opts->n_threads > 1) {
-    return ERROR_INCOMPATIBLE_OPTIONS;
-  }
 
   return ERROR_NONE;
 }
@@ -45,8 +41,8 @@ options_validate (struct balloon_options *opts)
 uint64_t
 options_n_blocks (const struct balloon_options *opts)
 {
-  const uint16_t bsize = BLOCK_SIZE;
-  uint64_t ret = opts->m_cost / bsize;
+  const uint32_t bsize = BLOCK_SIZE;
+  uint64_t ret = opts->s_cost / bsize;
   return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
 }
 

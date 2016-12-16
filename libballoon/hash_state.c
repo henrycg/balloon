@@ -41,7 +41,7 @@ block_last (const struct hash_state *s)
 
 
 int 
-hash_state_init (struct hash_state *s, struct balloon_options *opts,
+hash_state_init (struct hash_state *s, const struct balloon_options *opts,
     const void *salt, size_t saltlen)
 {
   s->n_blocks = options_n_blocks (opts);
@@ -75,8 +75,8 @@ hash_state_free (struct hash_state *s)
 
 int 
 hash_state_fill (struct hash_state *s, 
-    const void *in, size_t inlen,
-    const void *salt, size_t saltlen)
+    const uint8_t *in, size_t inlen,
+    const uint8_t *salt, size_t saltlen)
 {
   int error;
 
@@ -134,19 +134,17 @@ hash_state_mix (struct hash_state *s)
     //printf("\t\tBlock[%lu]: %u %u\n", i, this_block[0], this_block[1]);
   }
   s->has_mixed = true;
-
-  s->has_mixed = true;
   return ERROR_NONE;
 }
 
 int 
-hash_state_extract (struct hash_state *s, void *out, size_t outlen)
+hash_state_extract (const struct hash_state *s, uint8_t *out, size_t outlen)
 {
   if (!s->has_mixed)
     return ERROR_CANNOT_EXTRACT_BEFORE_MIX;
 
   // Return bytes derived from the last block of the buffer.
-  unsigned char *b = block_last (s);
+  uint8_t *b = block_last (s);
   printf("Last: ");
   for (int i=0; i < BLOCK_SIZE; i++) {
     printf("%x", b[i]);
@@ -156,10 +154,10 @@ hash_state_extract (struct hash_state *s, void *out, size_t outlen)
 }
 
 int 
-fill_bytes_from_strings (__attribute__  ((unused)) struct hash_state *s, 
+fill_bytes_from_strings (__attribute__  ((unused)) const struct hash_state *s, 
     uint8_t *block_start, size_t bytes_to_fill,
-    const void *in, size_t inlen,
-    const void *salt, size_t saltlen)
+    const uint8_t *in, size_t inlen,
+    const uint8_t *salt, size_t saltlen)
 {
   int error;
   struct bitstream bits;

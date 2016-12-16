@@ -27,10 +27,6 @@
 #define INLEN_MAX (1ull<<20)
 #define SALTLEN_MAX (1ull<<20)
 
-// Key length (in bits) for the AES-CTR cipher used
-// to fill up the buffers initially.
-#define AES_CTR_KEY_LEN 256
-
 // Time cost (in number of passes over memory)
 #define TCOST_MIN 1ull
 // Memory cost (roughly in number of bytes)
@@ -42,7 +38,7 @@
 // Maximum number of threads
 #define THREADS_MAX 255
 
-#define BLOCK_SIZE (16)
+#define BLOCK_SIZE (32)
 
 #endif
 

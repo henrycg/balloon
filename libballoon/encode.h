@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Henry Corrigan-Gibbs
+ * Copyright (c) 2016, Henry Corrigan-Gibbs
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,45 +14,16 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __ERRORS_H__
-#define __ERRORS_H__
+#ifndef __ENDIAN_H__
+#define __ENDIAN_H__
 
-enum error_codes {
-  ERROR_NONE,
+#include <stdint.h>
+#include <stdlib.h>
 
-  ERROR_INCOMPATIBLE_OPTIONS,
+uint64_t
+bytes_to_littleend_uint64 (const uint8_t *bytes, size_t n_bytes);
 
-  ERROR_NULL_POINTER,
-  ERROR_MALLOC,
-
-  ERROR_MCOST_TOO_SMALL,
-  ERROR_MCOST_TOO_BIG,
-
-  ERROR_TCOST_TOO_SMALL,
-  ERROR_TCOST_TOO_BIG,
-
-  ERROR_OUTLEN_TOO_SMALL,
-  ERROR_OUTLEN_TOO_BIG,
-
-  ERROR_INLEN_TOO_BIG,
-  ERROR_SALTLEN_TOO_BIG,
-
-  ERROR_NTHREADS_TOO_BIG,
-
-  ERROR_CANNOT_EXTRACT_BEFORE_MIX,
-
-  ERROR_OPENSSL_HASH,
-  ERROR_OPENSSL_AES,
-
-  ERROR_BITSTREAM_UNINITIALIZED,
-  ERROR_BITSTREAM_FINALIZED,
-  ERROR_BITSTREAM_MAX_TOO_SMALL,
-
-  ERROR_PTHREAD,
-  ERROR_URANDOM,
-  ERROR_FMEM,
-  ERROR_SNPRINTF
-
-};
+uint32_t
+bytes_to_littleend_uint32 (const uint8_t *bytes, size_t n_bytes);
 
 #endif

@@ -19,9 +19,9 @@
 #include "mutest.h"
 
 #include "libballoon/constants.h"
+#include "libballoon/encode.h"
 #include "libballoon/errors.h"
 
-// For testing static methods
 #include "libballoon/bitstream.c"
 
 
@@ -31,31 +31,32 @@ mu_test_bitstream__bytes_to_int (void)
   unsigned char buf[8] = {0, 0, 0, 0, 0, 0, 0, 0 };
   size_t out;
   
-  out = bytes_to_int (buf, 8);
+  out = bytes_to_littleend_uint64 (buf, 8);
   mu_check (out == 0);
 
-  out = bytes_to_int (buf, 2);
+  out = bytes_to_littleend_uint64 (buf, 2);
   mu_check (out == 0);
 
-  out = bytes_to_int (buf, 0);
+  out = bytes_to_littleend_uint64 (buf, 0);
   mu_check (out == 0);
 
   buf[0] = 5;
-  out = bytes_to_int (buf, 1);
+  out = bytes_to_littleend_uint64 (buf, 1);
   mu_check (out == 5);
   
-  out = bytes_to_int (buf, 0);
+  out = bytes_to_littleend_uint64 (buf, 0);
   mu_check (out == 0);
 
-  out = bytes_to_int (buf, 2);
-  mu_check (out == (5 * 256));
+  out = bytes_to_littleend_uint64 (buf, 2);
+  mu_check (out == 5);
 
-  out = bytes_to_int (buf, 3);
-  mu_check (out == (5 * 256 * 256));
+  buf[1] = 5;
+  out = bytes_to_littleend_uint64 (buf, 2);
+  mu_check (out == (5 * 256 + 5));
 
   buf[2] = 123;
-  out = bytes_to_int (buf, 3);
-  mu_check (out == (5 * 256 * 256 + 123));
+  out = bytes_to_littleend_uint64 (buf, 3);
+  mu_check (out == (5 + 5 * 256 + 256 * 256 * 123));
 }
 
 

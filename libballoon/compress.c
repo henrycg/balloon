@@ -49,18 +49,17 @@ int
 expand (uint8_t *buf, size_t blocks_in_buf)
 {
   int error;
-  const uint16_t block_size = BLOCK_SIZE;
 
   const uint8_t *blocks[1] = { buf };
-  uint8_t *cur = buf + block_size;
+  uint8_t *cur = buf + BLOCK_SIZE;
   for (size_t i = 1; i < blocks_in_buf; i++) { 
 
     // Block[i] = Hash(Block[i-1])
     if ((error = compress (cur, blocks, 1)))
       return error;
 
-    blocks[0] += block_size;
-    cur += block_size;
+    blocks[0] += BLOCK_SIZE;
+    cur += BLOCK_SIZE;
   }
 
   return ERROR_NONE;

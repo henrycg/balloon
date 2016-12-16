@@ -49,6 +49,7 @@ mu_test_validate_parameters__outlen ()
   mu_check ( validate_parameters (outlen, inlen, saltlen) == ERROR_OUTLEN_TOO_BIG);
 }
 
+
 void 
 mu_test_validate_parameters__inlen () 
 {
@@ -92,18 +93,18 @@ void
 mu_test_options () 
 {
   struct balloon_options opts;
-  opts.m_cost = 0;
+  opts.s_cost = 0;
   opts.t_cost = 10000llu;
   opts.n_threads = 1;
 
-  opts.m_cost = 1024;
-  mu_check ( !options_validate (&opts) );
+  opts.s_cost = 1024;
+  mu_check ( options_validate (&opts) == ERROR_NONE );
 
   opts.t_cost = 0;
-  mu_check ( !options_validate (&opts) );
+  mu_check ( options_validate (&opts) != ERROR_NONE );
 
   opts.t_cost = 3;
-  mu_check ( options_validate (&opts) );
+  mu_check ( options_validate (&opts) == ERROR_NONE );
 }
 
 void 
@@ -111,8 +112,9 @@ mu_test_options__blocks ()
 {
   struct balloon_options opts;
   opts.t_cost = 10000llu;
-  opts.m_cost = 1024*1024;
+  opts.s_cost = 1024*1024;
   opts.n_threads = 1;
 
   mu_check ( !options_validate (&opts) );
 }
+

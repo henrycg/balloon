@@ -23,15 +23,19 @@
 #include <stddef.h>
 
 struct balloon_options {
-  uint32_t m_cost;
+  uint32_t s_cost;
   uint32_t t_cost;
   uint32_t n_threads;
 };
 
-int BalloonHash (void *out, size_t outlen, 
-    const void *in, size_t inlen, 
-    const void *salt, size_t saltlen, 
-    struct balloon_options *opts);
+/* Password blob length (in bytes). */
+#define BLOB_LEN (128)
+
+int Balloon_Hash (uint8_t out[BLOB_LEN], struct balloon_options *opt, 
+    const uint8_t *passwd, size_t passwd_len);
+
+int Balloon_Verify (uint8_t blob[BLOB_LEN], struct balloon_options *opt, 
+    const uint8_t *passwd, size_t passwd_len);
 
 #endif /* __BALLOON_H__ */
 

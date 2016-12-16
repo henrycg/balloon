@@ -21,10 +21,16 @@
 #include <stdio.h>
 
 int
-write_hash (uint8_t *blob, size_t bloblen,
+write_blob (char *blob, size_t bloblen,
       const uint8_t *out, size_t outlen,
       const uint8_t *salt, size_t saltlen, 
       uint32_t s_cost, uint32_t t_cost, uint32_t n_threads);
+
+int
+read_blob (const char *blob, size_t bloblen,
+      uint8_t *out, size_t outlen,
+      uint8_t *salt, size_t saltlen, 
+      uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads);
 
 #endif
 

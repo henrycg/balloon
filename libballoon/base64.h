@@ -20,9 +20,9 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-int b64_ntop(uint8_t *target, size_t targsize, const uint8_t *src, size_t srclength);
+int b64_ntop(char *target, size_t targsize, const uint8_t *src, size_t srclength);
 
-int b64_pton(uint8_t *target, size_t targsize, const uint8_t *src);
+int b64_pton(uint8_t *target, size_t targsize, const char *src);
 
 #endif
 

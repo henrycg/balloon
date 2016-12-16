@@ -14,12 +14,90 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*-
+ * Copyright (c) 1990, 1993
+ *  The Regents of the University of California.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/* OPENBSD ORIGINAL: lib/libc/string/strsep.c */
+
+#include <string.h>
+#include <stdio.h>
+
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "base64.h"
 #include "errors.h"
 #include "parse.h"
 
+/*
+ * Get next token from string *stringp, where tokens are possibly-empty
+ * strings separated by characters from delim.  
+ *
+ * Writes NULs into the string at *stringp to end tokens.
+ * delim need not remain constant from call to call.
+ * On return, *stringp points past the last NUL written (if there might
+ * be further tokens), or is NULL (if there are definitely no more tokens).
+ *
+ * If *stringp is NULL, strsep returns NULL.
+ */
+char *
+my_strsep(char **stringp, const char *delim)
+{
+  char *s;
+  const char *spanp;
+  int c, sc;
+  char *tok;
+
+  if ((s = *stringp) == NULL)
+    return (NULL);
+  for (tok = s;;) {
+    c = *s++;
+    spanp = delim;
+    do {
+      if ((sc = *spanp++) == c) {
+        if (c == 0)
+          s = NULL;
+        else
+          s[-1] = 0;
+        *stringp = s;
+        return (tok);
+      }
+    } while (sc != 0);
+  }
+  /* NOTREACHED */
+}
+
+
+
 static int 
-encode (uint8_t *dst, const uint8_t *src, size_t srclen)
+encode (char *dst, const uint8_t *src, size_t srclen)
 {
   int retval = b64_ntop (dst, 3*srclen, src, srclen);
   if (retval == -1) {
@@ -35,22 +113,164 @@ encode (uint8_t *dst, const uint8_t *src, size_t srclen)
 }
 
 int
-write_hash (uint8_t *blob, size_t bloblen,
+write_blob (char *blob, size_t bloblen,
       const uint8_t *out, size_t outlen,
       const uint8_t *salt, size_t saltlen, 
       uint32_t s_cost, uint32_t t_cost, uint32_t n_threads)
 {
-  uint8_t salt64[3*saltlen];
-  uint8_t out64[3*outlen];
+  char salt64[3*saltlen];
+  char out64[3*outlen];
   int retval;
   if ((retval = encode (salt64, salt, saltlen)))
     return retval;
   if ((retval = encode (out64, out, outlen)))
     return retval;
 
-  if (snprintf ((char *)blob, bloblen, "$balloon$v=1$s=%u,t=%u,p=%u$%s$%s", s_cost, t_cost, n_threads, salt64, out64) < 0)
+  retval = snprintf ((char *)blob, bloblen, "$balloon$v=1$s=%u,t=%u,p=%u$%s$%s", s_cost, t_cost, n_threads, salt64, out64);
+
+  if (retval < 0 || retval == (int)bloblen)
     return ERROR_SNPRINTF;
 
   return 0;
 }
 
+static size_t
+n_tokens (const char *str, size_t strlen, uint8_t delim)
+{
+  int n_tokens = 1;
+  for (size_t i = 0 ; i < strlen; i++) {
+    if (str[i] == delim) n_tokens++;
+  }
+
+  return n_tokens;
+}
+
+static void
+tokenize (char **tokens, char *str, uint8_t delim)
+{
+  const char delimstr[] = { delim, '\0' };
+
+  int i = 0;
+  char *token;
+  char *strp = &str[0];
+  while ((token = my_strsep (&strp, delimstr)) != NULL) {
+    tokens[i++] = token;
+  }
+}
+
+int
+int_parse(const char *intstr, uint32_t *intp)
+{
+  const size_t len = strlen (intstr);
+  for (size_t i = 0; i < len; i++) {
+    if (!isdigit(intstr[i])) return ERROR_PARSE;
+  }
+
+  char *end;
+  *intp = strtoul(intstr, &end, 10);
+
+  // Make sure that we read the entire string.
+  if (end[0] != '\0')
+    return ERROR_PARSE;
+
+  return ERROR_NONE;
+}
+
+int
+parse_options (char *optstr, size_t optlen,
+  uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads)
+{
+  // Count the number of ,-separated tokens 
+  int n = n_tokens (optstr, optlen, ',');
+
+  // Put the tokens into an array
+  char *tokens[n];
+  tokenize (tokens, optstr, ',');
+
+  for (int i=0; i<n; i++) {
+    char *token = tokens[i];
+    if (strlen (token) < 3) 
+      return ERROR_PARSE;
+
+    char type = token[0];
+    char eq = token[1];
+    if (type != 'p' && type != 't' && type != 's') 
+      return ERROR_PARSE;
+    if (eq != '=') 
+      return ERROR_PARSE;
+  }
+
+  int error;
+  // All tokens have length at least 3
+  for (int i=0; i<n; i++) {
+    char *token = tokens[i];
+    uint32_t *intp;
+    switch (token[0]) {
+      case 's':
+        intp = s_cost;
+        break;
+      case 't':
+        intp = t_cost;
+        break;
+      case 'p':
+        intp = n_threads;
+        break;
+      default:
+        return ERROR_PARSE;
+    }
+
+    if ((error = int_parse(&token[2], intp)) != ERROR_NONE)
+      return ERROR_PARSE;
+  }
+  
+  return ERROR_NONE;
+} 
+
+int
+read_blob (const char *blob_in, size_t bloblen,
+      uint8_t *out, size_t outlen,
+      uint8_t *salt, size_t saltlen, 
+      uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads)
+{
+  if (blob_in[bloblen-1] != '\0')
+    return ERROR_PARSE;
+
+  char blob[bloblen];
+  strncpy (blob, blob_in, bloblen);
+
+  // Format is: 
+  //    $balloon$v=1$t={time},s={space},p={parallelism}$salt$hash
+
+
+  // Count the number of $-separated tokens 
+  int n = n_tokens (blob_in, bloblen, '$');
+
+  // Put the tokens into an array
+  char *tokens[n];
+
+  tokenize (tokens, blob, '$');
+
+  // Check the header
+  if (strlen (tokens[0]) != 0)
+    return ERROR_PARSE;
+  if (strlen (tokens[1]) != 7 || strncmp (tokens[1], "balloon", 7))
+    return ERROR_PARSE;
+  if (strlen (tokens[2]) != 3 || strncmp (tokens[2], "v=1", 3))
+    return ERROR_PARSE;
+
+  int optlen = strlen (tokens[3]); 
+  char optstr[optlen];
+  strncpy (optstr, tokens[3], optlen);
+
+  int error;
+  if ((error = parse_options (optstr, optlen, s_cost, t_cost, n_threads) != ERROR_NONE))
+    return error;
+
+  // Parse salt and password from Base64
+  if (b64_pton (salt, saltlen, tokens[4]) < 0)
+    return ERROR_PARSE;
+  if (b64_pton (out, outlen, tokens[5]) < 0)
+    return ERROR_PARSE;
+
+  return ERROR_NONE;
+}

@@ -144,8 +144,8 @@ main (int argc, char *argv[])
 
   int error;
   const double wall_start = wall_sec ();
-  uint8_t blob[BLOB_LEN];
-  if ((error = Balloon_Hash (blob, &opts, (uint8_t *)in, strlen (in)))) {
+  char blob[BLOB_LEN];
+  if ((error = Balloon_Hash (blob, &opts, in, strlen (in)))) {
     fprintf (stderr, "BalloonHash failed with error: %d\n", error);
     return -1;
   }

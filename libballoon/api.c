@@ -33,8 +33,8 @@ get_salt (uint8_t *salt)
 }
 
 int 
-Balloon_Hash (uint8_t out[BLOB_LEN], struct balloon_options *opt, 
-    const uint8_t *passwd, size_t passwd_len)
+Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt, 
+    const char *passwd, size_t passwd_len)
 {
   int error;
   uint8_t hash_bytes[HASH_LEN];
@@ -49,7 +49,7 @@ Balloon_Hash (uint8_t out[BLOB_LEN], struct balloon_options *opt,
       opt)) != ERROR_NONE)
     return error; 
 
-  if ((error = write_hash (out, BLOB_LEN,
+  if ((error = write_blob (out, BLOB_LEN,
       hash_bytes, HASH_LEN, 
       salt_bytes, SALT_LEN,
       opt->s_cost, opt->t_cost, opt->n_threads)))

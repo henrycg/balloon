@@ -51,8 +51,9 @@ enum error_codes {
   ERROR_PTHREAD,
   ERROR_URANDOM,
   ERROR_FMEM,
-  ERROR_SNPRINTF
+  ERROR_SNPRINTF,
 
+  ERROR_PARSE
 };
 
 #endif

@@ -118,7 +118,7 @@ static const char Pad64 = '=';
 
 
 int
-b64_ntop(uint8_t *target, size_t targsize, const uint8_t *src, size_t srclength) {
+b64_ntop(char *target, size_t targsize, const uint8_t *src, size_t srclength) {
 	size_t datalength = 0;
 	uint8_t input[3];
 	uint8_t output[4];
@@ -184,7 +184,7 @@ b64_ntop(uint8_t *target, size_t targsize, const uint8_t *src, size_t srclength)
  */
 
 int
-b64_pton(uint8_t *target, size_t targsize, const uint8_t *src)
+b64_pton(uint8_t *target, size_t targsize, const char *src)
 {
 	int tarindex, state, ch;
 	char *pos;

@@ -31,11 +31,11 @@ struct balloon_options {
 /* Password blob length (in bytes). */
 #define BLOB_LEN (128)
 
-int Balloon_Hash (uint8_t out[BLOB_LEN], struct balloon_options *opt, 
-    const uint8_t *passwd, size_t passwd_len);
+int Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt, 
+    const char *passwd, size_t passwd_len);
 
-int Balloon_Verify (uint8_t blob[BLOB_LEN], struct balloon_options *opt, 
-    const uint8_t *passwd, size_t passwd_len);
+int Balloon_Verify (char blob[BLOB_LEN], struct balloon_options *opt, 
+    const char *passwd, size_t passwd_len);
 
 #endif /* __BALLOON_H__ */
 

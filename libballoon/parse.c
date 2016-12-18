@@ -45,10 +45,10 @@
 
 /* OPENBSD ORIGINAL: lib/libc/string/strsep.c */
 
-#include <string.h>
-#include <stdio.h>
 
 #include <ctype.h>
+#include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -134,7 +134,7 @@ write_blob (char *blob, size_t bloblen,
   return 0;
 }
 
-static size_t
+size_t
 n_tokens (const char *str, size_t strlen, uint8_t delim)
 {
   int n_tokens = 1;
@@ -145,7 +145,7 @@ n_tokens (const char *str, size_t strlen, uint8_t delim)
   return n_tokens;
 }
 
-static void
+void
 tokenize (char **tokens, char *str, uint8_t delim)
 {
   const char delimstr[] = { delim, '\0' };
@@ -167,19 +167,27 @@ int_parse(const char *intstr, uint32_t *intp)
   }
 
   char *end;
-  *intp = strtoul(intstr, &end, 10);
+  uint64_t bigint = strtoul(intstr, &end, 10);
 
   // Make sure that we read the entire string.
-  if (end[0] != '\0')
+  if (end[0] != '\0' || bigint == ULONG_MAX)
     return ERROR_PARSE;
+
+  if (bigint > ((1ul<<32)-1ul))
+    return ERROR_PARSE;
+
+  *intp = (uint32_t)bigint;
 
   return ERROR_NONE;
 }
 
 int
-parse_options (char *optstr, size_t optlen,
+parse_options (const char *optstr_in, size_t optlen,
   uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads)
 {
+  char optstr[optlen];
+  strncpy (optstr, optstr_in, optlen);
+
   // Count the number of ,-separated tokens 
   int n = n_tokens (optstr, optlen, ',');
 
@@ -218,7 +226,7 @@ parse_options (char *optstr, size_t optlen,
       default:
         return ERROR_PARSE;
     }
-
+  
     if ((error = int_parse(&token[2], intp)) != ERROR_NONE)
       return ERROR_PARSE;
   }

@@ -20,17 +20,28 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-int
-write_blob (char *blob, size_t bloblen,
+int write_blob (char *blob, size_t bloblen,
       const uint8_t *out, size_t outlen,
       const uint8_t *salt, size_t saltlen, 
       uint32_t s_cost, uint32_t t_cost, uint32_t n_threads);
 
-int
-read_blob (const char *blob, size_t bloblen,
+int read_blob (const char *blob, size_t bloblen,
       uint8_t *out, size_t outlen,
       uint8_t *salt, size_t saltlen, 
       uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads);
+
+size_t n_tokens (const char *str, size_t strlen, uint8_t delim);
+
+/**
+ * WARNING: 
+ *  - tokens must have size n_tokens(str)
+ *  - str will be overwritten be a MUTABLE string
+ *  - tokens returns pointers into str where the tokens begin 
+ */
+void tokenize (char **tokens, char *str, uint8_t delim);
+int int_parse(const char *intstr, uint32_t *intp);
+int parse_options (const char *optstr, size_t optlen,
+  uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads);
 
 #endif
 

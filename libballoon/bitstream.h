@@ -27,16 +27,12 @@
 #define BITSTREAM_BUF_SIZE ((32) * (AES_BLOCK_SIZE))
 
 struct bitstream {
-  // All of the below are directly passed to OpenSSL
   bool initialized;
+  uint8_t *zeros;
+
+  // All of the below are directly passed to OpenSSL
   SHA256_CTX c;
   EVP_CIPHER_CTX ctx;
-
-  uint8_t *zeros;
-  uint8_t *generated;
-
-  uint8_t *genp;
-  unsigned int n_refreshes;
 };
 
 

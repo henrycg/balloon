@@ -138,12 +138,10 @@ mu_test_bitstream__rand_int (void)
   for (int i=0; i<1000; i++) {
     mu_ensure (!bitstream_rand_uint64 (&b, &out));
   }
-  mu_ensure (b.n_refreshes < 5);
 
   for (int i=0; i<1000; i++) {
     mu_ensure (!bitstream_rand_uint64 (&b, &out));
   }
-  mu_ensure (b.n_refreshes < 50);
   mu_ensure (!bitstream_free (&b));
 }
 

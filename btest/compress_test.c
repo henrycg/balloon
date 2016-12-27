@@ -21,7 +21,6 @@
 #include "mutest.h"
 
 #include "libballoon/compress.h"
-#include "libballoon/options.h"
 
 
 void 

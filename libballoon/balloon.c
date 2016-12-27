@@ -15,6 +15,7 @@
  */
 
 #include <assert.h>
+#include <balloon.h>
 #include <pthread.h>
 #include <string.h>
 
@@ -23,7 +24,7 @@
 #include "errors.h"
 #include "hash_state.h"
 
-static int validate_parameters (size_t outlen, size_t inlen, size_t saltlen);
+static int validate_parameters (size_t inlen);
 static void *balloon_worker (void *data);
 static void xor (uint8_t *a, const uint8_t *b, size_t len);
 
@@ -31,14 +32,11 @@ struct worker_data {
   const struct balloon_options *opts;
   uint32_t thread_idx;
 
-  uint8_t *out;
-  size_t outlen;
+  uint8_t out[BLOCK_SIZE];
+  uint8_t salt[SALT_LEN];
 
   const uint8_t *in;
   size_t inlen;
-
-  uint8_t *salt;
-  size_t saltlen;
 
   int error;
 };
@@ -51,13 +49,31 @@ xor (uint8_t *a, const uint8_t *b, size_t len)
   }
 }
 
+static int 
+options_validate (struct balloon_options *opts)
+{
+  if (opts->t_cost < TCOST_MIN)
+    return ERROR_TCOST_TOO_SMALL;
+  if (opts->s_cost < MCOST_MIN)
+    return ERROR_MCOST_TOO_SMALL;
+  if (opts->s_cost >= MCOST_MAX)
+    return ERROR_MCOST_TOO_BIG;
+
+  if (opts->n_threads > THREADS_MAX)
+    return ERROR_NTHREADS_TOO_BIG;
+
+  return ERROR_NONE;
+}
+
+
+
 void
-worker_salt (uint8_t *tsalt, const uint8_t *salt, uint8_t saltlen, uint32_t worker_idx)
+worker_salt (uint8_t tsalt[SALT_LEN], const uint8_t salt[SALT_LEN], uint32_t worker_idx)
 {
   // Add worker idx to last 32 bits of salt (as a little-endian integer)
 
-  strncpy ((char *)tsalt, (const char *)salt, saltlen);
-  uint8_t *last_bytes = tsalt + (saltlen - 4);
+  strncpy ((char *)tsalt, (const char *)salt, SALT_LEN);
+  uint8_t *last_bytes = tsalt + (SALT_LEN - 4);
   uint32_t byteint = bytes_to_littleend_uint32(last_bytes, 4) + worker_idx; 
 
   uint8_t byte0 = byteint & 0xFF;
@@ -74,12 +90,12 @@ balloon_worker(void *datap)
   struct worker_data *data = (struct worker_data *)datap;
   
   struct hash_state state;
-  if ((data->error = hash_state_init (&state, data->opts, data->salt, data->saltlen)))
+  if ((data->error = hash_state_init (&state, data->opts, data->salt)))
     return NULL; 
 
   // Fill buffer of s_cost blocks with pseudo-random stuff derived
   // from the password and salt.
-  if ((data->error = hash_state_fill (&state, data->in, data->inlen, data->salt, data->saltlen)))
+  if ((data->error = hash_state_fill (&state, data->salt, data->in, data->inlen)))
     return NULL;
 
   // Mix the buffer t_cost times
@@ -89,7 +105,7 @@ balloon_worker(void *datap)
   }
  
   // Extract the output from the hash state
-  if ((data->error = hash_state_extract (&state, data->out, data->outlen)))
+  if ((data->error = hash_state_extract (&state, data->out)))
     return NULL;
  
   hash_state_free (&state);
@@ -98,9 +114,9 @@ balloon_worker(void *datap)
 }
 
 int 
-balloon_internal (void *out, size_t outlen, 
+balloon_internal (uint8_t out[BLOCK_SIZE], 
+    const uint8_t salt[SALT_LEN],
     const void *in, size_t inlen, 
-    const void *salt, size_t saltlen, 
     struct balloon_options *opts)
 {
   int error;
@@ -109,7 +125,7 @@ balloon_internal (void *out, size_t outlen,
   if (!out || !in || !salt)
     return ERROR_NULL_POINTER;
 
-  if ((error = validate_parameters (outlen, inlen, saltlen)))
+  if ((error = validate_parameters (inlen)))
     return error;
 
   if ((error = options_validate (opts)))
@@ -118,34 +134,26 @@ balloon_internal (void *out, size_t outlen,
   struct worker_data thread_data[opts->n_threads]; 
   pthread_t thread_id[opts->n_threads]; 
   for (uint32_t t = 0; t < opts->n_threads; t++) {
-    uint8_t *tout = malloc (outlen);
-    uint8_t *tsalt = malloc (saltlen);
-    if (!tout) return ERROR_MALLOC;
-
-    worker_salt (tsalt, salt, saltlen, t);
-    printf("salt: ");
-    for(unsigned int i=0; i<saltlen;i++) {
-      printf("%x", tsalt[i]);
-    }
-    printf("\n");
-
     thread_data[t] = (struct worker_data){ 
       .opts = opts,
       .thread_idx = t,
-      .out = tout,
-      .outlen = outlen, 
       .in = in, 
       .inlen = inlen, 
-      .salt = tsalt, 
-      .saltlen = saltlen, 
       .error = ERROR_NONE
     };
+
+    worker_salt (thread_data[t].salt, salt, t);
+    printf("salt: ");
+    for(unsigned int i=0; i<SALT_LEN;i++) {
+      printf("%x", thread_data[t].salt[i]);
+    }
+    printf("\n");
 
     error = pthread_create(&thread_id[t], NULL, balloon_worker, (void *) &thread_data[t]);
     if (error) 
       return ERROR_PTHREAD;
   }
-printf("done\n");
+  printf("done\n");
 
   for (uint32_t t = 0; t < opts->n_threads; t++) {
     if (pthread_join(thread_id[t], NULL))
@@ -154,28 +162,17 @@ printf("done\n");
     if (thread_data[t].error != ERROR_NONE)
       return thread_data[t].error;
 
-    xor (out, thread_data[t].out, outlen);
-
-    free (thread_data[t].out);
-    free (thread_data[t].salt);
+    xor (out, thread_data[t].out, BLOCK_SIZE);
   }
 
   return ERROR_NONE;
 }
 
 static int
-validate_parameters (size_t outlen, size_t inlen, size_t saltlen)
+validate_parameters (size_t inlen)
 {
-  if (outlen < OUTLEN_MIN)
-    return ERROR_OUTLEN_TOO_SMALL;
-  if (outlen >= OUTLEN_MAX)
-    return ERROR_OUTLEN_TOO_BIG;
-
   if (inlen >= INLEN_MAX)
     return ERROR_INLEN_TOO_BIG;
-
-  if (saltlen >= SALTLEN_MAX)
-    return ERROR_SALTLEN_TOO_BIG;
 
   return 0;
 }

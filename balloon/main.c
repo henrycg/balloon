@@ -23,16 +23,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "libballoon/options.h"
 #include "libballoon/constants.h"
 #include "timing.h"
 
 static void 
 usage (const char *name)
 {
-  fprintf (stderr, "Usage: %s password salt\n", name);
+  fprintf (stderr, "Usage: %s password\n", name);
   fprintf (stderr, "A test utility for the Balloon password-hashing function.\n\n");
-  fprintf (stderr, "  -h, --help            Print this help message.\n");
+  fprintf (stderr, "OPERATIONS\n");
+  fprintf (stderr, "  -v, --verify=BLOB       Verify that the password matches\n"); 
+  fprintf (stderr, "                            the BLOB passed as an argument. \n"); 
+  fprintf (stderr, "  -h, --help              Print this help message.\n\n");
+  fprintf (stderr, "PARAMETERS\n");
   fprintf (stderr, "  -t, --time=NUM          Number of mixing rounds.\n");
   fprintf (stderr, "                            Default = 8\n");
   fprintf (stderr, "  -s, --space=NUM         Space usage (in KB).\n");
@@ -47,6 +50,7 @@ main (int argc, char *argv[])
   int32_t t_cost = 1;
   int64_t s_cost = (1024*1024);
   int16_t p_cost = 1;
+  const char *verify_blob = NULL;
   int help = false;
 
   while (1)
@@ -58,13 +62,14 @@ main (int argc, char *argv[])
           {"time",  required_argument, 0, 't'},
           {"space",  required_argument, 0, 's'},
           {"parallelism",  required_argument, 0, 'p'},
+          {"verify",  required_argument, 0, 'v'},
           {"help", no_argument, &help, 1},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      char c = getopt_long (argc, argv, "t:s:p:h?",
+      char c = getopt_long (argc, argv, "t:s:p:v:h?",
                        long_options, &option_index);
       char *end;
 
@@ -74,6 +79,11 @@ main (int argc, char *argv[])
 
       switch (c)
         {
+        case 'v':
+          verify_blob = optarg;
+
+          break;
+
         case 's':
           errno = 0;
           s_cost = strtoll (optarg, &end, 10);
@@ -140,14 +150,23 @@ main (int argc, char *argv[])
   printf ("s_cost         = %u\n", opts.s_cost);
   printf ("n_threads      = %u\n", opts.n_threads);
   printf ("passwd         = %s\n", in);
-  
 
   int error;
   const double wall_start = wall_sec ();
   char blob[BLOB_LEN];
-  if ((error = Balloon_Hash (blob, &opts, in, strlen (in)))) {
-    fprintf (stderr, "BalloonHash failed with error: %d\n", error);
-    return -1;
+
+  if (verify_blob) {
+    strncpy (blob, verify_blob, BLOB_LEN);
+
+    if ((error = Balloon_Verify (blob, in, strlen (in)))) {
+      fprintf (stderr, "Balloon_Verify failed with error: %d\n", error);
+      return -1;
+    }
+  } else {
+    if ((error = Balloon_Hash (blob, &opts, in, strlen (in)))) {
+      fprintf (stderr, "Balloon_Hash failed with error: %d\n", error);
+      return -1;
+    }
   }
   const double wall_end = wall_sec ();
   const double wall_diff = wall_end - wall_start;

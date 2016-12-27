@@ -10,7 +10,6 @@ src = [
     "compress.c",
     "encode.c",
     "hash_state.c",
-    "options.c",
     "parse.c",
 ]
 

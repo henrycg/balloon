@@ -33,6 +33,15 @@ block_index (const struct hash_state *s, size_t i)
   return s->buffer + (BLOCK_SIZE * i);
 }
 
+static uint64_t
+options_n_blocks (const struct balloon_options *opts)
+{
+  const uint32_t bsize = BLOCK_SIZE;
+  uint64_t ret = opts->s_cost / bsize;
+  return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
+}
+
+
 void *
 block_last (const struct hash_state *s)
 {
@@ -42,7 +51,7 @@ block_last (const struct hash_state *s)
 
 int 
 hash_state_init (struct hash_state *s, const struct balloon_options *opts,
-    const void *salt, size_t saltlen)
+    const uint8_t salt[SALT_LEN])
 {
   s->n_blocks = options_n_blocks (opts);
 
@@ -56,8 +65,9 @@ hash_state_init (struct hash_state *s, const struct balloon_options *opts,
   // calloc or realloc)
   s->buffer = malloc (s->n_blocks * BLOCK_SIZE);
 
+  // TODO: Hash in parameters here as well.
   int error;
-  if ((error = bitstream_init_with_seed (&s->bstream, salt, saltlen)))
+  if ((error = bitstream_init_with_seed (&s->bstream, salt, SALT_LEN)))
     return error;
 
   return (s->buffer) ? ERROR_NONE : ERROR_MALLOC;
@@ -75,15 +85,27 @@ hash_state_free (struct hash_state *s)
 
 int 
 hash_state_fill (struct hash_state *s, 
-    const uint8_t *in, size_t inlen,
-    const uint8_t *salt, size_t saltlen)
+    const uint8_t salt[SALT_LEN],
+    const uint8_t *in, size_t inlen)
 {
   int error;
 
-  // Hash password and salt into 0-th block
-  if ((error = fill_bytes_from_strings (s, s->buffer, 
-      BLOCK_SIZE, in, inlen, salt, saltlen)))
-    return error;
+  uint8_t wordsize = sizeof (inlen);
+
+  // Hash salt and password into 0-th block
+  SHA256_CTX c;
+  if (!SHA256_Init(&c))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, salt, SALT_LEN))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, (const char *)&wordsize, 1))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, (const char *)&inlen, sizeof (inlen)))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, in, inlen))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Final(s->buffer, &c))
+    return ERROR_OPENSSL_HASH;
 
   if ((error = expand (s->buffer, s->n_blocks)))
     return error;
@@ -138,7 +160,7 @@ hash_state_mix (struct hash_state *s)
 }
 
 int 
-hash_state_extract (const struct hash_state *s, uint8_t *out, size_t outlen)
+hash_state_extract (const struct hash_state *s, uint8_t out[BLOCK_SIZE])
 {
   if (!s->has_mixed)
     return ERROR_CANNOT_EXTRACT_BEFORE_MIX;
@@ -150,30 +172,7 @@ hash_state_extract (const struct hash_state *s, uint8_t *out, size_t outlen)
     printf("%x", b[i]);
   }
   puts("");
-  return fill_bytes_from_strings (s, out, outlen, block_last (s), BLOCK_SIZE, NULL, 0);
-}
-
-int 
-fill_bytes_from_strings (__attribute__  ((unused)) const struct hash_state *s, 
-    uint8_t *block_start, size_t bytes_to_fill,
-    const uint8_t *in, size_t inlen,
-    const uint8_t *salt, size_t saltlen)
-{
-  int error;
-  struct bitstream bits;
-  if ((error = bitstream_init (&bits)))
-    return error;
-  if ((error = bitstream_seed_add (&bits, salt, saltlen)))
-    return error;
-  if ((error = bitstream_seed_add (&bits, in, inlen)))
-    return error;
-  if ((error = bitstream_seed_finalize (&bits)))
-    return error;
-  if ((error = bitstream_fill_buffer (&bits, block_start, bytes_to_fill)))
-    return error;
-  if ((error = bitstream_free (&bits)))
-    return error;
-
+  strncpy ((char *)out, (const char *)b, BLOCK_SIZE);
   return ERROR_NONE;
 }
 

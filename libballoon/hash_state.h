@@ -20,7 +20,6 @@
 #include <stddef.h>
 
 #include "bitstream.h"
-#include "options.h"
 
 #define UNUSED __attribute__ ((unused))
 
@@ -36,22 +35,16 @@ struct hash_state {
 
 
 int hash_state_init (struct hash_state *s, const struct balloon_options *opts,
-    const void *salt, size_t saltlen);
+    const uint8_t salt[SALT_LEN]);
 
 int hash_state_free (struct hash_state *s);
 
-int hash_state_fill (struct hash_state *s, const uint8_t *in, size_t inlen,
-    const uint8_t *salt, size_t saltlen);
+int hash_state_fill (struct hash_state *s, 
+    const uint8_t salt[SALT_LEN], const uint8_t *in, size_t inlen);
 
 int hash_state_mix (struct hash_state *s);
 
-int hash_state_extract (const struct hash_state *s, uint8_t *out, size_t outlen);
-
-
-int fill_bytes_from_strings (const struct hash_state *s, 
-    uint8_t *block_start, size_t bytes_to_fill,
-    const uint8_t *in, size_t inlen,
-    const uint8_t *salt, size_t saltlen);
+int hash_state_extract (const struct hash_state *s, uint8_t out[BLOCK_SIZE]);
 
 void *
 block_index (const struct hash_state *s, size_t i);

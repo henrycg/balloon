@@ -10,7 +10,6 @@ test_srcs = [
     "compress_test.c",
     "hash_state_test.c",
     "parse_test.c",
-    "options_test.c",
 ]
 
 libs = [

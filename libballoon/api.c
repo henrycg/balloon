@@ -1,17 +1,17 @@
 
 #include <balloon.h>
 #include <stdio.h>
+#include <string.h>
 
+#include "constants.h"
 #include "errors.h"
 #include "parse.h"
 
-int balloon_internal (void *out, size_t outlen, 
+int balloon_internal (uint8_t out[BLOCK_SIZE],
+    const uint8_t salt[SALT_LEN], 
     const void *in, size_t inlen, 
-    const void *salt, size_t saltlen, 
     struct balloon_options *opts);
 
-#define SALT_LEN (16)
-#define HASH_LEN (32)
 
 static int
 get_salt (uint8_t *salt)
@@ -37,33 +37,44 @@ Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt,
     const char *passwd, size_t passwd_len)
 {
   int error;
-  uint8_t hash_bytes[HASH_LEN];
+  uint8_t hash_bytes[BLOCK_SIZE];
   uint8_t salt_bytes[SALT_LEN];
 
   if ((error = get_salt (salt_bytes)) != ERROR_NONE)
     return error;
 
-  if ((error = balloon_internal (hash_bytes, HASH_LEN, 
-      passwd, passwd_len, 
-      salt_bytes, SALT_LEN, 
-      opt)) != ERROR_NONE)
+  if ((error = balloon_internal (hash_bytes, salt_bytes,  passwd, passwd_len, opt)) != ERROR_NONE)
     return error; 
 
   if ((error = write_blob (out, BLOB_LEN,
-      hash_bytes, HASH_LEN, 
-      salt_bytes, SALT_LEN,
+      salt_bytes, 
+      hash_bytes, BLOCK_SIZE, 
       opt->s_cost, opt->t_cost, opt->n_threads)))
     return error;
 
   return ERROR_NONE;
 }
 
-/*
 int 
-Balloon_Verify (uint8_t blob[BLOB_LEN], struct balloon_options *opt, 
-    const uint8_t *passwd, size_t passwd_len)
+Balloon_Verify (char blob[BLOB_LEN], const char *passwd, size_t passwd_len)
 {
 
+  int error;
+  uint8_t hash[BLOCK_SIZE]; 
+  uint8_t salt[SALT_LEN]; 
+
+  struct balloon_options opt;
+ 
+  if ((error = read_blob (blob, BLOB_LEN,
+      salt, 
+      hash, BLOCK_SIZE, 
+      &opt.s_cost, &opt.t_cost, &opt.n_threads)))
+    return error;
+
+  uint8_t hash2[BLOCK_SIZE]; 
+  if ((error = balloon_internal (hash2, salt, passwd, passwd_len, &opt)) != ERROR_NONE)
+    return error; 
+
+  return !strncmp ((char *)hash, (char *)hash2, BLOCK_SIZE);
 }
 
-*/

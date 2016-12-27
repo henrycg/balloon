@@ -19,13 +19,10 @@
 
 #include <limits.h>
 
-#define OUTLEN_MIN 16ull
-#define OUTLEN_MAX 128ull
-
 #define N_NEIGHBORS (3)
 
+#define SALT_LEN (16)
 #define INLEN_MAX (1ull<<20)
-#define SALTLEN_MAX (1ull<<20)
 
 // Time cost (in number of passes over memory)
 #define TCOST_MIN 1ull

@@ -53,6 +53,7 @@
 #include <string.h>
 
 #include "base64.h"
+#include "constants.h"
 #include "errors.h"
 #include "parse.h"
 
@@ -114,14 +115,14 @@ encode (char *dst, const uint8_t *src, size_t srclen)
 
 int
 write_blob (char *blob, size_t bloblen,
+      const uint8_t salt[SALT_LEN], 
       const uint8_t *out, size_t outlen,
-      const uint8_t *salt, size_t saltlen, 
       uint32_t s_cost, uint32_t t_cost, uint32_t n_threads)
 {
-  char salt64[3*saltlen];
+  char salt64[3*SALT_LEN];
   char out64[3*outlen];
   int retval;
-  if ((retval = encode (salt64, salt, saltlen)))
+  if ((retval = encode (salt64, salt, SALT_LEN)))
     return retval;
   if ((retval = encode (out64, out, outlen)))
     return retval;
@@ -236,8 +237,7 @@ parse_options (const char *optstr_in, size_t optlen,
 
 int
 read_blob (const char *blob_in, size_t bloblen,
-      uint8_t *out, size_t outlen,
-      uint8_t *salt, size_t saltlen, 
+      uint8_t salt[SALT_LEN], uint8_t *out, size_t outlen,
       uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads)
 {
   if (blob_in[bloblen-1] != '\0')
@@ -258,9 +258,11 @@ read_blob (const char *blob_in, size_t bloblen,
 
   tokenize (tokens, blob, '$');
 
+  printf("t0 %s .\n", tokens[0]);
   // Check the header
   if (strlen (tokens[0]) != 0)
     return ERROR_PARSE;
+  printf("so far.\n");
   if (strlen (tokens[1]) != 7 || strncmp (tokens[1], "balloon", 7))
     return ERROR_PARSE;
   if (strlen (tokens[2]) != 3 || strncmp (tokens[2], "v=1", 3))
@@ -271,13 +273,13 @@ read_blob (const char *blob_in, size_t bloblen,
   strncpy (optstr, tokens[3], optlen);
 
   int error;
-  if ((error = parse_options (optstr, optlen, s_cost, t_cost, n_threads) != ERROR_NONE))
+  if ((error = parse_options (optstr, optlen+1, s_cost, t_cost, n_threads) != ERROR_NONE))
     return error;
 
   // Parse salt and password from Base64
-  if (b64_pton (salt, saltlen, tokens[4]) < 0)
+  if (b64_pton (salt, SALT_LEN, tokens[4]) <= 0)
     return ERROR_PARSE;
-  if (b64_pton (out, outlen, tokens[5]) < 0)
+  if (b64_pton (out, outlen, tokens[5]) <= 0)
     return ERROR_PARSE;
 
   return ERROR_NONE;

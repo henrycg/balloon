@@ -38,10 +38,9 @@ mu_test_hash_state_init_free ()
   struct balloon_options opts;
  
   init_options (&opts);
-  mu_ensure ( !options_validate (&opts) );
 
-  const unsigned char salt[] = "abcdefghijkl";
-  mu_ensure ( !hash_state_init (&s, &opts, salt, sizeof (salt)) );
+  const unsigned char salt[] = "abcdefghijklabasdfasdfasdfasfcdefghijkl";
+  mu_ensure ( !hash_state_init (&s, &opts, salt) );
   hash_state_free (&s);
 }
 
@@ -51,11 +50,10 @@ mu_test_hash_state_fill (void)
   struct hash_state s;
   struct balloon_options opts;
   init_options (&opts);
-  mu_ensure ( !options_validate (&opts) );
-  const unsigned char salt[] = "abcdefghijkl";
+  const unsigned char salt[] = "abcdefghijkabasdfasdfasdfasfcdefghijkll";
   const unsigned char in[] = "ZZZZZZZZZZZZ";
-  mu_ensure ( !hash_state_init (&s, &opts, salt, sizeof (salt)) );
-  mu_ensure ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
+  mu_ensure ( !hash_state_init (&s, &opts, salt) );
+  mu_ensure ( !hash_state_fill (&s, salt, in, sizeof (in)) ); 
 
   hash_state_free (&s);
 }
@@ -69,19 +67,19 @@ mu_test_hash_state_fill2 (void)
   struct hash_state s1;
   struct hash_state s2;
   struct hash_state s3;
-  unsigned char salt[] = "abcdefghijkl";
+  unsigned char salt[] = "abcdefghijklabasdfasdfasdfasfcdefghijkl";
   unsigned char in[] = "ZZZZZZZZZZZZ";
-  mu_ensure ( !hash_state_init (&s1, &opts, salt, sizeof (salt)) );
-  mu_ensure ( !hash_state_fill (&s1, in, sizeof (in), salt, sizeof (salt)) ); 
+  mu_ensure ( !hash_state_init (&s1, &opts, salt) );
+  mu_ensure ( !hash_state_fill (&s1, salt, in, sizeof (in)) ); 
 
   salt[0] = '5';
-  mu_ensure ( !hash_state_init (&s2, &opts, salt, sizeof (salt)) );
-  mu_ensure ( !hash_state_fill (&s2, in, sizeof (in), salt, sizeof (salt)) ); 
+  mu_ensure ( !hash_state_init (&s2, &opts, salt) );
+  mu_ensure ( !hash_state_fill (&s2, salt, in, sizeof (in)) ); 
 
 
   in[3] = '7';
-  mu_ensure ( !hash_state_init (&s3, &opts, salt, sizeof (salt)) );
-  mu_ensure ( !hash_state_fill (&s3, in, sizeof (in), salt, sizeof (salt)) ); 
+  mu_ensure ( !hash_state_init (&s3, &opts, salt) );
+  mu_ensure ( !hash_state_fill (&s3, salt, in, sizeof (in)) ); 
 
   hash_state_free (&s1);
   hash_state_free (&s2);
@@ -94,19 +92,20 @@ mu_test_hash_state_mix (void)
   struct balloon_options opts;
   init_options (&opts);
   struct hash_state s;
-  const unsigned char salt[] = "abcdefghijkl";
+  const unsigned char salt[] = "abcdefghijklabasdfasdfasdfasfcdefghijkl";
   const unsigned char in[] = "ZZZZZZZZZZZZ";
-  mu_ensure ( !hash_state_init (&s, &opts, salt, sizeof (salt)) );
-  mu_ensure ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
+  mu_ensure ( !hash_state_init (&s, &opts, salt) );
+  mu_ensure ( !hash_state_fill (&s, salt, in, sizeof (in)) ); 
 
   for (int i = 0; i < 10; i++)
     mu_ensure ( !hash_state_mix (&s) );
 
-  unsigned char out[1024];
-  mu_ensure ( !hash_state_extract (&s, out, 1024) );
+  unsigned char out[32];
+  mu_ensure ( !hash_state_extract (&s, out) );
   mu_ensure ( out[0] || out[1] || out[2] || out[3] );
   hash_state_free (&s);
 }
+
 
 void 
 mu_test_hash_state_bad_extract (void)
@@ -114,13 +113,13 @@ mu_test_hash_state_bad_extract (void)
   struct balloon_options opts;
   init_options (&opts);
   struct hash_state s;
-  const unsigned char salt[] = "abcdefghijkl";
+  const unsigned char salt[] = "abasdfasdfasdfasfcdefghijkl";
   const unsigned char in[] = "ZZZZZZZZZZZZ";
-  mu_ensure ( !hash_state_init (&s, &opts, salt, sizeof (salt)) );
-  mu_ensure ( !hash_state_fill (&s, in, sizeof (in), salt, sizeof (salt)) ); 
+  mu_ensure ( !hash_state_init (&s, &opts, salt) );
+  mu_ensure ( !hash_state_fill (&s, salt, in, sizeof (in)) ); 
 
-  unsigned char out[1024];
-  mu_check ( hash_state_extract (&s, out, 1024) == ERROR_CANNOT_EXTRACT_BEFORE_MIX );
+  unsigned char out[32];
+  mu_check ( hash_state_extract (&s, out) == ERROR_CANNOT_EXTRACT_BEFORE_MIX );
   hash_state_free (&s);
 }
 

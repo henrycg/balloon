@@ -19,6 +19,7 @@
 #include <string.h>
 #include "mutest.h"
 
+#include "libballoon/constants.h"
 #include "libballoon/errors.h"
 #include "libballoon/parse.h"
 
@@ -160,4 +161,83 @@ mu_test_parse__options3 (void)
   mu_check (s_cost == 14);
   mu_check (t_cost == 15);
   mu_check (p_cost == 1);
+}
+
+void 
+mu_test_parse__verify (void) 
+{
+  const char *str = "$balloon$v=1$t=12,s=0140,p=1$YmxhaAo=$YmxhaAo=";
+  int len = strlen (str);
+
+  uint32_t s_cost, t_cost, p_cost;
+  uint8_t out[1024];
+  uint8_t salt[SALT_LEN];
+  mu_check (read_blob (str, len+1, salt, out, 1024, &s_cost, &t_cost, &p_cost) == ERROR_NONE);
+
+  mu_check (s_cost == 140);
+  mu_check (t_cost == 12);
+  mu_check (p_cost == 1);
+
+  mu_check (!strncmp((char *)salt, "blah", 4));
+  mu_check (!strncmp((char *)out, "blah", 4));
+}
+
+void 
+mu_test_parse__fail (void) 
+{
+  const char *str = "$balloon$v=1$t=12,s=0140,p=1$YmxhaAo=$Ymxha?Ao=";
+  int len = strlen (str);
+
+  uint32_t s_cost, t_cost, p_cost;
+  uint8_t out[1024];
+  uint8_t salt[SALT_LEN];
+  mu_check (read_blob (str, len+1, salt, out, 1024, &s_cost, &t_cost, &p_cost) != ERROR_NONE);
+}
+
+void 
+mu_test_parse__fail2 (void) 
+{
+  const char *str = "$balloon$v=1$t=12,s=0140,p=1$$YmxhaAo=";
+  int len = strlen (str);
+
+  uint32_t s_cost, t_cost, p_cost;
+  uint8_t out[1024];
+  uint8_t salt[SALT_LEN];
+  mu_check (read_blob (str, len+1, salt, out, 1024, &s_cost, &t_cost, &p_cost) != ERROR_NONE);
+}
+
+void 
+mu_test_parse__fail3 (void) 
+{
+  const char *str = "$bxlwalloon$v=1$t=12,s=0140,p=1$YmxhaAo=$YmxhaAo=";
+  int len = strlen (str);
+
+  uint32_t s_cost, t_cost, p_cost;
+  uint8_t out[1024];
+  uint8_t salt[SALT_LEN];
+  mu_check (read_blob (str, len+1, salt, out, 1024, &s_cost, &t_cost, &p_cost) != ERROR_NONE);
+}
+
+void 
+mu_test_parse__fail4 (void) 
+{
+  const char *str = "$balloon$v=2$t=12,s=0140,p=1$YmxhaAo=$YmxhaAo=";
+  int len = strlen (str);
+
+  uint32_t s_cost, t_cost, p_cost;
+  uint8_t out[1024];
+  uint8_t salt[SALT_LEN];
+  mu_check (read_blob (str, len+1, salt, out, 1024, &s_cost, &t_cost, &p_cost) != ERROR_NONE);
+}
+
+void 
+mu_test_parse__fail5 (void) 
+{
+  const char *str = "$balloon$v=1$t=12,s=0140,p=1$YmxhaAo=";
+  int len = strlen (str);
+
+  uint32_t s_cost, t_cost, p_cost;
+  uint8_t out[1024];
+  uint8_t salt[SALT_LEN];
+  mu_check (read_blob (str, len+1, salt, out, 1024, &s_cost, &t_cost, &p_cost) != ERROR_NONE);
 }

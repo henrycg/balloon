@@ -26,7 +26,7 @@
 static void
 init_options (struct balloon_options *opts)
 {
-  opts->s_cost = 1024 * 128;
+  opts->s_cost = 128;
   opts->t_cost = 3;
   opts->n_threads = 1;
 }

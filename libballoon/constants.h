@@ -26,9 +26,9 @@
 
 // Time cost (in number of passes over memory)
 #define TCOST_MIN 1ull
-// Memory cost (roughly in number of bytes)
-#define MCOST_MIN (1024ull)
-#define MCOST_MAX (UINT32_MAX)
+// Space/memory cost (roughly in number of bytes)
+#define SCOST_MIN (1)
+#define SCOST_MAX (UINT32_MAX)
 // Minimum number of blocks to use
 #define BLOCKS_MIN (32ull)
 

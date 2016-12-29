@@ -37,7 +37,8 @@ static uint64_t
 options_n_blocks (const struct balloon_options *opts)
 {
   const uint32_t bsize = BLOCK_SIZE;
-  uint64_t ret = opts->s_cost / bsize;
+  // Covert s_cost into KB
+  uint64_t ret = (opts->s_cost * 1024) / bsize;
   return (ret < BLOCKS_MIN) ? BLOCKS_MIN : ret;
 }
 

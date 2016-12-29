@@ -25,8 +25,8 @@ enum error_codes {
   ERROR_NULL_POINTER,               // 2
   ERROR_MALLOC,                     // 3
 
-  ERROR_MCOST_TOO_SMALL,            // 4
-  ERROR_MCOST_TOO_BIG,              // 5
+  ERROR_SCOST_TOO_SMALL,            // 4
+  ERROR_SCOST_TOO_BIG,              // 5
 
   ERROR_TCOST_TOO_SMALL,            // 6
   ERROR_TCOST_TOO_BIG,              // 7

@@ -48,7 +48,7 @@ int
 main (int argc, char *argv[]) 
 {
   int32_t t_cost = 1;
-  int64_t s_cost = (1024*1024);
+  int64_t s_cost = 1024;
   int16_t p_cost = 1;
   const char *verify_blob = NULL;
   int help = false;
@@ -91,7 +91,6 @@ main (int argc, char *argv[])
             fprintf (stderr, "Invalid argument to -s\n");
             return -1;
           }
-          s_cost *= 1024;  // Convert from KB to bytes
 
           break;
 

@@ -19,6 +19,7 @@ import os
 import multiprocessing
 import SCons.Util
 
+
 ## Helper Functions
 
 def CheckPkgConfig(context):
@@ -83,6 +84,11 @@ if os.environ.has_key('LDFLAGS'):
 
 env.Append(CFLAGS = [ "-Wall", "-Werror", "-Wextra", "-O3", "-std=c99"])
 env.Append(CXXFLAGS = [ "-Wall", "-Werror", "-Wextra", "-O3", "-std=c++11"])
+
+# On Mac OS X, include homebrew openssl
+if sys.platform == "darwin":
+    env.Append(CFLAGS = [ "-I/usr/local/opt/openssl/include" ])
+    env.Append(LINKFLAGS = [ "-L/usr/local/opt/openssl/lib" ])
 
 if "WITH_GPROF" in env and env["WITH_GPROF"]:
     print "With gprof"

@@ -24,7 +24,6 @@
 #include "errors.h"
 #include "hash_state.h"
 
-static int validate_parameters (size_t inlen);
 static void *balloon_worker (void *data);
 static void xor (uint8_t *a, const uint8_t *b, size_t len);
 
@@ -73,15 +72,14 @@ worker_salt (uint8_t tsalt[SALT_LEN], const uint8_t salt[SALT_LEN], uint32_t wor
   // Add worker idx to last 32 bits of salt (as a little-endian integer)
 
   strncpy ((char *)tsalt, (const char *)salt, SALT_LEN);
-  uint8_t *last_bytes = tsalt + (SALT_LEN - 4);
-  uint32_t byteint = bytes_to_littleend_uint32(last_bytes, 4) + worker_idx; 
+  uint32_t byteint = bytes_to_littleend_uint32(tsalt, 4) + worker_idx; 
 
   uint8_t byte0 = byteint & 0xFF;
   //printf("0 = %x\n", byte0);
-  last_bytes[0] = byte0;
-  last_bytes[1] = (byteint & 0xFF00) >> 8;
-  last_bytes[2] = (byteint & 0xFF0000) >> 16;
-  last_bytes[3] = (byteint & 0xFF000000) >> 24;
+  tsalt[0] = byte0;
+  tsalt[1] = (byteint & 0xFF00) >> 8;
+  tsalt[2] = (byteint & 0xFF0000) >> 16;
+  tsalt[3] = (byteint & 0xFF000000) >> 24;
 }
 
 static void *
@@ -125,8 +123,8 @@ balloon_internal (uint8_t out[BLOCK_SIZE],
   if (!out || !in || !salt)
     return ERROR_NULL_POINTER;
 
-  if ((error = validate_parameters (inlen)))
-    return error;
+  if (inlen >= INLEN_MAX)
+    return ERROR_INLEN_TOO_BIG;
 
   if ((error = options_validate (opts)))
     return error;
@@ -143,18 +141,19 @@ balloon_internal (uint8_t out[BLOCK_SIZE],
     };
 
     worker_salt (thread_data[t].salt, salt, t);
-    printf("salt: ");
-    for(unsigned int i=0; i<SALT_LEN;i++) {
-      printf("%x", thread_data[t].salt[i]);
+    printf ("salt: ");
+    for (unsigned int i=0; i<SALT_LEN;i++) {
+      printf ("%x", thread_data[t].salt[i]);
     }
-    printf("\n");
+    printf ("\n");
 
-    error = pthread_create(&thread_id[t], NULL, balloon_worker, (void *) &thread_data[t]);
+    error = pthread_create (&thread_id[t], NULL, balloon_worker, (void *) &thread_data[t]);
     if (error) 
       return ERROR_PTHREAD;
   }
   printf("done\n");
 
+  bzero (out, BLOCK_SIZE);
   for (uint32_t t = 0; t < opts->n_threads; t++) {
     if (pthread_join(thread_id[t], NULL))
       return ERROR_PTHREAD;
@@ -167,14 +166,4 @@ balloon_internal (uint8_t out[BLOCK_SIZE],
 
   return ERROR_NONE;
 }
-
-static int
-validate_parameters (size_t inlen)
-{
-  if (inlen >= INLEN_MAX)
-    return ERROR_INLEN_TOO_BIG;
-
-  return 0;
-}
-
 

@@ -32,7 +32,7 @@ usage (const char *name)
   fprintf (stderr, "Usage: %s password\n", name);
   fprintf (stderr, "A test utility for the Balloon password-hashing function.\n\n");
   fprintf (stderr, "OPERATIONS\n");
-  fprintf (stderr, "  -v, --verify=BLOB       Verify that the password matches\n"); 
+  fprintf (stderr, "  -b, --blob=BLOB         Verify that the password matches\n"); 
   fprintf (stderr, "                            the BLOB passed as an argument. \n"); 
   fprintf (stderr, "  -h, --help              Print this help message.\n\n");
   fprintf (stderr, "PARAMETERS\n");
@@ -62,14 +62,14 @@ main (int argc, char *argv[])
           {"time",  required_argument, 0, 't'},
           {"space",  required_argument, 0, 's'},
           {"parallelism",  required_argument, 0, 'p'},
-          {"verify",  required_argument, 0, 'v'},
+          {"blob",  required_argument, 0, 'b'},
           {"help", no_argument, &help, 1},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      char c = getopt_long (argc, argv, "t:s:p:v:h?",
+      char c = getopt_long (argc, argv, "t:s:p:b:h?",
                        long_options, &option_index);
       char *end;
 
@@ -79,7 +79,7 @@ main (int argc, char *argv[])
 
       switch (c)
         {
-        case 'v':
+        case 'b':
           verify_blob = optarg;
 
           break;
@@ -147,7 +147,7 @@ main (int argc, char *argv[])
 
   printf ("t_cost         = %u\n", opts.t_cost);
   printf ("s_cost         = %u\n", opts.s_cost);
-  printf ("n_threads      = %u\n", opts.n_threads);
+  printf ("p_cost         = %u\n", opts.n_threads);
   printf ("passwd         = %s\n", in);
 
   int error;

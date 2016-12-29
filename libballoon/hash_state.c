@@ -62,13 +62,28 @@ hash_state_init (struct hash_state *s, const struct balloon_options *opts,
   s->has_mixed = false;
   s->opts = opts;
 
-  // TODO: Make sure this multiplication doesn't overflow (or use 
-  // calloc or realloc)
+  // TODO: Make sure that this multiplication doesn't overflow 
+  // (or use calloc or realloc)
   s->buffer = malloc (s->n_blocks * BLOCK_SIZE);
 
-  // TODO: Hash in parameters here as well.
+  uint8_t bogus_salt[SALT_LEN];
+  for (int i=0; i< SALT_LEN;i++)
+    bogus_salt[i] = 'a';
+
+  int a = salt[0];
+  a++;
   int error;
-  if ((error = bitstream_init_with_seed (&s->bstream, salt, SALT_LEN)))
+  if ((error = bitstream_init (&s->bstream)))
+    return error;
+  if ((error = bitstream_seed_add (&s->bstream, bogus_salt, SALT_LEN)))
+    return error;
+  if ((error = bitstream_seed_add (&s->bstream, &opts->s_cost, 4)))
+    return error;
+  if ((error = bitstream_seed_add (&s->bstream, &opts->t_cost, 4)))
+    return error;
+  if ((error = bitstream_seed_add (&s->bstream, &opts->n_threads, 4)))
+    return error;
+  if ((error = bitstream_seed_finalize (&s->bstream)))
     return error;
 
   return (s->buffer) ? ERROR_NONE : ERROR_MALLOC;
@@ -147,7 +162,6 @@ hash_state_mix (struct hash_state *s)
       //printf("Next[%lu]: %lu\n", i, neighbor % s->n_blocks);
       blocks[n] = block_index (s, neighbor % s->n_blocks);
     }
-
 
     // Hash value of neighbors into temp buffer.
     if ((error = compress (cur_block, blocks, n_blocks_to_hash)))

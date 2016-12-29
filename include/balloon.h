@@ -28,8 +28,8 @@ struct balloon_options {
   uint32_t n_threads;
 };
 
-/* Password blob length (in bytes). */
-#define BLOB_LEN (128)
+/* Maximum password blob length (in bytes). */
+#define BLOB_LEN (160)
 
 int Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt, 
     const char *passwd, size_t passwd_len);

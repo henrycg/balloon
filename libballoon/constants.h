@@ -33,7 +33,7 @@
 #define BLOCKS_MIN (32ull)
 
 // Maximum number of threads
-#define THREADS_MAX 255
+#define THREADS_MAX 4096
 
 #define BLOCK_SIZE (32)
 

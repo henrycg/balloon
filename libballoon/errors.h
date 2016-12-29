@@ -44,11 +44,12 @@ enum error_codes {
   ERROR_BITSTREAM_FINALIZED,        // 14
   ERROR_BITSTREAM_MAX_TOO_SMALL,    // 15
 
-  ERROR_PTHREAD,                    // 17
-  ERROR_URANDOM,                    // 18
-  ERROR_SNPRINTF,                   // 19
+  ERROR_PTHREAD,                    // 16
+  ERROR_URANDOM,                    // 17
+  ERROR_SNPRINTF,                   // 18
 
-  ERROR_PARSE                       // 20
+  ERROR_PARSE,                      // 19
+  ERROR_HASH_MISMATCH               // 20
 };
 
 #endif

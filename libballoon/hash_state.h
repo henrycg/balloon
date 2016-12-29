@@ -26,6 +26,7 @@
 struct hash_state;
 
 struct hash_state {
+  uint64_t counter;
   uint64_t n_blocks;
   bool has_mixed;
   uint8_t *buffer;

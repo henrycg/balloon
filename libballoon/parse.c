@@ -57,6 +57,9 @@
 #include "errors.h"
 #include "parse.h"
 
+// Round x up to a multiple of three
+#define ROUND3(x) (3*(((x)/3)+1))
+
 /*
  * Get next token from string *stringp, where tokens are possibly-empty
  * strings separated by characters from delim.  
@@ -102,11 +105,11 @@ encode (char *dst, const uint8_t *src, size_t srclen)
 {
   int retval = b64_ntop (dst, 3*srclen, src, srclen);
   if (retval == -1) {
-    fprintf(stderr, "Base64 encoding failed.\n");
+    fprintf (stderr, "Base64 encoding failed.\n");
     return 1;
   }
   if (retval > (int)(3 * srclen)-1) {
-    fprintf(stderr, "Buffer too small.\n");
+    fprintf (stderr, "Buffer too small.\n");
     return 1;
   }
   
@@ -163,19 +166,27 @@ int
 int_parse(const char *intstr, uint32_t *intp)
 {
   const size_t len = strlen (intstr);
+  printf("intstr: %s\n", intstr);
   for (size_t i = 0; i < len; i++) {
-    if (!isdigit(intstr[i])) return ERROR_PARSE;
+    if (!isdigit(intstr[i])) {
+      fprintf(stderr, "Invalid char in integer\n");
+      return ERROR_PARSE;
+    }
   }
 
   char *end;
   uint64_t bigint = strtoul(intstr, &end, 10);
 
   // Make sure that we read the entire string.
-  if (end[0] != '\0' || bigint == ULONG_MAX)
+  if (end[0] != '\0' || bigint == ULONG_MAX) {
+    fprintf(stderr, "Int read error\n");
     return ERROR_PARSE;
+  }
 
-  if (bigint > ((1ul<<32)-1ul))
+  if (bigint > ((1ul<<32)-1ul)) {
+    fprintf(stderr, "Int too big\n");
     return ERROR_PARSE;
+  }
 
   *intp = (uint32_t)bigint;
 
@@ -186,8 +197,8 @@ int
 parse_options (const char *optstr_in, size_t optlen,
   uint32_t *s_cost, uint32_t *t_cost, uint32_t *n_threads)
 {
-  char optstr[optlen];
-  strncpy (optstr, optstr_in, optlen);
+  char optstr[optlen+1];
+  strncpy (optstr, optstr_in, optlen+1);
 
   // Count the number of ,-separated tokens 
   int n = n_tokens (optstr, optlen, ',');
@@ -198,15 +209,21 @@ parse_options (const char *optstr_in, size_t optlen,
 
   for (int i=0; i<n; i++) {
     char *token = tokens[i];
-    if (strlen (token) < 3) 
+    if (strlen (token) < 3) {
+      fprintf (stderr, "Bad option header\n");
       return ERROR_PARSE;
+    }
 
     char type = token[0];
     char eq = token[1];
-    if (type != 'p' && type != 't' && type != 's') 
+    if (type != 'p' && type != 't' && type != 's') {
+      fprintf (stderr, "Bad option type \n");
       return ERROR_PARSE;
-    if (eq != '=') 
+    }
+    if (eq != '=') {
+      fprintf (stderr, "Bad option format\n");
       return ERROR_PARSE;
+    }
   }
 
   int error;
@@ -225,9 +242,11 @@ parse_options (const char *optstr_in, size_t optlen,
         intp = n_threads;
         break;
       default:
+        fprintf(stderr, "Bad option type\n");
         return ERROR_PARSE;
     }
-  
+ 
+    printf(">> %s\n", &token[2]); 
     if ((error = int_parse(&token[2], intp)) != ERROR_NONE)
       return ERROR_PARSE;
   }
@@ -243,8 +262,8 @@ read_blob (const char *blob_in, size_t bloblen,
   if (blob_in[bloblen-1] != '\0')
     return ERROR_PARSE;
 
-  char blob[bloblen];
-  strncpy (blob, blob_in, bloblen);
+  char blob[bloblen+1];
+  strncpy (blob, blob_in, bloblen+1);
 
   // Format is: 
   //    $balloon$v=1$t={time},s={space},p={parallelism}$salt$hash
@@ -267,20 +286,40 @@ read_blob (const char *blob_in, size_t bloblen,
     return ERROR_PARSE;
   if (strlen (tokens[2]) != 3 || strncmp (tokens[2], "v=1", 3))
     return ERROR_PARSE;
+  printf("ok header.\n");
 
   int optlen = strlen (tokens[3]); 
-  char optstr[optlen];
-  strncpy (optstr, tokens[3], optlen);
+  char optstr[optlen+1];
+  strncpy (optstr, tokens[3], optlen+1);
 
   int error;
-  if ((error = parse_options (optstr, optlen+1, s_cost, t_cost, n_threads) != ERROR_NONE))
+  if ((error = parse_options (optstr, optlen+1, s_cost, t_cost, n_threads)) != ERROR_NONE)
     return error;
-
   // Parse salt and password from Base64
-  if (b64_pton (salt, SALT_LEN, tokens[4]) <= 0)
+
+  // Need to round up to a multiple of three so that we can 
+  // decode an arbitrary base64 string of the right length.
+  const size_t tmp_saltlen = ROUND3(SALT_LEN);
+  uint8_t tmp_salt[tmp_saltlen];
+
+  const size_t tmp_outlen = ROUND3(outlen);
+  uint8_t tmp_out[tmp_outlen];
+
+  if ((error = b64_pton (tmp_salt, tmp_saltlen, tokens[4])) <= 0) {
+    fprintf (stderr, "Could not decode salt\n");
     return ERROR_PARSE;
-  if (b64_pton (out, outlen, tokens[5]) <= 0)
+  }
+
+  if (b64_pton (tmp_out, tmp_outlen, tokens[5]) <= 0) {
+    fprintf (stderr, "Could not decode password hash\n");
     return ERROR_PARSE;
+  }
+
+  memcpy (salt, tmp_salt, SALT_LEN);
+  memcpy (out, tmp_out, outlen);
+
+  for(int i=0; i<SALT_LEN;i++)
+    printf("%d,", tmp_salt[i]);
 
   return ERROR_NONE;
 }

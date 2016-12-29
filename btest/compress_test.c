@@ -32,9 +32,10 @@ mu_test_compress ()
     unsigned char bufB[block_size];
     memset (out, 0, block_size);
 
+    uint64_t cnt = 0;
     unsigned const char *blocks[2];
     blocks[0] = bufA;
     blocks[1] = bufB;
-    mu_ensure (!compress (out, blocks, 2));
+    mu_ensure (!compress (&cnt, out, blocks, 2));
 }
 

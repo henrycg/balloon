@@ -71,7 +71,7 @@ worker_salt (uint8_t tsalt[SALT_LEN], const uint8_t salt[SALT_LEN], uint32_t wor
 {
   // Add worker idx to last 32 bits of salt (as a little-endian integer)
 
-  strncpy ((char *)tsalt, (const char *)salt, SALT_LEN);
+  memcpy ((char *)tsalt, (const char *)salt, SALT_LEN);
   uint32_t byteint = bytes_to_littleend_uint32(tsalt, 4) + worker_idx; 
 
   uint8_t byte0 = byteint & 0xFF;
@@ -152,17 +152,31 @@ balloon_internal (uint8_t out[BLOCK_SIZE],
       return ERROR_PTHREAD;
   }
   printf("done\n");
-
-  bzero (out, BLOCK_SIZE);
   for (uint32_t t = 0; t < opts->n_threads; t++) {
     if (pthread_join(thread_id[t], NULL))
       return ERROR_PTHREAD;
+  }
+
+  bzero (out, BLOCK_SIZE);
+  for (uint32_t t = 0; t < opts->n_threads; t++) {
+  //  if (pthread_join(thread_id[t], NULL))
+  //    return ERROR_PTHREAD;
 
     if (thread_data[t].error != ERROR_NONE)
       return thread_data[t].error;
 
+    printf("Last[%d]: ", t);
+    for (int i=0; i < BLOCK_SIZE; i++) {
+      printf("%02d,", thread_data[t].out[i]);
+    }
+    puts("");
     xor (out, thread_data[t].out, BLOCK_SIZE);
   }
+  printf("Last: ");
+  for (int i=0; i < BLOCK_SIZE; i++) {
+    printf("%02x", out[i]);
+  }
+  puts("");
 
   return ERROR_NONE;
 }

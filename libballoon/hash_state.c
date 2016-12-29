@@ -54,6 +54,7 @@ int
 hash_state_init (struct hash_state *s, const struct balloon_options *opts,
     const uint8_t salt[SALT_LEN])
 {
+  s->counter = 0;
   s->n_blocks = options_n_blocks (opts);
 
   // Force number of blocks to be even
@@ -66,16 +67,13 @@ hash_state_init (struct hash_state *s, const struct balloon_options *opts,
   // (or use calloc or realloc)
   s->buffer = malloc (s->n_blocks * BLOCK_SIZE);
 
-  uint8_t bogus_salt[SALT_LEN];
-  for (int i=0; i< SALT_LEN;i++)
-    bogus_salt[i] = 'a';
 
   int a = salt[0];
   a++;
   int error;
   if ((error = bitstream_init (&s->bstream)))
     return error;
-  if ((error = bitstream_seed_add (&s->bstream, bogus_salt, SALT_LEN)))
+  if ((error = bitstream_seed_add (&s->bstream, salt, SALT_LEN)))
     return error;
   if ((error = bitstream_seed_add (&s->bstream, &opts->s_cost, 4)))
     return error;
@@ -106,28 +104,38 @@ hash_state_fill (struct hash_state *s,
 {
   int error;
 
-  uint8_t wordsize = sizeof (inlen);
-
   // Hash salt and password into 0-th block
   SHA256_CTX c;
   if (!SHA256_Init(&c))
     return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, &s->counter, 8))
+    return ERROR_OPENSSL_HASH;
   if (!SHA256_Update(&c, salt, SALT_LEN))
     return ERROR_OPENSSL_HASH;
-  if (!SHA256_Update(&c, (const char *)&wordsize, 1))
-    return ERROR_OPENSSL_HASH;
-  if (!SHA256_Update(&c, (const char *)&inlen, sizeof (inlen)))
-    return ERROR_OPENSSL_HASH;
   if (!SHA256_Update(&c, in, inlen))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, &s->opts->s_cost, 4))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, &s->opts->t_cost, 4))
+    return ERROR_OPENSSL_HASH;
+  if (!SHA256_Update(&c, &s->opts->n_threads, 4))
     return ERROR_OPENSSL_HASH;
   if (!SHA256_Final(s->buffer, &c))
     return ERROR_OPENSSL_HASH;
 
-  if ((error = expand (s->buffer, s->n_blocks)))
-    return error;
+  s->counter++;
 
-  for (int i=0; i<BLOCK_SIZE;i++) {
-    printf("%02x", s->buffer[i]);
+  printf("BLOCK: ");
+  for(int i=0; i<BLOCK_SIZE; i++)
+    printf("%d,", s->buffer[i]);
+  puts("");
+
+  if ((error = expand (&s->counter, s->buffer, s->n_blocks)))
+    return error;
+  printf("nblock %d\n", (int)s->n_blocks);
+
+  for (int i=31*BLOCK_SIZE; i<32*BLOCK_SIZE;i++) {
+    printf("%02d,", s->buffer[i]);
   }
   printf("\n");
 
@@ -142,10 +150,10 @@ hash_state_mix (struct hash_state *s)
   
   // Simplest design: hash in place with one buffer
   for (size_t i = 0; i < s->n_blocks; i++) {
-    void *cur_block = block_index (s, i);
+    uint8_t *cur_block = block_index (s, i);
 
     const size_t n_blocks_to_hash = 3;
-    const uint8_t *blocks[n_blocks_to_hash];
+    const uint8_t *blocks[2+n_blocks_to_hash];
 
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
@@ -153,18 +161,38 @@ hash_state_mix (struct hash_state *s)
 
     blocks[0] = prev_block;
     blocks[1] = cur_block;
+
+
+    if (i==0) {
+      printf("First mix\n");
+      printf("%llu,", s->counter);
+      for (int i=0; i<BLOCK_SIZE; i++) {
+        printf("%d,", prev_block[i]);
+      }
+      puts("");
+      for (int i=0; i<BLOCK_SIZE; i++) {
+        printf("%d,", cur_block[i]);
+      }
+      puts("");
+    }
     
     // For each block, pick random neighbors
-    for (size_t n = 2; n < n_blocks_to_hash; n++) { 
+    for (size_t n = 2; n < 2+n_blocks_to_hash; n++) { 
       // Get next neighbor
       if ((error = bitstream_rand_uint64 (&s->bstream, &neighbor)))
         return error;
-      //printf("Next[%lu]: %lu\n", i, neighbor % s->n_blocks);
       blocks[n] = block_index (s, neighbor % s->n_blocks);
+      /*
+      printf("Next[%lu]: %llu\n", i, neighbor); 
+        if (i==0){ printf("---\n");
+        for (int i=0; i<BLOCK_SIZE; i++) {
+          printf("%d,", blocks[n][i]);
+        }
+    }*/
     }
 
     // Hash value of neighbors into temp buffer.
-    if ((error = compress (cur_block, blocks, n_blocks_to_hash)))
+    if ((error = compress (&s->counter, cur_block, blocks, 2+n_blocks_to_hash)))
       return error;
 
     //uint8_t *this_block = cur_block;
@@ -182,12 +210,7 @@ hash_state_extract (const struct hash_state *s, uint8_t out[BLOCK_SIZE])
 
   // Return bytes derived from the last block of the buffer.
   uint8_t *b = block_last (s);
-  printf("Last: ");
-  for (int i=0; i < BLOCK_SIZE; i++) {
-    printf("%x", b[i]);
-  }
-  puts("");
-  strncpy ((char *)out, (const char *)b, BLOCK_SIZE);
+  memcpy ((char *)out, (const char *)b, BLOCK_SIZE);
   return ERROR_NONE;
 }
 

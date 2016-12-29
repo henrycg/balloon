@@ -77,9 +77,6 @@ bitstream_seed_add (struct bitstream *b, const void *seed, size_t seedlen)
   if (b->initialized)
     return ERROR_BITSTREAM_FINALIZED;
 
-  for (int i=0; i<(int)seedlen; i++)
-    printf("%d,", ((uint8_t*)seed)[i]);
-
   if (!SHA256_Update(&b->c, seed, seedlen))
     return ERROR_OPENSSL_HASH;
   return ERROR_NONE;
@@ -98,9 +95,9 @@ bitstream_seed_finalize (struct bitstream *b)
   memset (iv, 0, AES_BLOCK_SIZE);
 
   printf("Key: ");
-  for(int i=0; i<16; i++) 
-    printf("%02x,", key_bytes[i]);
-    //printf("%d,", key_bytes[i]);
+  for(int i=0; i<32; i++) 
+    //printf("%02x,", key_bytes[i]);
+    printf("%d,", key_bytes[i]);
   puts("");
 
   if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 1))

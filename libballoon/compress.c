@@ -24,7 +24,7 @@
 #include "errors.h"
 
 int 
-compress (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp)
+compress (uint64_t *counter, uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp)
 {
   // TODO: Insert hash metadata (block index and node index) at
   // each compression function call to prevent state reuse.
@@ -33,6 +33,10 @@ compress (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp)
   if (!SHA256_Init (&ctx))
     return ERROR_OPENSSL_HASH;
   
+  if (!SHA256_Update (&ctx, counter, 8))
+    return ERROR_OPENSSL_HASH;
+  //printf("Counter: %llu\n", *counter);
+
   for (unsigned int i = 0; i < blocks_to_comp; i++) {
     if (!SHA256_Update (&ctx, blocks[i], BLOCK_SIZE))
       return ERROR_OPENSSL_HASH;
@@ -41,12 +45,14 @@ compress (uint8_t *out, const uint8_t *blocks[], size_t blocks_to_comp)
   if (!SHA256_Final (out, &ctx))
     return ERROR_OPENSSL_HASH;
 
+  *counter += 1;
+
   return ERROR_NONE;
 }
 
 
 int 
-expand (uint8_t *buf, size_t blocks_in_buf)
+expand (uint64_t *counter, uint8_t *buf, size_t blocks_in_buf)
 {
   int error;
 
@@ -55,7 +61,7 @@ expand (uint8_t *buf, size_t blocks_in_buf)
   for (size_t i = 1; i < blocks_in_buf; i++) { 
 
     // Block[i] = Hash(Block[i-1])
-    if ((error = compress (cur, blocks, 1)))
+    if ((error = compress (counter, cur, blocks, 1)))
       return error;
 
     blocks[0] += BLOCK_SIZE;

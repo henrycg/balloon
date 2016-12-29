@@ -21,7 +21,10 @@
 
 #define N_NEIGHBORS (3)
 
-#define SALT_LEN (16)
+// Length of salt (in bytes)
+#define SALT_LEN (32)
+
+// Maximum length of password (in bytes)
 #define INLEN_MAX (1ull<<20)
 
 // Time cost (in number of passes over memory)
@@ -29,12 +32,14 @@
 // Space/memory cost (roughly in number of bytes)
 #define SCOST_MIN (1)
 #define SCOST_MAX (UINT32_MAX)
+
 // Minimum number of blocks to use
 #define BLOCKS_MIN (32ull)
 
 // Maximum number of threads
 #define THREADS_MAX 4096
 
+// Size of a memory block in the buffer (in bytes)
 #define BLOCK_SIZE (32)
 
 #endif

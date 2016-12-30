@@ -152,10 +152,10 @@ main (int argc, char *argv[])
 
   int error;
   const double wall_start = wall_sec ();
-  char blob[BLOB_LEN];
+  char blob[BLOB_LEN+1];
 
   if (verify_blob) {
-    strncpy (blob, verify_blob, BLOB_LEN);
+    strncpy (blob, verify_blob, BLOB_LEN+1);
 
     if ((error = Balloon_Verify (blob, in, strlen (in)))) {
       fprintf (stderr, "Balloon_Verify failed with error: %d\n", error);

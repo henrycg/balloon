@@ -125,19 +125,8 @@ hash_state_fill (struct hash_state *s,
 
   s->counter++;
 
-  printf("BLOCK: ");
-  for(int i=0; i<BLOCK_SIZE; i++)
-    printf("%d,", s->buffer[i]);
-  puts("");
-
   if ((error = expand (&s->counter, s->buffer, s->n_blocks)))
     return error;
-  printf("nblock %d\n", (int)s->n_blocks);
-
-  for (int i=31*BLOCK_SIZE; i<32*BLOCK_SIZE;i++) {
-    printf("%02d,", s->buffer[i]);
-  }
-  printf("\n");
 
   return ERROR_NONE;
 }
@@ -162,41 +151,17 @@ hash_state_mix (struct hash_state *s)
     blocks[0] = prev_block;
     blocks[1] = cur_block;
 
-
-    if (i==0) {
-      printf("First mix\n");
-      printf("%llu,", s->counter);
-      for (int i=0; i<BLOCK_SIZE; i++) {
-        printf("%d,", prev_block[i]);
-      }
-      puts("");
-      for (int i=0; i<BLOCK_SIZE; i++) {
-        printf("%d,", cur_block[i]);
-      }
-      puts("");
-    }
-    
     // For each block, pick random neighbors
     for (size_t n = 2; n < 2+n_blocks_to_hash; n++) { 
       // Get next neighbor
       if ((error = bitstream_rand_uint64 (&s->bstream, &neighbor)))
         return error;
       blocks[n] = block_index (s, neighbor % s->n_blocks);
-      /*
-      printf("Next[%lu]: %llu\n", i, neighbor); 
-        if (i==0){ printf("---\n");
-        for (int i=0; i<BLOCK_SIZE; i++) {
-          printf("%d,", blocks[n][i]);
-        }
-    }*/
     }
 
     // Hash value of neighbors into temp buffer.
     if ((error = compress (&s->counter, cur_block, blocks, 2+n_blocks_to_hash)))
       return error;
-
-    //uint8_t *this_block = cur_block;
-    //printf("\t\tBlock[%lu]: %u %u\n", i, this_block[0], this_block[1]);
   }
   s->has_mixed = true;
   return ERROR_NONE;

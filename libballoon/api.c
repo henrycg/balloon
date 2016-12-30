@@ -43,10 +43,6 @@ Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt,
   if ((error = get_salt (salt_bytes)) != ERROR_NONE)
     return error;
 
-  printf("ERROR USING FIXED SALT\n");
-  for (int i=0; i< SALT_LEN;i++)
-    salt_bytes[i] = 'a';
-
   if ((error = balloon_internal (hash_bytes, salt_bytes,  passwd, passwd_len, opt)) != ERROR_NONE)
     return error; 
 
@@ -79,6 +75,7 @@ Balloon_Verify (char blob[BLOB_LEN], const char *passwd, size_t passwd_len)
   if ((error = balloon_internal (hash2, salt, passwd, passwd_len, &opt)) != ERROR_NONE)
     return error; 
 
-  return strncmp ((char *)hash, (char *)hash2, BLOCK_SIZE) ? ERROR_HASH_MISMATCH : ERROR_NONE;
+  // Return ERROR_NONE on success.
+  return !memcmp ((char *)hash, (char *)hash2, BLOCK_SIZE) ? ERROR_NONE : ERROR_HASH_MISMATCH;
 }
 

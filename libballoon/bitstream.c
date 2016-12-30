@@ -94,11 +94,11 @@ bitstream_seed_finalize (struct bitstream *b)
   uint8_t iv[AES_BLOCK_SIZE];
   memset (iv, 0, AES_BLOCK_SIZE);
 
-  printf("Key: ");
-  for(int i=0; i<32; i++) 
+  //printf("Key: ");
+  //for(int i=0; i<32; i++) 
     //printf("%02x,", key_bytes[i]);
-    printf("%d,", key_bytes[i]);
-  puts("");
+  //  printf("%d,", key_bytes[i]);
+  //puts("");
 
   if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 1))
     return ERROR_OPENSSL_AES;

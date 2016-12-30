@@ -124,6 +124,10 @@ write_blob (char *blob, size_t bloblen,
 {
   char salt64[3*SALT_LEN];
   char out64[3*outlen];
+
+  bzero (salt64, 3*SALT_LEN);
+  bzero (out64, 3*outlen);
+
   int retval;
   if ((retval = encode (salt64, salt, SALT_LEN)))
     return retval;
@@ -166,7 +170,6 @@ int
 int_parse(const char *intstr, uint32_t *intp)
 {
   const size_t len = strlen (intstr);
-  printf("intstr: %s\n", intstr);
   for (size_t i = 0; i < len; i++) {
     if (!isdigit(intstr[i])) {
       fprintf(stderr, "Invalid char in integer\n");
@@ -246,7 +249,6 @@ parse_options (const char *optstr_in, size_t optlen,
         return ERROR_PARSE;
     }
  
-    printf(">> %s\n", &token[2]); 
     if ((error = int_parse(&token[2], intp)) != ERROR_NONE)
       return ERROR_PARSE;
   }
@@ -277,16 +279,13 @@ read_blob (const char *blob_in, size_t bloblen,
 
   tokenize (tokens, blob, '$');
 
-  printf("t0 %s .\n", tokens[0]);
   // Check the header
   if (strlen (tokens[0]) != 0)
     return ERROR_PARSE;
-  printf("so far.\n");
   if (strlen (tokens[1]) != 7 || strncmp (tokens[1], "balloon", 7))
     return ERROR_PARSE;
   if (strlen (tokens[2]) != 3 || strncmp (tokens[2], "v=1", 3))
     return ERROR_PARSE;
-  printf("ok header.\n");
 
   int optlen = strlen (tokens[3]); 
   char optstr[optlen+1];
@@ -317,9 +316,6 @@ read_blob (const char *blob_in, size_t bloblen,
 
   memcpy (salt, tmp_salt, SALT_LEN);
   memcpy (out, tmp_out, outlen);
-
-  for(int i=0; i<SALT_LEN;i++)
-    printf("%d,", tmp_salt[i]);
 
   return ERROR_NONE;
 }

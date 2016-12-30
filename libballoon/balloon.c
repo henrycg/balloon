@@ -141,42 +141,27 @@ balloon_internal (uint8_t out[BLOCK_SIZE],
     };
 
     worker_salt (thread_data[t].salt, salt, t);
-    printf ("salt: ");
-    for (unsigned int i=0; i<SALT_LEN;i++) {
-      printf ("%x", thread_data[t].salt[i]);
-    }
-    printf ("\n");
 
     error = pthread_create (&thread_id[t], NULL, balloon_worker, (void *) &thread_data[t]);
     if (error) 
       return ERROR_PTHREAD;
   }
-  printf("done\n");
-  for (uint32_t t = 0; t < opts->n_threads; t++) {
-    if (pthread_join(thread_id[t], NULL))
-      return ERROR_PTHREAD;
-  }
 
   bzero (out, BLOCK_SIZE);
   for (uint32_t t = 0; t < opts->n_threads; t++) {
-  //  if (pthread_join(thread_id[t], NULL))
-  //    return ERROR_PTHREAD;
+    if (pthread_join(thread_id[t], NULL))
+      return ERROR_PTHREAD;
 
     if (thread_data[t].error != ERROR_NONE)
       return thread_data[t].error;
 
-    printf("Last[%d]: ", t);
-    for (int i=0; i < BLOCK_SIZE; i++) {
-      printf("%02d,", thread_data[t].out[i]);
-    }
-    puts("");
     xor (out, thread_data[t].out, BLOCK_SIZE);
   }
-  printf("Last: ");
-  for (int i=0; i < BLOCK_SIZE; i++) {
-    printf("%02x", out[i]);
-  }
-  puts("");
+  //printf("Last: ");
+  //for (int i=0; i < BLOCK_SIZE; i++) {
+  //  printf("%02x", out[i]);
+  //}
+  //puts("");
 
   return ERROR_NONE;
 }

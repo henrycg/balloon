@@ -125,8 +125,8 @@ write_blob (char *blob, size_t bloblen,
   char salt64[3*SALT_LEN];
   char out64[3*outlen];
 
-  bzero (salt64, 3*SALT_LEN);
-  bzero (out64, 3*outlen);
+  memset (salt64, 0, 3*SALT_LEN);
+  memset (out64, 0, 3*outlen);
 
   int retval;
   if ((retval = encode (salt64, salt, SALT_LEN)))

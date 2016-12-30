@@ -147,7 +147,7 @@ balloon_internal (uint8_t out[BLOCK_SIZE],
       return ERROR_PTHREAD;
   }
 
-  bzero (out, BLOCK_SIZE);
+  memset (out, 0, BLOCK_SIZE);
   for (uint32_t t = 0; t < opts->n_threads; t++) {
     if (pthread_join(thread_id[t], NULL))
       return ERROR_PTHREAD;

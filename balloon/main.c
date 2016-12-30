@@ -37,7 +37,7 @@ usage (const char *name)
   fprintf (stderr, "  -h, --help              Print this help message.\n\n");
   fprintf (stderr, "PARAMETERS\n");
   fprintf (stderr, "  -t, --time=NUM          Number of mixing rounds.\n");
-  fprintf (stderr, "                            Default = 8\n");
+  fprintf (stderr, "                            Default = 1\n");
   fprintf (stderr, "  -s, --space=NUM         Space usage (in KB).\n");
   fprintf (stderr, "                            Default = 1024 KB\n");
   fprintf (stderr, "  -p, --parllelism=NUM    Number of threads to use.\n");

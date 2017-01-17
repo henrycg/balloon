@@ -33,8 +33,8 @@
 #define SCOST_MIN (1)
 #define SCOST_MAX (UINT32_MAX)
 
-// Minimum number of blocks to use
-#define BLOCKS_MIN (32ull)
+// Minimum number of blocks to use per thread
+#define BLOCKS_MIN (1ull)
 
 // Maximum number of threads
 #define THREADS_MAX 4096

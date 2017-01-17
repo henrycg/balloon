@@ -63,7 +63,7 @@ main (int argc, char *argv[])
           {"space",  required_argument, 0, 's'},
           {"parallelism",  required_argument, 0, 'p'},
           {"blob",  required_argument, 0, 'b'},
-          {"help", no_argument, &help, 1},
+          {"help", no_argument, &help, 'h'},
           {0, 0, 0, 0}
         };
       /* getopt_long stores the option index here. */
@@ -113,6 +113,8 @@ main (int argc, char *argv[])
           break;
 
         case 'h':
+          help = true;
+          break;
         case '?':
           help = true;
           break;

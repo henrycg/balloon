@@ -51,13 +51,6 @@ xor (uint8_t *a, const uint8_t *b, size_t len)
 static int 
 options_validate (struct balloon_options *opts)
 {
-  if (opts->t_cost < TCOST_MIN)
-    return ERROR_TCOST_TOO_SMALL;
-  if (opts->s_cost < SCOST_MIN)
-    return ERROR_SCOST_TOO_SMALL;
-  if (opts->s_cost >= SCOST_MAX)
-    return ERROR_SCOST_TOO_BIG;
-
   if (opts->n_threads > THREADS_MAX)
     return ERROR_NTHREADS_TOO_BIG;
 

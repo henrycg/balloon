@@ -14,15 +14,15 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef __ERRORS_H__
-#define __ERRORS_H__
-
-#define ERROR(name) ERROR_##name,
-enum error_codes {
+#define ERROR(name) "ERROR_" #name,
+char *error_strings[] = {
 #include "error_data.h"
 };
 #undef ERROR
 
-char *error_to_string(unsigned);
-
-#endif
+char *error_to_string(unsigned e) {
+  if (e >= (unsigned) (sizeof(error_strings) / sizeof(*error_strings)))
+    return "(UNKNOWN)";
+  else
+    return error_strings[e];
+}

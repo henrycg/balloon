@@ -9,6 +9,7 @@ src = [
     "bitstream.c",
     "compress.c",
     "encode.c",
+    "errors.c",
     "hash_state.c",
     "parse.c",
 ]

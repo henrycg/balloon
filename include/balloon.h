@@ -34,7 +34,7 @@ struct balloon_options {
 int Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt, 
     const char *passwd, size_t passwd_len);
 
-int Balloon_Verify (char blob[BLOB_LEN], 
+int Balloon_Verify (const char blob[BLOB_LEN], 
     const char *passwd, size_t passwd_len);
 
 #endif /* __BALLOON_H__ */

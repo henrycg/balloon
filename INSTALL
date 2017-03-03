@@ -29,6 +29,12 @@ $ scons WITH_GPROF=1
 To clean up the object and binary files, run:
 $ scons -c
 
+To compile the library as PIC, one can run:
+$ env CFLAGS="-fPIC" scons
+
+To generate a shared library, one can add this line to the
+end of libballoon/SConscript:
+  env.SharedLibrary("balloon-dyn", src)
 
 ===================================
 === This code compiles on... 

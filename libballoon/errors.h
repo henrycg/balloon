@@ -17,39 +17,12 @@
 #ifndef __ERRORS_H__
 #define __ERRORS_H__
 
+#define ERROR(name) ERROR_##name,
 enum error_codes {
-  ERROR_NONE,                       // 0
-
-  ERROR_INCOMPATIBLE_OPTIONS,       // 1
-
-  ERROR_NULL_POINTER,               // 2
-  ERROR_MALLOC,                     // 3
-
-  ERROR_SCOST_TOO_SMALL,            // 4
-  ERROR_SCOST_TOO_BIG,              // 5
-
-  ERROR_TCOST_TOO_SMALL,            // 6
-  ERROR_TCOST_TOO_BIG,              // 7
-
-  ERROR_INLEN_TOO_BIG,              // 8
-
-  ERROR_NTHREADS_TOO_BIG,           // 9
-
-  ERROR_CANNOT_EXTRACT_BEFORE_MIX,  // 10
-
-  ERROR_OPENSSL_HASH,               // 11
-  ERROR_OPENSSL_AES,                // 12
-
-  ERROR_BITSTREAM_UNINITIALIZED,    // 13
-  ERROR_BITSTREAM_FINALIZED,        // 14
-  ERROR_BITSTREAM_MAX_TOO_SMALL,    // 15
-
-  ERROR_PTHREAD,                    // 16
-  ERROR_URANDOM,                    // 17
-  ERROR_SNPRINTF,                   // 18
-
-  ERROR_PARSE,                      // 19
-  ERROR_HASH_MISMATCH               // 20
+#include "error_data.h"
 };
+#undef ERROR
+
+char *error_to_string(unsigned);
 
 #endif

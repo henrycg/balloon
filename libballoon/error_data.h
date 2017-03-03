@@ -14,28 +14,22 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+ERROR(NONE)
 
-#ifndef __BALLOON_H__
-#define __BALLOON_H__
-
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-struct balloon_options {
-  uint32_t s_cost;
-  uint32_t t_cost;
-  uint32_t n_threads;
-};
-
-/* Maximum password blob length (in bytes). */
-#define BLOB_LEN (160)
-
-int Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt, 
-    const char *passwd, size_t passwd_len);
-
-int Balloon_Verify (const char blob[BLOB_LEN], 
-    const char *passwd, size_t passwd_len);
-
-#endif /* __BALLOON_H__ */
-
+ERROR(INCOMPATIBLE_OPTIONS)
+ERROR(NULL_POINTER)
+ERROR(MALLOC)
+ERROR(INLEN_TOO_BIG)
+ERROR(SALTLEN_TOO_SMALL)
+ERROR(SALTLEN_TOO_BIG)
+ERROR(NTHREADS_TOO_BIG)
+ERROR(CANNOT_EXTRACT_BEFORE_MIX)
+ERROR(OPENSSL_HASH)
+ERROR(OPENSSL_AES)
+ERROR(BITSTREAM_UNINITIALIZED)
+ERROR(BITSTREAM_FINALIZED)
+ERROR(PTHREAD)
+ERROR(SNPRINTF)
+ERROR(PARSE)
+ERROR(HASH_MISMATCH)
+ERROR(URANDOM)

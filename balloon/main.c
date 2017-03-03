@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "libballoon/constants.h"
+#include "libballoon/errors.h"
 #include "timing.h"
 
 static void 
@@ -81,7 +82,10 @@ main (int argc, char *argv[])
         {
         case 'b':
           verify_blob = optarg;
-
+        case 0:
+          /* If this option set a flag, do nothing else now. */
+          if (long_options[option_index].flag != 0)
+            break;
           break;
 
         case 's':
@@ -160,12 +164,12 @@ main (int argc, char *argv[])
     strncpy (blob, verify_blob, BLOB_LEN+1);
 
     if ((error = Balloon_Verify (blob, in, strlen (in)))) {
-      fprintf (stderr, "Balloon_Verify failed with error: %d\n", error);
+      fprintf (stderr, "Balloon_Hash failed with error: %s (%d)\n", error_to_string(error), error);
       return -1;
     }
   } else {
     if ((error = Balloon_Hash (blob, &opts, in, strlen (in)))) {
-      fprintf (stderr, "Balloon_Hash failed with error: %d\n", error);
+      fprintf (stderr, "Balloon_Hash failed with error: %s (%d)\n", error_to_string(error), error);
       return -1;
     }
   }

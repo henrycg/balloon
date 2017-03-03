@@ -56,7 +56,7 @@ Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt,
 }
 
 int 
-Balloon_Verify (char blob[BLOB_LEN], const char *passwd, size_t passwd_len)
+Balloon_Verify (const char blob[BLOB_LEN], const char *passwd, size_t passwd_len)
 {
 
   int error;

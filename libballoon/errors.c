@@ -14,28 +14,15 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-
-#ifndef __BALLOON_H__
-#define __BALLOON_H__
-
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-struct balloon_options {
-  uint32_t s_cost;
-  uint32_t t_cost;
-  uint32_t n_threads;
+#define ERROR(name) "ERROR_" #name,
+char *error_strings[] = {
+#include "error_data.h"
 };
+#undef ERROR
 
-/* Maximum password blob length (in bytes). */
-#define BLOB_LEN (160)
-
-int Balloon_Hash (char out[BLOB_LEN], struct balloon_options *opt, 
-    const char *passwd, size_t passwd_len);
-
-int Balloon_Verify (const char blob[BLOB_LEN], 
-    const char *passwd, size_t passwd_len);
-
-#endif /* __BALLOON_H__ */
-
+char *error_to_string(unsigned e) {
+  if (e >= (unsigned) (sizeof(error_strings) / sizeof(*error_strings)))
+    return "(UNKNOWN)";
+  else
+    return error_strings[e];
+}

@@ -1,4 +1,19 @@
-- Hash params with the salt
+- Rename  threads => tasks
+
+
+- Default parameters
+    Web app
+      1 tasks, 512 KB
+    Mobile
+      2 tasks, 8 MB
+    Local login
+      4 tasks, 16 MB
+    High-security key derivation 
+    (PGP, password mgr, SSH, file encryption): 
+      4 tasks, 128 MB
+    
+
 - API format (default for different deployment scenarios)
+
 
 

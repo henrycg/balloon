@@ -151,10 +151,6 @@ main (int argc, char *argv[])
     .n_threads = p_cost
   };
 
-  printf ("t_cost         = %u\n", opts.t_cost);
-  printf ("s_cost         = %u\n", opts.s_cost);
-  printf ("p_cost         = %u\n", opts.n_threads);
-  printf ("passwd         = %s\n", in);
 
   int error;
   const double wall_start = wall_sec ();
@@ -168,6 +164,10 @@ main (int argc, char *argv[])
       return -1;
     }
   } else {
+    printf ("t_cost         = %u\n", opts.t_cost);
+    printf ("s_cost         = %u\n", opts.s_cost);
+    printf ("p_cost         = %u\n", opts.n_threads);
+    printf ("passwd         = %s\n", in);
     if ((error = Balloon_Hash (blob, &opts, in, strlen (in)))) {
       fprintf (stderr, "Balloon_Hash failed with error: %s (%d)\n", error_to_string(error), error);
       return -1;

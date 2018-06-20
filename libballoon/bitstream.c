@@ -46,7 +46,7 @@ bitstream_free (struct bitstream *b)
 {
   uint8_t out[AES_BLOCK_SIZE];
   int outl;
-  if (!EVP_EncryptFinal (&b->ctx, out, &outl))
+  if (!EVP_EncryptFinal_ex (&b->ctx, out, &outl))
     return ERROR_OPENSSL_AES;
 
   if (!EVP_CIPHER_CTX_cleanup (&b->ctx))

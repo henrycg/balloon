@@ -67,20 +67,34 @@ hash_state_init (struct hash_state *s, const struct balloon_options *opts,
   // (or use calloc or realloc)
   s->buffer = malloc (s->n_blocks * BLOCK_SIZE);
 
-
-  int a = salt[0];
-  a++;
   int error;
   if ((error = bitstream_init (&s->bstream)))
     return error;
   if ((error = bitstream_seed_add (&s->bstream, salt, SALT_LEN)))
     return error;
-  if ((error = bitstream_seed_add (&s->bstream, &opts->s_cost, 4)))
+
+  uint8_t cost[4];
+  cost[0] = opts->s_cost;
+  cost[1] = opts->s_cost >> 8;
+  cost[2] = opts->s_cost >> 16;
+  cost[3] = opts->s_cost >> 24;
+  if ((error = bitstream_seed_add(&s->bstream, cost, 4)))
     return error;
-  if ((error = bitstream_seed_add (&s->bstream, &opts->t_cost, 4)))
+
+  cost[0] = opts->t_cost;
+  cost[1] = opts->t_cost >> 8;
+  cost[2] = opts->t_cost >> 16;
+  cost[3] = opts->t_cost >> 24;
+  if ((error = bitstream_seed_add(&s->bstream, cost, 4)))
     return error;
-  if ((error = bitstream_seed_add (&s->bstream, &opts->n_threads, 4)))
+
+  cost[0] = opts->n_threads;
+  cost[1] = opts->n_threads >> 8;
+  cost[2] = opts->n_threads >> 16;
+  cost[3] = opts->n_threads >> 24;
+  if ((error = bitstream_seed_add(&s->bstream, cost, 4)))
     return error;
+
   if ((error = bitstream_seed_finalize (&s->bstream)))
     return error;
 

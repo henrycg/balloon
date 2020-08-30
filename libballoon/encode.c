@@ -39,3 +39,20 @@ bytes_to_littleend_uint32 (const uint8_t *bytes, size_t n_bytes)
   return out;
 }
 
+void
+uint64_to_littleend_bytes (uint8_t *bytes, size_t n_bytes, uint64_t value)
+{
+  for (size_t i = 0; i < n_bytes; i++) {
+    bytes[i] = value & 0xFF;
+    value >>= 8;
+  }
+}
+
+void
+uint32_to_littleend_bytes (uint8_t *bytes, size_t n_bytes, uint32_t value)
+{
+  for (size_t i = 0; i < n_bytes; i++) {
+    bytes[i] = value & 0xFF;
+    value >>= 8;
+  }
+}

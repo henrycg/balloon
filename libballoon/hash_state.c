@@ -22,6 +22,7 @@
 #include "bitstream.h"
 #include "constants.h"
 #include "compress.h"
+#include "encode.h"
 #include "errors.h"
 #include "hash_state.h"
 
@@ -73,26 +74,17 @@ hash_state_init (struct hash_state *s, const struct balloon_options *opts,
   if ((error = bitstream_seed_add (&s->bstream, salt, SALT_LEN)))
     return error;
 
-  uint8_t cost[4];
-  cost[0] = opts->s_cost;
-  cost[1] = opts->s_cost >> 8;
-  cost[2] = opts->s_cost >> 16;
-  cost[3] = opts->s_cost >> 24;
-  if ((error = bitstream_seed_add(&s->bstream, cost, 4)))
+  uint8_t temp[4];
+  uint32_to_littleend_bytes (temp, 4, opts->s_cost);
+  if ((error = bitstream_seed_add(&s->bstream, temp, 4)))
     return error;
 
-  cost[0] = opts->t_cost;
-  cost[1] = opts->t_cost >> 8;
-  cost[2] = opts->t_cost >> 16;
-  cost[3] = opts->t_cost >> 24;
-  if ((error = bitstream_seed_add(&s->bstream, cost, 4)))
+  uint32_to_littleend_bytes (temp, 4, opts->t_cost);
+  if ((error = bitstream_seed_add(&s->bstream, temp, 4)))
     return error;
 
-  cost[0] = opts->n_threads;
-  cost[1] = opts->n_threads >> 8;
-  cost[2] = opts->n_threads >> 16;
-  cost[3] = opts->n_threads >> 24;
-  if ((error = bitstream_seed_add(&s->bstream, cost, 4)))
+  uint32_to_littleend_bytes (temp, 4, opts->n_threads);
+  if ((error = bitstream_seed_add(&s->bstream, temp, 4)))
     return error;
 
   if ((error = bitstream_seed_finalize (&s->bstream)))
@@ -117,22 +109,27 @@ hash_state_fill (struct hash_state *s,
     const uint8_t *in, size_t inlen)
 {
   int error;
+  uint8_t temp[8];
 
   // Hash salt and password into 0-th block
   SHA256_CTX c;
   if (!SHA256_Init(&c))
     return ERROR_OPENSSL_HASH;
-  if (!SHA256_Update(&c, &s->counter, 8))
+  uint64_to_littleend_bytes (temp, 8, s->counter);
+  if (!SHA256_Update(&c, temp, 8))
     return ERROR_OPENSSL_HASH;
   if (!SHA256_Update(&c, salt, SALT_LEN))
     return ERROR_OPENSSL_HASH;
   if (!SHA256_Update(&c, in, inlen))
     return ERROR_OPENSSL_HASH;
-  if (!SHA256_Update(&c, &s->opts->s_cost, 4))
+  uint32_to_littleend_bytes (temp, 4, s->opts->s_cost);
+  if (!SHA256_Update(&c, temp, 4))
     return ERROR_OPENSSL_HASH;
-  if (!SHA256_Update(&c, &s->opts->t_cost, 4))
+  uint32_to_littleend_bytes (temp, 4, s->opts->t_cost);
+  if (!SHA256_Update(&c, temp, 4))
     return ERROR_OPENSSL_HASH;
-  if (!SHA256_Update(&c, &s->opts->n_threads, 4))
+  uint32_to_littleend_bytes (temp, 4, s->opts->n_threads);
+  if (!SHA256_Update(&c, temp, 4))
     return ERROR_OPENSSL_HASH;
   if (!SHA256_Final(s->buffer, &c))
     return ERROR_OPENSSL_HASH;

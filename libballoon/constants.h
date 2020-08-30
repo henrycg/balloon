@@ -19,8 +19,6 @@
 
 #include <limits.h>
 
-#define N_NEIGHBORS (3)
-
 // Length of salt (in bytes)
 #define SALT_LEN (32)
 

@@ -67,12 +67,7 @@ worker_salt (uint8_t tsalt[SALT_LEN], const uint8_t salt[SALT_LEN], uint32_t wor
   memcpy ((char *)tsalt, (const char *)salt, SALT_LEN);
   uint32_t byteint = bytes_to_littleend_uint32(tsalt, 4) + worker_idx; 
 
-  uint8_t byte0 = byteint & 0xFF;
-  //printf("0 = %x\n", byte0);
-  tsalt[0] = byte0;
-  tsalt[1] = (byteint & 0xFF00) >> 8;
-  tsalt[2] = (byteint & 0xFF0000) >> 16;
-  tsalt[3] = (byteint & 0xFF000000) >> 24;
+  uint32_to_littleend_bytes (tsalt, 4, byteint);
 }
 
 static void *

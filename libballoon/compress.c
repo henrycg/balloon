@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "compress.h"
+#include "encode.h"
 #include "errors.h"
 
 int 
@@ -30,12 +31,14 @@ compress (uint64_t *counter, uint8_t *out, const uint8_t *blocks[], size_t block
   // each compression function call to prevent state reuse.
 
   SHA256_CTX ctx;
+  uint8_t temp[8];
+
   if (!SHA256_Init (&ctx))
     return ERROR_OPENSSL_HASH;
-  
-  if (!SHA256_Update (&ctx, counter, 8))
+
+  uint64_to_littleend_bytes (temp, 8, *counter);
+  if (!SHA256_Update (&ctx, temp, 8))
     return ERROR_OPENSSL_HASH;
-  //printf("Counter: %llu\n", *counter);
 
   for (unsigned int i = 0; i < blocks_to_comp; i++) {
     if (!SHA256_Update (&ctx, blocks[i], BLOCK_SIZE))

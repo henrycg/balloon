@@ -26,4 +26,10 @@ bytes_to_littleend_uint64 (const uint8_t *bytes, size_t n_bytes);
 uint32_t
 bytes_to_littleend_uint32 (const uint8_t *bytes, size_t n_bytes);
 
+void
+uint64_to_littleend_bytes (uint8_t *bytes, size_t n_bytes, uint64_t value);
+
+void
+uint32_to_littleend_bytes (uint8_t *bytes, size_t n_bytes, uint32_t value);
+
 #endif

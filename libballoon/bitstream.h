@@ -40,8 +40,6 @@ int bitstream_init (struct bitstream *b);
 
 int bitstream_free (struct bitstream *b);
 
-int bitstream_init_with_seed (struct bitstream *b, const void *seed, size_t seedlen);
-
 int bitstream_seed_add (struct bitstream *b, const void *seed, size_t seedlen);
 
 int bitstream_seed_finalize (struct bitstream *b);

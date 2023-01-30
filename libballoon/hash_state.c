@@ -155,8 +155,7 @@ hash_state_mix (struct hash_state *s)
   for (size_t i = 0; i < s->n_blocks; i++) {
     uint8_t *cur_block = block_index (s, i);
 
-    const size_t n_blocks_to_hash = 3;
-    const uint8_t *blocks[2+n_blocks_to_hash];
+    const uint8_t *blocks[2+N_NEIGHBORS];
 
     // Hash in the previous block (or the last block if this is
     // the first block of the buffer).
@@ -166,7 +165,7 @@ hash_state_mix (struct hash_state *s)
     blocks[1] = cur_block;
 
     // For each block, pick random neighbors
-    for (size_t n = 2; n < 2+n_blocks_to_hash; n++) { 
+    for (size_t n = 2; n < 2+N_NEIGHBORS; n++) { 
       // Get next neighbor
       if ((error = bitstream_rand_uint64 (&s->bstream, &neighbor)))
         return error;
@@ -174,7 +173,7 @@ hash_state_mix (struct hash_state *s)
     }
 
     // Hash value of neighbors into temp buffer.
-    if ((error = compress (&s->counter, cur_block, blocks, 2+n_blocks_to_hash)))
+    if ((error = compress (&s->counter, cur_block, blocks, 2+N_NEIGHBORS)))
       return error;
   }
   s->has_mixed = true;

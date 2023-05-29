@@ -65,24 +65,24 @@ env = Environment(options = opts,
 Help(opts.GenerateHelpText(env))
 
 # Copy environment variables
-if os.environ.has_key('CC'):
+if "CC" in os.environ:
     env["CC"] = os.getenv('CC')
-if os.environ.has_key('CXX'):
+if "CXX" in os.environ:
     env["CXX"] = os.getenv('CXX')
-if os.environ.has_key('AS'):
+if "AS" in os.environ:
     env["AS"] = os.getenv('AS')
-if os.environ.has_key('LD'):
+if "LD" in os.environ:
     env["LINK"] = os.getenv('LD')
-if os.environ.has_key('CFLAGS'):
+if "CFLAGS" in os.environ:
     env.Append(CCFLAGS = SCons.Util.CLVar(os.environ['CFLAGS']))
-if os.environ.has_key('CPPFLAGS'):
+if "CPPFLAGS" in os.environ:
     env.Append(CPPFLAGS = SCons.Util.CLVar(os.environ['CPPFLAGS']))
-if os.environ.has_key('CXXFLAGS'):
+if "CXXFLAGS" in os.environ:
     env.Append(CXXFLAGS = SCons.Util.CLVar(os.environ['CXXFLAGS']))
-if os.environ.has_key('LDFLAGS'):
+if "LDFLAGS" in os.environ:
     env.Append(LINKFLAGS = SCons.Util.CLVar(os.environ['LDFLAGS']))
 
-env.Append(CFLAGS = [ "-Wall", "-Werror", "-Wextra", "-O3", "-std=c99"])
+env.Append(CFLAGS = [ "-Wall", "-Werror", "-Wextra", "-O3", "-std=c99", "-Wno-deprecated-declarations"])
 env.Append(CXXFLAGS = [ "-Wall", "-Werror", "-Wextra", "-O3", "-std=c++11"])
 
 # On Mac OS X, include homebrew openssl
@@ -91,18 +91,18 @@ if sys.platform == "darwin":
     env.Append(LINKFLAGS = [ "-L/usr/local/opt/openssl/lib" ])
 
 if "WITH_GPROF" in env and env["WITH_GPROF"]:
-    print "With gprof"
+    print("With gprof")
     env.Append(CFLAGS = [ "-pg" ])
     env.Append(CPPFLAGS = [ "-pg" ])
     env.Append(LINKFLAGS = [ "-pg" ])
 
 if env["BUILDTYPE"] == "DEBUG":
-    print "DEBUG MODE!"
+    print("DEBUG MODE!")
     env.Append(CPPFLAGS = [ "-g", "-DDEBUG", "-Wall"])
 elif env["BUILDTYPE"] == "RELEASE":
     env.Append(CPPFLAGS = ["-DNDEBUG", "-Wall" ])
 else:
-    print "Error BUILDTYPE must be RELEASE or DEBUG"
+    print("Error BUILDTYPE must be RELEASE or DEBUG")
     sys.exit(-1)
 
 if not env["VERBOSE"]:
@@ -125,7 +125,7 @@ conf = env.Configure(custom_tests = { 'CheckPkgConfig' : CheckPkgConfig,
                                       'CheckPkgMinVersion' : CheckPkgMinVersion })
 
 if not conf.CheckCC():
-    print 'Your C compiler and/or environment is incorrectly configured.'
+    print('Your C compiler and/or environment is incorrectly configured.')
     CheckFailed()
 
 conf.Finish()

@@ -35,11 +35,11 @@ do
 	pr_file=`echo "$file" | sed 's/\"/\\\\\"/g'`
 	suite=`basename "$file" .o | sed 's/\"/\\\\\"/g'`
 #symbols=`nm "$file" | egrep '^[[:xdigit:]]{8} T mu_\w+$' | cut -c12-`
-	symbols=`nm "$file" | egrep ' T _mu_\w+$' | cut -c21-`
-	symbols+=`nm "$file" | egrep ' T mu_\w+$' | cut -c20-`
-	tests=`echo "$symbols" | egrep '^mu_test'`
-	inits=`echo "$symbols" | egrep '^mu_init'`
-	terms=`echo "$symbols" | egrep '^mu_term'`
+	symbols=`nm "$file" | grep -E ' T _mu_\w+$' | cut -c21-`
+	symbols+=`nm "$file" | grep -E ' T mu_\w+$' | cut -c20-`
+	tests=`echo "$symbols" | grep -E '^mu_test'`
+	inits=`echo "$symbols" | grep -E '^mu_init'`
+	terms=`echo "$symbols" | grep -E '^mu_term'`
 	echo -e '\tdo {'
 	echo -e '\t\tmutest_suite_name = "'"$suite"'";'
 	echo -e '\t\tmu_print(MU_SUITE, "\\nRunning suite '"'$suite'"'\\n");'

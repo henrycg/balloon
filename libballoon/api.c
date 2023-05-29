@@ -1,5 +1,6 @@
 
 #include <balloon.h>
+#include <openssl/crypto.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -76,6 +77,6 @@ Balloon_Verify (const char blob[BLOB_LEN], const char *passwd, size_t passwd_len
     return error; 
 
   // Return ERROR_NONE on success.
-  return !memcmp ((char *)hash, (char *)hash2, BLOCK_SIZE) ? ERROR_NONE : ERROR_HASH_MISMATCH;
+  return !CRYPTO_memcmp ((char *)hash, (char *)hash2, BLOCK_SIZE) ? ERROR_NONE : ERROR_HASH_MISMATCH;
 }
 

@@ -62,7 +62,7 @@ options_validate (struct balloon_options *opts)
 void
 worker_salt (uint8_t tsalt[SALT_LEN], const uint8_t salt[SALT_LEN], uint32_t worker_idx)
 {
-  // Add worker idx to last 32 bits of salt (as a little-endian integer)
+  // Add worker idx to first 32 bits of salt (as a little-endian integer)
 
   memcpy ((char *)tsalt, (const char *)salt, SALT_LEN);
   uint32_t byteint = bytes_to_littleend_uint32(tsalt, 4) + worker_idx; 

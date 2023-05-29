@@ -32,7 +32,7 @@ struct bitstream {
 
   // All of the below are directly passed to OpenSSL
   SHA256_CTX c;
-  EVP_CIPHER_CTX ctx;
+  EVP_CIPHER_CTX *ctx;
 };
 
 

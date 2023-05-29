@@ -32,7 +32,7 @@ bitstream_init (struct bitstream *b)
     return ERROR_OPENSSL_HASH;
   b->initialized = false;
 
-  EVP_CIPHER_CTX_init (&b->ctx);
+  b->ctx = EVP_CIPHER_CTX_new ();
 
   if (!(b->zeros = malloc (BITSTREAM_BUF_SIZE * sizeof (uint8_t))))
     return ERROR_MALLOC;
@@ -46,11 +46,10 @@ bitstream_free (struct bitstream *b)
 {
   uint8_t out[AES_BLOCK_SIZE];
   int outl;
-  if (!EVP_EncryptFinal_ex (&b->ctx, out, &outl))
+  if (!EVP_EncryptFinal_ex (b->ctx, out, &outl))
     return ERROR_OPENSSL_AES;
 
-  if (!EVP_CIPHER_CTX_cleanup (&b->ctx))
-    return ERROR_OPENSSL_AES;
+  EVP_CIPHER_CTX_free (b->ctx);
 
   free (b->zeros);
 
@@ -86,10 +85,10 @@ bitstream_seed_finalize (struct bitstream *b)
   //  printf("%d,", key_bytes[i]);
   //puts("");
 
-  if (!EVP_CIPHER_CTX_set_padding (&b->ctx, 1))
+  if (!EVP_CIPHER_CTX_set_padding (b->ctx, 1))
     return ERROR_OPENSSL_AES;
 
-  if (!EVP_EncryptInit (&b->ctx, EVP_aes_128_ctr (), key_bytes, iv))
+  if (!EVP_EncryptInit (b->ctx, EVP_aes_128_ctr (), key_bytes, iv))
     return ERROR_OPENSSL_AES;
 
   b->initialized = true;
@@ -101,7 +100,7 @@ encrypt_partial (struct bitstream *b, void *outp, int to_encrypt)
 {
   int encl;
   // Encrypt directly into the output buffer
-  if (!EVP_EncryptUpdate (&b->ctx, outp, &encl, b->zeros, to_encrypt))
+  if (!EVP_EncryptUpdate (b->ctx, outp, &encl, b->zeros, to_encrypt))
     return ERROR_OPENSSL_AES;
 
   return ERROR_NONE;

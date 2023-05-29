@@ -82,6 +82,8 @@ main (int argc, char *argv[])
         {
         case 'b':
           verify_blob = optarg;
+          break;
+
         case 0:
           /* If this option set a flag, do nothing else now. */
           if (long_options[option_index].flag != 0)
@@ -154,7 +156,7 @@ main (int argc, char *argv[])
 
   int error;
   const double wall_start = wall_sec ();
-  char blob[BLOB_LEN+1];
+  char blob[BLOB_LEN+2];
 
   if (verify_blob) {
     strncpy (blob, verify_blob, BLOB_LEN+1);

@@ -85,10 +85,10 @@ bitstream_seed_finalize (struct bitstream *b)
   //  printf("%d,", key_bytes[i]);
   //puts("");
 
-  if (!EVP_CIPHER_CTX_set_padding (b->ctx, 1))
+  if (!EVP_EncryptInit (b->ctx, EVP_aes_128_ctr (), key_bytes, iv))
     return ERROR_OPENSSL_AES;
 
-  if (!EVP_EncryptInit (b->ctx, EVP_aes_128_ctr (), key_bytes, iv))
+  if (!EVP_CIPHER_CTX_set_padding (b->ctx, 1))
     return ERROR_OPENSSL_AES;
 
   b->initialized = true;

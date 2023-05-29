@@ -113,7 +113,7 @@ mu_test_hash_state_bad_extract (void)
   struct balloon_options opts;
   init_options (&opts);
   struct hash_state s;
-  const unsigned char salt[] = "abasdfasdfasdfasfcdefghijkl";
+  const unsigned char salt[] = "abasdfasdfasdfasfcdefghijklssdf";
   const unsigned char in[] = "ZZZZZZZZZZZZ";
   mu_ensure ( !hash_state_init (&s, &opts, salt) );
   mu_ensure ( !hash_state_fill (&s, salt, in, sizeof (in)) ); 
